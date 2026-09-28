@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lakshana Veggie - Online Mandi & Procurement Web Portal</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Top Navigation Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-logo">
+          <span>🥕</span>
+        </div>
+        <div>
+          <h1 class="brand-title">LAKSHANA VEGGIE</h1>
+          <p class="brand-sub">Daily Mandi Procurement & Inventory Management Web Portal</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="cloud-status-badge" id="cloudSyncStatus">
+          <span class="status-dot"></span>
+          <span class="status-text">Cloud Synchronized</span>
+        </div>
+        <button class="btn btn-outline" id="syncNowBtn">
+          <span class="icon">🔄</span> Sync Online
+        </button>
+        <button class="btn btn-primary" id="openUploadModalBtn">
+          <span class="icon">📤</span> Upload Daily Sheet
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Live Ticker Bar -->
+  <div class="ticker-bar">
+    <div class="ticker-wrap">
+      <div class="ticker-content" id="priceTicker">
+        <span>🍅 Country Tomatoes: ₹35.00/kg (500 kgs)</span>
+        <span>🧅 Nashik Red Onions: ₹28.00/kg (1000 kgs)</span>
+        <span>🥕 Ooty Fresh Carrots: ₹45.00/kg (450 kgs)</span>
+        <span>🥔 Baby Potatoes: ₹25.00/kg (1250 kgs)</span>
+        <span>🌶️ Green Chillies: ₹65.00/kg (300 kgs)</span>
+        <span>🥦 Fresh Cauliflower: ₹32.00/kg (525 kgs)</span>
+        <span>🫑 Green Capsicum: ₹55.00/kg (225 kgs)</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-content">
+    <!-- Quick Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon bg-green">📦</div>
+        <div class="stat-info">
+          <span class="stat-label">Total Stock in Warehouse</span>
+          <h3 class="stat-value" id="totalStockKgs">4,250 <small>kgs</small></h3>
+          <span class="stat-sub" id="totalBoxesCount">180 boxes / crates</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-teal">💰</div>
+        <div class="stat-info">
+          <span class="stat-label">Today's Total Purchases</span>
+          <h3 class="stat-value" id="todayPurchasesTotal">₹1,13,875.00</h3>
+          <span class="stat-sub">5 daily intake batches</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-purple">🚚</div>
+        <div class="stat-info">
+          <span class="stat-label">Active Mandi Suppliers</span>
+          <h3 class="stat-value" id="activeSuppliersCount">6</h3>
+          <span class="stat-sub">Direct farm & APMC merchants</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-amber">⚡</div>
+        <div class="stat-info">
+          <span class="stat-label">Online Sync State</span>
+          <h3 class="stat-value" style="color: #10b981;">Connected</h3>
+          <span class="stat-sub" id="lastSyncTimeLabel">Synced just now</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="portal-tabs">
+      <button class="tab-btn active" data-tab="purchases">📑 Daily Purchase Manifest</button>
+      <button class="tab-btn" data-tab="inventory">🥕 Live Inventory & Stocks</button>
+      <button class="tab-btn" data-tab="suppliers">🏢 Mandi Suppliers</button>
+      <button class="tab-btn" data-tab="sync">☁️ Cloud Synchronize Hub</button>
+    </div>
+
+    <!-- TAB 1: DAILY PURCHASES -->
+    <section class="tab-panel active" id="tab-purchases">
+      <div class="panel-header">
+        <div>
+          <h2>Daily Purchases Ledger</h2>
+          <p class="section-desc">Date, Item, Boxes, Quantity in Kgs, Rate per Kg and Auto-Calculated Total (Qty * Rate)</p>
+        </div>
+        <div class="panel-controls">
+          <input type="text" id="purchaseSearch" class="search-input" placeholder="Search item or supplier..." />
+          <button class="btn btn-outline" id="printReportBtn">🖨️ Print Manifest</button>
+          <button class="btn btn-outline" onclick="document.getElementById('uploadModal').classList.add('open')">
+            📤 Bulk Upload
+          </button>
+          <button class="btn btn-primary" id="openNewPurchaseBtn" onclick="document.getElementById('newPurchaseModal').classList.add('open')">
+            + New Purchase
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table" id="purchasesTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Batch / PO #</th>
+              <th>Vegetable Item</th>
+              <th>Boxes</th>
+              <th>Qty (Kgs)</th>
+              <th>Rate / Kg</th>
+              <th>Total Amount (₹)</th>
+              <th>Supplier</th>
+              <th>Payment</th>
+            </tr>
+          </thead>
+          <tbody id="purchasesTbody">
+            <!-- Populated dynamically via app.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: INVENTORY -->
+    <section class="tab-panel" id="tab-inventory">
+      <div class="panel-header">
+        <div>
+          <h2>Current Vegetable Stock Levels</h2>
+          <p class="section-desc">Real-time stock balance updated automatically upon daily sheet uploads</p>
+        </div>
+        <div class="panel-controls">
+          <input type="text" id="inventorySearch" class="search-input" placeholder="Search vegetables..." />
+        </div>
+      </div>
+
+      <div class="inventory-grid" id="inventoryCardsGrid">
+        <!-- Rendered via app.js -->
+      </div>
+    </section>
+
+    <!-- TAB 3: SUPPLIERS -->
+    <section class="tab-panel" id="tab-suppliers">
+      <div class="panel-header">
+        <div>
+          <h2>Mandi Vendor & Farm Suppliers Directory</h2>
+          <p class="section-desc">Registered procurement partners, contacts, and payment balances</p>
+        </div>
+      </div>
+      <div class="suppliers-grid" id="suppliersGrid">
+        <!-- Rendered via app.js -->
+      </div>
+    </section>
+
+    <!-- TAB 4: CLOUD SYNCHRONIZE HUB -->
+    <section class="tab-panel" id="tab-sync">
+      <div class="panel-header">
+        <div>
+          <h2>Online Cloud Synchronize Dashboard</h2>
+          <p class="section-desc">Real-time synchronization between Android Mobile App & Web Portal</p>
+        </div>
+      </div>
+
+      <div class="sync-grid">
+        <div class="sync-card">
+          <div class="sync-icon">☁️</div>
+          <h3>Two-Way Cloud Sync</h3>
+          <p>Local Room Database on Android devices syncs purchases, stocks, and daily sheets with the Web Portal seamlessly.</p>
+          <div class="sync-details">
+            <div class="detail-row"><span>Custom Domain:</span> <strong>https://lakshanaveggie.trade</strong></div>
+            <div class="detail-row"><span>API Sync Endpoint:</span> <code>https://lakshanaveggie.trade/api/v1/sync</code></div>
+            <div class="detail-row"><span>Admin Contact:</span> <strong>8608414322</strong></div>
+            <div class="detail-row"><span>Auto-Sync:</span> <span class="badge badge-success">Enabled</span></div>
+          </div>
+          <button class="btn btn-primary btn-block" id="triggerSyncNow">Synchronize Now</button>
+        </div>
+
+        <div class="sync-card">
+          <div class="sync-icon">💾</div>
+          <h3>Backup & Data Portability</h3>
+          <p>Export full database JSON snapshot or restore previous manifests instantly.</p>
+          <div class="sync-buttons">
+            <button class="btn btn-outline btn-block" id="exportBackupBtn">📥 Export JSON Backup</button>
+            <button class="btn btn-outline btn-block" id="loadSampleDataBtn">✨ Load Fresh Mandi Sheet</button>
+          </div>
+        </div>
+
+        <div class="sync-card">
+          <div class="sync-icon">🌐</div>
+          <h3>Custom Domain & Real-Time DB</h3>
+          <p>Connected to <code>lakshanaveggie.trade</code> with instant two-way synchronization.</p>
+          <div style="margin: 0.75rem 0;">
+            <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Backend Server / Database URL:</label>
+            <input type="text" id="customDomainInput" class="form-input" value="https://lakshanaveggie.trade/api/v1/sync" style="font-family: monospace; font-size: 0.8125rem;" />
+          </div>
+          <div id="domainTestFeedback" style="display: none; padding: 0.5rem; border-radius: 6px; font-size: 0.75rem; margin-bottom: 0.75rem;"></div>
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <button class="btn btn-outline" style="flex: 1;" id="testDomainPingBtn">⚡ Test Ping</button>
+            <button class="btn btn-primary" style="flex: 1;" id="saveDomainBtn">Save Domain</button>
+          </div>
+          <details style="font-size: 0.75rem; background: #f8fafc; padding: 0.5rem; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <summary style="font-weight: 600; cursor: pointer; color: #1e293b;">Cloudflare DNS Settings for lakshanaveggie.trade</summary>
+            <p style="margin-top: 0.5rem; line-height: 1.4; color: #475569;">
+              1. <strong>Cloudflare CNAME / A:</strong> Point <code>lakshanaveggie.trade</code> and <code>api.lakshanaveggie.trade</code> to your hosting server.<br/>
+              2. <strong>SSL/TLS:</strong> Set to Full (strict) in Cloudflare.<br/>
+              3. <strong>Real-Time Updates:</strong> Both mobile app and web portal push real-time sync payloads to <code>https://lakshanaveggie.trade/api/v1/sync</code>.
+            </p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- DAILY SHEET UPLOAD MODAL -->
+  <div class="modal" id="uploadModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Upload Daily Purchase Sheet (Direct Excel or Image)</h3>
+        <button class="modal-close" onclick="document.getElementById('uploadModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="upload-tabs">
+          <button class="upload-tab-btn active" data-utab="excel">Direct Excel / CSV</button>
+          <button class="upload-tab-btn" data-utab="image">Image Format (Mandi Bill)</button>
+        </div>
+
+        <div class="upload-tab-content active" id="utab-excel">
+          <p class="modal-instruction">Upload an Excel (.xlsx / .csv) file or paste entries with columns: <strong>Date, Supplier, Items, Boxes, Qty(kgs), Rate, Total</strong></p>
+          <div class="drop-zone" id="excelDropZone">
+            <span class="drop-icon">📊</span>
+            <p>Drag and drop Excel/CSV file here or <label for="fileInput" class="file-label">Browse File</label></p>
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.txt" style="display:none;" />
+          </div>
+          <div class="paste-section">
+            <label>Or Paste CSV / Tabular Entries:</label>
+            <textarea id="excelPasteArea" rows="4" placeholder="Date,Supplier,Items,Boxes,Qty(kgs),Rate,Total&#10;2026-09-25,Lakshana Agro Farms,Fresh Country Tomatoes,25,500.0,35.00,17500.00&#10;2026-09-25,Green Valley Mandi,Nashik Red Onions,40,1000.0,28.00,28000.00"></textarea>
+          </div>
+        </div>
+
+        <div class="upload-tab-content" id="utab-image">
+          <p class="modal-instruction">Upload an image / photo of your handwritten or printed Mandi arrival slip for automatic optical parsing:</p>
+          <div class="drop-zone" id="imageDropZone">
+            <span class="drop-icon">📷</span>
+            <p>Upload Mandi bill photo <label for="imageInput" class="file-label">Choose Photo</label></p>
+            <input type="file" id="imageInput" accept="image/*" style="display:none;" />
+          </div>
+          <div class="image-sample-btns">
+            <button class="btn btn-outline btn-sm" id="loadSampleBill1">Sample APMC Bill</button>
+            <button class="btn btn-outline btn-sm" id="loadSampleBill2">Sample Farm Gate Bill</button>
+          </div>
+        </div>
+
+        <div class="auto-update-toggle">
+          <input type="checkbox" id="autoUpdateInventory" checked />
+          <label for="autoUpdateInventory">Automatically increment warehouse inventory stocks and crates upon upload</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('uploadModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" id="processUploadBtn">Parse & Integrate Daily Sheet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE NEW PURCHASE MODAL (WITH DATE FORWARD & BACKWARD DDMMYY) -->
+  <div class="modal" id="newPurchaseModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Create New Purchase Order</h3>
+        <button class="modal-close" onclick="document.getElementById('newPurchaseModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Date Stepper Forward & Backward (DDMMYY) -->
+        <div class="date-stepper-group">
+          <label>
+            <span>Purchase Date</span>
+            <span class="date-ddmmyy-badge" id="newPoDdmmyyBadge">DDMMYY: 270926</span>
+          </label>
+          <div class="date-stepper-controls">
+            <button type="button" class="date-step-btn" id="newPoDateBackBtn" title="Previous Day (Backward)">◀</button>
+            <div class="date-stepper-display">
+              <div class="date-stepper-value" id="newPoDateDisplay">27-09-26</div>
+              <div class="date-stepper-sub" id="newPoDateSub">Sunday, 27 Sep 2026 (Today)</div>
+            </div>
+            <button type="button" class="date-step-btn" id="newPoDateFwdBtn" title="Next Day (Forward)">▶</button>
+          </div>
+          <div class="date-preset-chips">
+            <button type="button" class="date-preset-chip" id="newPoDateYest">◀ Yesterday</button>
+            <button type="button" class="date-preset-chip" id="newPoDateToday">Today</button>
+            <button type="button" class="date-preset-chip" id="newPoDateTom">Tomorrow ▶</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="newPoItem">Vegetable Item Name</label>
+          <input type="text" id="newPoItem" class="form-input" placeholder="e.g. Country Tomatoes, Red Onions..." value="Fresh Country Tomatoes" />
+        </div>
+
+        <div class="form-group">
+          <label for="newPoSupplier">Vendor / Mandi Supplier</label>
+          <input type="text" id="newPoSupplier" class="form-input" placeholder="e.g. Lakshana Agro Farms" value="Lakshana Agro Farms" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="newPoBoxes">Boxes / Crates</label>
+            <input type="number" id="newPoBoxes" class="form-input" value="10" min="1" />
+          </div>
+          <div class="form-group">
+            <label for="newPoQty">Quantity (Kgs)</label>
+            <input type="number" id="newPoQty" class="form-input" value="200" step="0.5" min="1" />
+          </div>
+          <div class="form-group">
+            <label for="newPoRate">Rate per Kg (₹)</label>
+            <input type="number" id="newPoRate" class="form-input" value="35.00" step="0.5" min="0" />
+          </div>
+        </div>
+
+        <div class="form-calculated-box">
+          <span>Auto-Calculated Total (Qty * Rate):</span>
+          <strong style="color: #15803d; font-size: 1.1rem;" id="newPoTotalDisplay">₹7,000.00</strong>
+        </div>
+
+        <div class="auto-update-toggle">
+          <input type="checkbox" id="newPoUpdateStock" checked />
+          <label for="newPoUpdateStock">Auto-update warehouse stock and crates upon saving purchase</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('newPurchaseModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" id="saveNewPoBtn">Create Purchase Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PURCHASE PAYMENT SETTLEMENT MODAL (WITH DATE FORWARD & BACKWARD DDMMYY) -->
+  <div class="modal" id="settlePaymentModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Purchase Payment Settlement (Cash / UPI)</h3>
+        <button class="modal-close" onclick="document.getElementById('settlePaymentModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f1f5f9; border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong id="settlePoBatch" style="font-family: monospace;">BATCH-20260925-02</strong>
+              <div id="settlePoItem" style="font-size: 0.8125rem; color: #64748b;">Baby Potatoes • Green Valley Mandi</div>
+            </div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: #15803d;" id="settlePoAmount">₹31,250.00</div>
+          </div>
+        </div>
+
+        <!-- Settlement Date Forward & Backward (DDMMYY) -->
+        <div class="date-stepper-group">
+          <label>
+            <span>Settlement Date</span>
+            <span class="date-ddmmyy-badge" id="settleDdmmyyBadge">DDMMYY: 270926</span>
+          </label>
+          <div class="date-stepper-controls">
+            <button type="button" class="date-step-btn" id="settleDateBackBtn" title="Previous Day (Backward)">◀</button>
+            <div class="date-stepper-display">
+              <div class="date-stepper-value" id="settleDateDisplay">27-09-26</div>
+              <div class="date-stepper-sub" id="settleDateSub">Sunday, 27 Sep 2026 (Today)</div>
+            </div>
+            <button type="button" class="date-step-btn" id="settleDateFwdBtn" title="Next Day (Forward)">▶</button>
+          </div>
+          <div class="date-preset-chips">
+            <button type="button" class="date-preset-chip" id="settleDateYest">◀ Yesterday</button>
+            <button type="button" class="date-preset-chip" id="settleDateToday">Today</button>
+            <button type="button" class="date-preset-chip" id="settleDateTom">Tomorrow ▶</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Payment Mode</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-outline" id="modeCashBtn" style="flex: 1; background: #ecfdf5; border-color: #10b981; color: #065f46; font-weight: bold;">💵 Cash Payment</button>
+            <button type="button" class="btn btn-outline" id="modeUpiBtn" style="flex: 1;">📱 UPI Instant</button>
+          </div>
+        </div>
+
+        <div id="cashFields">
+          <div class="form-group">
+            <label for="settleCashVoucher">Cash Voucher / Physical Receipt Ref</label>
+            <input type="text" id="settleCashVoucher" class="form-input" value="CASH-VCH-8492" />
+          </div>
+        </div>
+
+        <div id="upiFields" style="display: none;">
+          <div class="form-group">
+            <label for="settleUpiRef">12-Digit UPI UTR / Reference</label>
+            <input type="text" id="settleUpiRef" class="form-input" placeholder="e.g. 938471928471" value="948271039482" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('settlePaymentModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" id="confirmSettlementBtn">Verify & Confirm Settlement</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <p>© 2026 Lakshana Veggie Express • Admin Hotline: <strong>8608414322</strong></p>
+      <p>Android Mobile App & Cloud Web Portal Architecture</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="260dp"
+    android:height="130dp"
+    android:viewportWidth="200"
+    android:viewportHeight="100">
+
+    <!-- White Oval with Solid Black Outline matching attached image -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#000000"
+        android:strokeWidth="5"
+        android:pathData="M 8,50 C 8,24 40,6 100,6 C 160,6 192,24 192,50 C 192,76 160,94 100,94 C 40,94 8,76 8,50 Z" />
+
+    <!-- ================= ROW 1: LAK  [Airplane]  EXPRESS ================= -->
+    <!-- 'L' -->
+    <path
+        android:fillColor="#1F0D29"
+        android:pathData="M 24,31 L 30,31 L 30,44 L 39,44 L 39,48.5 L 24,48.5 Z" />
+    <!-- 'A' -->
+    <path
+        android:fillColor="#1F0D29"
+        android:pathData="M 47,31 L 41.5,48.5 L 46.5,48.5 L 47.8,44 L 53,44 L 54.3,48.5 L 59.5,48.5 L 53.8,31 Z M 50.4,36.5 L 52,41 L 48.8,41 Z" />
+    <!-- 'K' -->
+    <path
+        android:fillColor="#1F0D29"
+        android:pathData="M 62,31 L 67.5,31 L 67.5,38 L 73.5,31 L 79.5,31 L 71.5,39.5 L 80.5,48.5 L 74,48.5 L 67.5,41.5 L 67.5,48.5 L 62,48.5 Z" />
+
+    <!-- AIRPLANE SILHOUETTE (Taking off ~40 degrees up-right) -->
+    <group
+        android:pivotX="94"
+        android:pivotY="38"
+        android:rotation="40">
+        <!-- Fuselage -->
+        <path
+            android:fillColor="#1F0D29"
+            android:pathData="M 92.5,23 C 93.5,21.5 95,21.5 96,23 L 96,44 L 92.5,44 Z" />
+        <!-- Main Swept Wings -->
+        <path
+            android:fillColor="#1F0D29"
+            android:pathData="M 82,34 L 106.5,34 L 96,29 L 92.5,29 Z" />
+        <!-- Tailfin & Stabilizers -->
+        <path
+            android:fillColor="#1F0D29"
+            android:pathData="M 88,43 L 100.5,43 L 96,41 L 92.5,41 Z" />
+    </group>
+
+    <!-- 'EXPRESS' in warm gold #C18845 -->
+    <!-- E -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 112,34 L 118.5,34 L 118.5,36.5 L 114.8,36.5 L 114.8,39.5 L 118,39.5 L 118,42 L 114.8,42 L 114.8,45 L 118.8,45 L 118.8,47.5 L 112,47.5 Z" />
+    <!-- X -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 120.5,34 L 123.5,34 L 125.8,38.5 L 128,34 L 131,34 L 127.3,40.8 L 131.2,47.5 L 128.2,47.5 L 125.8,43 L 123.3,47.5 L 120.3,47.5 L 124.3,40.8 Z" />
+    <!-- P -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 133,34 L 137.8,34 C 140.2,34 141.6,35.2 141.6,37.8 C 141.6,40.4 140.2,41.6 137.8,41.6 L 135.6,41.6 L 135.6,47.5 L 133,47.5 Z M 135.6,36.5 L 135.6,39.2 L 137.5,39.2 C 138.6,39.2 139.1,38.7 139.1,37.8 C 139.1,37 138.6,36.5 137.5,36.5 Z" />
+    <!-- R -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 143.5,34 L 148.5,34 C 150.8,34 152.1,35.1 152.1,37.5 C 152.1,39.5 151,40.5 149.2,40.9 L 152.3,47.5 L 149.5,47.5 L 146.8,41.5 L 146.1,41.5 L 146.1,47.5 L 143.5,47.5 Z M 146.1,36.4 L 146.1,39.4 L 148.1,39.4 C 149.1,39.4 149.6,38.9 149.6,37.9 C 149.6,36.9 149.1,36.4 148.1,36.4 Z" />
+    <!-- E -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 154,34 L 160.5,34 L 160.5,36.5 L 156.8,36.5 L 156.8,39.5 L 160,39.5 L 160,42 L 156.8,42 L 156.8,45 L 160.8,45 L 160.8,47.5 L 154,47.5 Z" />
+    <!-- S -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 162.5,45 L 164.8,43.2 C 165.6,44.4 166.7,45.2 168.1,45.2 C 169.3,45.2 170.1,44.5 170.1,43.6 C 170.1,42.7 169.3,42.2 167.6,41.7 C 165.2,41 163.2,39.9 163.2,37.5 C 163.2,35.1 165.3,33.5 168,33.5 C 170.3,33.5 172.1,34.5 173.2,36.1 L 171,37.8 C 170.2,36.8 169.3,36.1 168,36.1 C 166.9,36.1 166.1,36.7 166.1,37.4 C 166.1,38.2 166.8,38.7 168.4,39.1 C 171,39.9 173,41 173,43.5 C 173,46.1 170.8,47.8 167.9,47.8 C 165.3,47.8 163.4,46.6 162.5,45 Z" />
+    <!-- S -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 175,45 L 177.3,43.2 C 178.1,44.4 179.2,45.2 180.6,45.2 C 181.8,45.2 182.6,44.5 182.6,43.6 C 182.6,42.7 181.8,42.2 180.1,41.7 C 177.7,41 175.7,39.9 175.7,37.5 C 175.7,35.1 177.8,33.5 180.5,33.5 C 182.8,33.5 184.6,34.5 185.7,36.1 L 183.5,37.8 C 182.7,36.8 181.8,36.1 180.5,36.1 C 179.4,36.1 178.6,36.7 178.6,37.4 C 178.6,38.2 179.3,38.7 180.9,39.1 C 183.5,39.9 185.5,41 185.5,43.5 C 185.5,46.1 183.3,47.8 180.4,47.8 C 177.8,47.8 175.9,46.6 175,45 Z" />
+
+
+    <!-- ================= ROW 2: VEGGIE  [Green Leaf S]  HANA ================= -->
+    <!-- 'VEGGIE' in warm gold #C18845 -->
+    <!-- V -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 18,57 L 21.2,57 L 24.5,68.5 L 27.8,57 L 31,57 L 26.2,71.5 L 22.8,71.5 Z" />
+    <!-- E -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 33,57 L 39.5,57 L 39.5,59.5 L 35.8,59.5 L 35.8,62.5 L 39,62.5 L 39,65 L 35.8,65 L 35.8,69 L 39.8,69 L 39.8,71.5 L 33,71.5 Z" />
+    <!-- G -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 48.5,59.8 L 46.2,61.8 C 45.3,60.4 43.8,59.5 42,59.5 C 39.2,59.5 37.2,61.6 37.2,64.5 C 37.2,67.4 39.2,69.5 42.2,69.5 C 44,69.5 45.4,68.7 46.2,67.4 L 46.2,66 L 42.8,66 L 42.8,63.5 L 48.8,63.5 L 48.8,69 C 47.2,71.1 44.8,72.2 42.2,72.2 C 37.6,72.2 34.2,68.9 34.2,64.5 C 34.2,60.1 37.6,56.8 42,56.8 C 44.8,56.8 47.1,58 48.5,59.8 Z" />
+    <!-- G -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 58.5,59.8 L 56.2,61.8 C 55.3,60.4 53.8,59.5 52,59.5 C 49.2,59.5 47.2,61.6 47.2,64.5 C 47.2,67.4 49.2,69.5 52.2,69.5 C 54,69.5 55.4,68.7 56.2,67.4 L 56.2,66 L 52.8,66 L 52.8,63.5 L 58.8,63.5 L 58.8,69 C 57.2,71.1 54.8,72.2 52.2,72.2 C 47.6,72.2 44.2,68.9 44.2,64.5 C 44.2,60.1 47.6,56.8 52,56.8 C 54.8,56.8 57.1,58 58.5,59.8 Z" />
+    <!-- I -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 61,57 L 63.8,57 L 63.8,71.5 L 61,71.5 Z" />
+    <!-- E -->
+    <path
+        android:fillColor="#C18845"
+        android:pathData="M 66,57 L 72.5,57 L 72.5,59.5 L 68.8,59.5 L 68.8,62.5 L 72,62.5 L 72,65 L 68.8,65 L 68.8,69 L 72.8,69 L 72.8,71.5 L 66,71.5 Z" />
+
+    <!-- STYLIZED GREEN LEAF 'S' (#68B426 Vibrant Leaf Green) -->
+    <!-- Upper loop of S with leaf shape -->
+    <path
+        android:strokeColor="#68B426"
+        android:strokeWidth="2.8"
+        android:fillColor="#00000000"
+        android:pathData="M 88,57 C 84,54 79.5,56 79.5,60 C 79.5,64.5 86,65 86,70 C 86,74.5 81.5,76 77.5,74" />
+    <!-- Leaf vein and contour curves -->
+    <path
+        android:strokeColor="#68B426"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"
+        android:pathData="M 80.5,57 C 84.5,56.5 87.5,60 84.5,63 M 78,69 C 81,71 85,70 84.5,73.5" />
+
+    <!-- 'HANA' in dark plum #1F0D29 -->
+    <!-- 'H' -->
+    <path
+        android:fillColor="#1F0D29"
+        android:pathData="M 94,54 L 99.5,54 L 99.5,61.5 L 107.5,61.5 L 107.5,54 L 113,54 L 113,71.5 L 107.5,71.5 L 107.5,66 L 99.5,66 L 99.5,71.5 L 94,71.5 Z" />
+    <!-- 'A' -->
+    <path
+        android:fillColor="#1F0D29"
+        android:pathData="M 121,54 L 115.5,71.5 L 120.5,71.5 L 121.8,67 L 127,67 L 128.3,71.5 L 133.5,71.5 L 127.8,54 Z M 124.4,59.5 L 126,64 L 122.8,64 Z" />
+    <!-- 'N' -->
+    <path
+        android:fillColor="#1F0D29"
+        android:pathData="M 136,54 L 141,54 L 148,65 L 148,54 L 153,54 L 153,71.5 L 148,71.5 L 141,60.5 L 141,71.5 L 136,71.5 Z" />
+    <!-- 'A' -->
+    <path
+        android:fillColor="#1F0D29"
+        android:pathData="M 161,54 L 155.5,71.5 L 160.5,71.5 L 161.8,67 L 167,67 L 168.3,71.5 L 173.5,71.5 L 167.8,54 Z M 164.4,59.5 L 166,64 L 162.8,64 Z" />
+
+</vector>

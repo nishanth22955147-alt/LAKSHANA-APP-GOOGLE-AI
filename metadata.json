@@ -1,0 +1,6 @@
+{
+  "name": "Lakshana Veggie",
+  "description": "Lakshana Veggie procurement, daily excel bulk upload, online synchronization, inventory management, and web portal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

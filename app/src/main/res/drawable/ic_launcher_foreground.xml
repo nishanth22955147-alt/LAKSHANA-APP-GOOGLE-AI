@@ -1,0 +1,129 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer Oval Badge Base (White fill with Black border) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#000000"
+        android:strokeWidth="3.2"
+        android:pathData="M 17,54 C 17,33 33.5,23 54,23 C 74.5,23 91,33 91,54 C 91,75 74.5,85 54,85 C 33.5,85 17,75 17,54 Z" />
+
+    <!-- ================= TOP LINE ================= -->
+    <!-- LAK (Dark Plum #1E0B2B) -->
+    <!-- 'L' -->
+    <path
+        android:fillColor="#1E0B2B"
+        android:pathData="M 24,38 L 26.8,38 L 26.8,47 L 31.5,47 L 31.5,49.2 L 24,49.2 Z" />
+    <!-- 'A' -->
+    <path
+        android:fillColor="#1E0B2B"
+        android:pathData="M 35.8,38 L 33,49.2 L 35.5,49.2 L 36.2,46.3 L 38.8,46.3 L 39.5,49.2 L 42,49.2 L 39.2,38 Z M 37.5,40.8 L 38.3,44.4 L 36.7,44.4 Z" />
+    <!-- 'K' -->
+    <path
+        android:fillColor="#1E0B2B"
+        android:pathData="M 43,38 L 45.7,38 L 45.7,42.5 L 48.8,38 L 51.8,38 L 47.7,43.5 L 52.2,49.2 L 49,49.2 L 45.7,44.8 L 45.7,49.2 L 43,49.2 Z" />
+
+    <!-- AIRPLANE SILHOUETTE (Taking off at 45 deg, #1E0B2B) -->
+    <group
+        android:pivotX="54"
+        android:pivotY="42"
+        android:rotation="42">
+        <!-- Fuselage -->
+        <path
+            android:fillColor="#1E0B2B"
+            android:pathData="M 53,35 C 53.5,34 54.5,34 55,35 L 55,47 L 53,47 Z" />
+        <!-- Main Wings -->
+        <path
+            android:fillColor="#1E0B2B"
+            android:pathData="M 47,42 L 61,42 L 55,39 L 53,39 Z" />
+        <!-- Tail Fin & Stabilizers -->
+        <path
+            android:fillColor="#1E0B2B"
+            android:pathData="M 50.5,47 L 57.5,47 L 55,45.5 L 53,45.5 Z" />
+    </group>
+
+    <!-- 'EXPRESS' (Warm Gold #BD8938) -->
+    <!-- E -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 60,40 L 63.8,40 L 63.8,41.4 L 61.4,41.4 L 61.4,43.3 L 63.5,43.3 L 63.5,44.7 L 61.4,44.7 L 61.4,46.6 L 63.9,46.6 L 63.9,48 L 60,48 Z" />
+    <!-- X -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 64.5,40 L 66,40 L 67.2,42.6 L 68.4,40 L 69.9,40 L 68,44 L 70,48 L 68.5,48 L 67.2,45.3 L 65.9,48 L 64.4,48 L 66.4,44 Z" />
+    <!-- P -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 70.8,40 L 73.5,40 C 74.8,40 75.5,40.7 75.5,42.2 C 75.5,43.7 74.8,44.4 73.5,44.4 L 72.2,44.4 L 72.2,48 L 70.8,48 Z M 72.2,41.4 L 72.2,43 L 73.3,43 C 73.9,43 74.2,42.7 74.2,42.2 C 74.2,41.7 73.9,41.4 73.3,41.4 Z" />
+    <!-- R -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 76.5,40 L 79.2,40 C 80.4,40 81.1,40.6 81.1,42 C 81.1,43.1 80.5,43.7 79.5,43.9 L 81.2,48 L 79.7,48 L 78.2,44.3 L 77.9,44.3 L 77.9,48 L 76.5,48 Z M 77.9,41.3 L 77.9,43.1 L 79,43.1 C 79.5,43.1 79.8,42.8 79.8,42.2 C 79.8,41.6 79.5,41.3 79,41.3 Z" />
+    <!-- E -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 82,40 L 85.5,40 L 85.5,41.4 L 83.4,41.4 L 83.4,43.3 L 85.2,43.3 L 85.2,44.7 L 83.4,44.7 L 83.4,46.6 L 85.6,46.6 L 85.6,48 L 82,48 Z" />
+
+    <!-- ================= BOTTOM LINE ================= -->
+    <!-- 'VEGGIE' (Warm Gold #BD8938) -->
+    <!-- V -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 22.5,58 L 24.1,58 L 25.8,64 L 27.5,58 L 29.1,58 L 26.6,66 L 25,66 Z" />
+    <!-- E -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 30.2,58 L 33.7,58 L 33.7,59.4 L 31.6,59.4 L 31.6,61.3 L 33.4,61.3 L 33.4,62.7 L 31.6,62.7 L 31.6,64.6 L 33.8,64.6 L 33.8,66 L 30.2,66 Z" />
+    <!-- G -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 38.5,59.5 L 37.3,60.6 C 36.8,59.8 36,59.4 35.1,59.4 C 33.7,59.4 32.7,60.5 32.7,62 C 32.7,63.5 33.7,64.6 35.2,64.6 C 36.1,64.6 36.8,64.2 37.2,63.5 L 37.2,62.8 L 35.5,62.8 L 35.5,61.5 L 38.6,61.5 L 38.6,64.3 C 37.8,65.4 36.6,66 35.2,66 C 32.9,66 31.2,64.3 31.2,62 C 31.2,59.7 32.9,58 35.2,58 C 36.6,58 37.8,58.6 38.5,59.5 Z" />
+    <!-- G -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 43.5,59.5 L 42.3,60.6 C 41.8,59.8 41,59.4 40.1,59.4 C 38.7,59.4 37.7,60.5 37.7,62 C 37.7,63.5 38.7,64.6 40.2,64.6 C 41.1,64.6 41.8,64.2 42.2,63.5 L 42.2,62.8 L 40.5,62.8 L 40.5,61.5 L 43.6,61.5 L 43.6,64.3 C 42.8,65.4 41.6,66 40.2,66 C 37.9,66 36.2,64.3 36.2,62 C 36.2,59.7 37.9,58 40.2,58 C 41.6,58 42.8,58.6 43.5,59.5 Z" />
+    <!-- I -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 44.8,58 L 46.2,58 L 46.2,66 L 44.8,66 Z" />
+    <!-- E -->
+    <path
+        android:fillColor="#BD8938"
+        android:pathData="M 47.3,58 L 50.8,58 L 50.8,59.4 L 48.7,59.4 L 48.7,61.3 L 50.5,61.3 L 50.5,62.7 L 48.7,62.7 L 48.7,64.6 L 50.9,64.6 L 50.9,66 L 47.3,66 Z" />
+
+    <!-- STYLIZED GREEN LEAF 'S' (#68B426 Vibrant Leaf Green) -->
+    <!-- Top leaf loop -->
+    <path
+        android:strokeColor="#68B426"
+        android:strokeWidth="1.6"
+        android:fillColor="#00000000"
+        android:pathData="M 57.5,58 C 55,56.5 53,58 53,60.5 C 53,63 56.5,63.5 56.5,66 C 56.5,68.5 54,69.5 51.5,68.5" />
+    <!-- Leaf vein accent -->
+    <path
+        android:strokeColor="#68B426"
+        android:strokeWidth="1.2"
+        android:fillColor="#00000000"
+        android:pathData="M 53.5,58.5 C 56,58 57.5,60 55.5,62 M 52,65.5 C 54,66.5 56,66 55.5,68" />
+
+    <!-- 'HANA' (Dark Plum #1E0B2B) -->
+    <!-- 'H' -->
+    <path
+        android:fillColor="#1E0B2B"
+        android:pathData="M 59.5,56 L 62.2,56 L 62.2,60.5 L 66.8,60.5 L 66.8,56 L 69.5,56 L 69.5,67.2 L 66.8,67.2 L 66.8,62.8 L 62.2,62.8 L 62.2,67.2 L 59.5,67.2 Z" />
+    <!-- 'A' -->
+    <path
+        android:fillColor="#1E0B2B"
+        android:pathData="M 73.8,56 L 71,67.2 L 73.5,67.2 L 74.2,64.3 L 76.8,64.3 L 77.5,67.2 L 80,67.2 L 77.2,56 Z M 75.5,58.8 L 76.3,62.4 L 74.7,62.4 Z" />
+    <!-- 'N' -->
+    <path
+        android:fillColor="#1E0B2B"
+        android:pathData="M 81.2,56 L 83.8,56 L 87.2,63.5 L 87.2,56 L 89.8,56 L 89.8,67.2 L 87.2,67.2 L 83.8,59.8 L 83.8,67.2 L 81.2,67.2 Z" />
+    <!-- 'A' -->
+    <path
+        android:fillColor="#1E0B2B"
+        android:pathData="M 93.8,56 L 91,67.2 L 93.5,67.2 L 94.2,64.3 L 96.8,64.3 L 97.5,67.2 L 100,67.2 L 97.2,56 Z M 95.5,58.8 L 96.3,62.4 L 94.7,62.4 Z" />
+
+</vector>
