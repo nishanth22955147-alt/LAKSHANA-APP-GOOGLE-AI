@@ -602,6 +602,41 @@ fun OnlineSyncDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    // Row 0: Cloud Restore Action
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                viewModel.restoreFromCloud { success, msg ->
+                                    Toast.makeText(context, if (success) "Restored from Cloud!" else msg, Toast.LENGTH_LONG).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = SecondaryTeal),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Pull from Cloud", style = MaterialTheme.typography.labelSmall)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.restoreInitialMandiData { success, msg ->
+                                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Reset Mandi Data", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
                     // Row 1: Import Actions
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -784,28 +819,49 @@ fun OnlineSyncDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Bottom Sync Button
-                Button(
-                    onClick = { viewModel.syncNow() },
-                    enabled = !isSyncing,
-                    colors = ButtonDefaults.buttonColors(containerColor = SecondaryTeal),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .testTag("dialog_sync_now_button")
+                // Bottom Sync & Restore Actions
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (isSyncing) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text("Synchronizing with Cloud...")
-                    } else {
-                        Icon(Icons.Default.Sync, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Synchronize Online Now", fontWeight = FontWeight.Bold)
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.restoreFromCloud { success, msg ->
+                                Toast.makeText(context, if (success) "Cloud restore complete!" else msg, Toast.LENGTH_LONG).show()
+                            }
+                        },
+                        enabled = !isSyncing,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
+                        Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Restore Cloud", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                    }
+
+                    Button(
+                        onClick = { viewModel.syncNow() },
+                        enabled = !isSyncing,
+                        colors = ButtonDefaults.buttonColors(containerColor = SecondaryTeal),
+                        modifier = Modifier
+                            .weight(1.2f)
+                            .height(50.dp)
+                            .testTag("dialog_sync_now_button")
+                    ) {
+                        if (isSyncing) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Syncing...", style = MaterialTheme.typography.bodySmall)
+                        } else {
+                            Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Sync Online", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }

@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -436,6 +438,43 @@ class CloudSyncManager(
         root.put("users", usersArr)
 
         root.toString(2)
+    }
+
+    suspend fun fetchAndRestoreFromCloud(): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val endpoint = getCloudEndpoint()
+            val url = URL(endpoint)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 15000
+                readTimeout = 20000
+                setRequestProperty("Accept", "application/json")
+                setRequestProperty("User-Agent", "Lakshana-Android-Sync/2.0")
+            }
+
+            val responseCode = conn.responseCode
+            val responseText = try {
+                if (responseCode in 200..299) {
+                    conn.inputStream.bufferedReader().use { it.readText() }
+                } else {
+                    conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+                }
+            } catch (e: Exception) {
+                ""
+            }
+            conn.disconnect()
+
+            if (responseCode in 200..299) {
+                if (responseText.isBlank()) {
+                    return@withContext Result.failure(Exception("Cloud server at ${url.host} returned an empty response."))
+                }
+                return@withContext restoreFromBackupJson(responseText)
+            } else {
+                return@withContext Result.failure(Exception("Cloud server at ${url.host} returned HTTP $responseCode: $responseText"))
+            }
+        } catch (e: Exception) {
+            return@withContext Result.failure(e)
+        }
     }
 
     suspend fun restoreFromBackupJson(jsonString: String): Result<String> = withContext(Dispatchers.IO) {

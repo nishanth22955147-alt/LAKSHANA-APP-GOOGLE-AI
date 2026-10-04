@@ -1586,6 +1586,60 @@ function generateFullSyncPayload() {
   };
 }
 
+// Pull & Restore directly from Cloud Server
+document.getElementById('pullFromCloudBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('pullFromCloudBtn');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ Pulling from Cloud...';
+  btn.disabled = true;
+  try {
+    const endpoint = getCustomWorkerUrl();
+    const res = await fetch(endpoint, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    const data = await res.json();
+    if (data && (data.items || data.purchases || data.suppliers)) {
+      mergeRemoteDataIntoLocal(data);
+      alert(`Cloud Restore Successful!\n\nRestored from ${endpoint}:\n- ${(data.items || []).length} Vegetables\n- ${(data.purchases || []).length} Purchases\n- ${(data.suppliers || []).length} Mandi Suppliers`);
+    } else {
+      alert(`Server responded successfully, but returned 0 records.`);
+    }
+  } catch (err) {
+    alert(`Cloud Restore Failed: ${err.message}\n\nPlease check your sync endpoint (${getCustomWorkerUrl()}).`);
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+});
+
+// Restore Sample Mandi Data
+document.getElementById('restoreSampleDataBtn')?.addEventListener('click', () => {
+  if (confirm('Restore sample Mandi inventory (Country Tomatoes, Red Onions, Ooty Potatoes) and suppliers?')) {
+    const sampleItems = [
+      { name: 'Fresh Country Tomatoes', icon: '🍅', stockKgs: 450, boxes: 18, avgRate: 32, category: 'Tomatoes' },
+      { name: 'Nashik Red Onions', icon: '🧅', stockKgs: 800, boxes: 32, avgRate: 28, category: 'Onions' },
+      { name: 'Ooty Fresh Potatoes', icon: '🥔', stockKgs: 600, boxes: 20, avgRate: 30, category: 'Potatoes' },
+      { name: 'Mysore Hybrid Carrots', icon: '🥕', stockKgs: 300, boxes: 12, avgRate: 42, category: 'Root Vegetables' },
+      { name: 'Guntur Green Chillies', icon: '🌶️', stockKgs: 120, boxes: 8, avgRate: 55, category: 'Spices & Greens' }
+    ];
+    sampleItems.forEach(si => {
+      const existing = inventory.find(i => (i.name || '').toLowerCase() === si.name.toLowerCase());
+      if (existing) {
+        existing.stockKgs = si.stockKgs;
+        existing.boxes = si.boxes;
+      } else {
+        inventory.push(si);
+      }
+    });
+    saveInventory();
+    renderInventory();
+    renderKpis();
+    alert('Sample Mandi data restored successfully!');
+  }
+});
+
 // Export JSON Backup
 document.getElementById('exportBackupBtn')?.addEventListener('click', () => {
   const data = generateFullSyncPayload();

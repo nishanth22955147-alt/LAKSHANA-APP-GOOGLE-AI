@@ -365,22 +365,28 @@
 
         <div class="sync-card">
           <div class="sync-icon">💾</div>
-          <h3>Backup & Data Portability</h3>
-          <p>Export web portal data snapshot or import mobile app backup JSON directly.</p>
+          <h3>Backup & Data Restore Hub</h3>
+          <p>Restore from Cloudflare cloud storage, load sample Mandi inventory, or import JSON backup.</p>
           <div class="sync-buttons">
+            <button class="btn btn-primary btn-block" id="pullFromCloudBtn">☁️ Pull & Restore from Server</button>
+            <button class="btn btn-outline btn-block" id="restoreSampleDataBtn">🔄 Restore Sample Mandi Data</button>
             <button class="btn btn-outline btn-block" id="exportBackupBtn">📥 Export JSON Backup</button>
-            <button class="btn btn-primary btn-block" id="openImportBackupModalBtn">📥 Import Mobile App JSON</button>
+            <button class="btn btn-outline btn-block" id="openImportBackupModalBtn">📥 Import Mobile App JSON</button>
             <button class="btn btn-outline btn-block" id="clearWebDataBtn" style="color: #dc2626; border-color: #fca5a5;">🗑️ Reset / Clear All Records</button>
           </div>
         </div>
 
         <div class="sync-card">
-          <div class="sync-icon">☁️</div>
-          <h3>Cloudflare Worker Sync</h3>
-          <p>Syncs directly with your default Cloudflare Worker domain (<code>.workers.dev</code>).</p>
+          <div class="sync-icon">🌐</div>
+          <h3>Connected Backend Domain & Real-Time Sync</h3>
+          <p>Two-way real-time sync with Android mobile app. Default domain: <code>https://lakshanaveggie.trade/api/v1/sync</code></p>
           <div style="margin: 0.75rem 0;">
-            <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Cloudflare Worker URL (.workers.dev):</label>
-            <input type="text" id="customDomainInput" class="form-input" placeholder="https://my-worker.account.workers.dev" style="font-family: monospace; font-size: 0.8125rem;" />
+            <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Server API / Sync Domain URL:</label>
+            <input type="text" id="customDomainInput" class="form-input" value="https://lakshanaveggie.trade/api/v1/sync" placeholder="https://lakshanaveggie.trade/api/v1/sync" style="font-family: monospace; font-size: 0.8125rem;" />
+          </div>
+          <div style="display: flex; gap: 0.4rem; margin-bottom: 0.75rem;">
+            <button type="button" class="btn btn-outline btn-sm" style="flex: 1; font-size: 0.72rem; padding: 0.25rem;" onclick="document.getElementById('customDomainInput').value='https://lakshanaveggie.trade/api/v1/sync'">lakshanaveggie.trade</button>
+            <button type="button" class="btn btn-outline btn-sm" style="flex: 1; font-size: 0.72rem; padding: 0.25rem;" onclick="document.getElementById('customDomainInput').value='https://api.lakshanaveggie.trade/sync'">api.lakshanaveggie.trade</button>
           </div>
           <div id="domainTestFeedback" style="display: none; padding: 0.5rem; border-radius: 6px; font-size: 0.75rem; margin-bottom: 0.75rem;"></div>
           <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
@@ -388,7 +394,7 @@
             <button class="btn btn-primary" style="flex: 1;" id="saveDomainBtn">Save URL</button>
           </div>
           <p style="font-size: 0.75rem; color: #64748b; line-height: 1.4; margin: 0;">
-            💡 Paste the public default domain from your Cloudflare Worker dashboard (ends with <code>.workers.dev</code>). No custom domain or DNS setup needed!
+            💡 Both your mobile app and website use the exact same URL: <code>https://lakshanaveggie.trade/api/v1/sync</code>.
           </p>
         </div>
 

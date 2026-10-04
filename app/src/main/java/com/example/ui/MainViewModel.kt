@@ -764,6 +764,59 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun restoreFromCloud(onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            _syncSummary.value = _syncSummary.value.copy(syncState = SyncState.SYNCING)
+            val result = cloudSyncManager.fetchAndRestoreFromCloud()
+            if (result.isSuccess) {
+                val summary = result.getOrThrow()
+                _syncSummary.value = _syncSummary.value.copy(
+                    syncState = SyncState.SUCCESS,
+                    lastSyncTimestamp = System.currentTimeMillis(),
+                    statusMessage = "Cloud Restore Successful: $summary"
+                )
+                _toastEvent.emit("Cloud Restore: $summary")
+                onResult(true, summary)
+                syncNow()
+            } else {
+                val err = "Cloud restore failed: ${result.exceptionOrNull()?.message}"
+                _syncSummary.value = _syncSummary.value.copy(
+                    syncState = SyncState.ERROR,
+                    statusMessage = err
+                )
+                _toastEvent.emit(err)
+                onResult(false, err)
+            }
+        }
+    }
+
+    fun restoreInitialMandiData(onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val sampleItems = listOf(
+                    com.example.data.model.ItemEntity(name = "Fresh Country Tomatoes", code = "TOM-01", category = "Tomatoes", currentStockKgs = 450.0, totalBoxes = 18, defaultRatePerKg = 32.0, unit = "kgs"),
+                    com.example.data.model.ItemEntity(name = "Nashik Red Onions", code = "ONI-01", category = "Onions", currentStockKgs = 800.0, totalBoxes = 32, defaultRatePerKg = 28.0, unit = "kgs"),
+                    com.example.data.model.ItemEntity(name = "Ooty Fresh Potatoes", code = "POT-01", category = "Potatoes", currentStockKgs = 600.0, totalBoxes = 20, defaultRatePerKg = 30.0, unit = "kgs"),
+                    com.example.data.model.ItemEntity(name = "Mysore Hybrid Carrots", code = "CAR-01", category = "Root Vegetables", currentStockKgs = 300.0, totalBoxes = 12, defaultRatePerKg = 42.0, unit = "kgs"),
+                    com.example.data.model.ItemEntity(name = "Guntur Green Chillies", code = "CHI-01", category = "Spices & Greens", currentStockKgs = 120.0, totalBoxes = 8, defaultRatePerKg = 55.0, unit = "kgs")
+                )
+                sampleItems.forEach { repository.addOrUpdateItem(it) }
+
+                val sampleSuppliers = listOf(
+                    com.example.data.model.SupplierEntity(name = "Lakshana Agro Farms", contactPerson = "Ramanathan", phone = "9842100111", email = "ramanathan@lakshanaveggie.trade", address = "Dindigul Mandi", vegetableCategories = "Tomatoes, Greens"),
+                    com.example.data.model.SupplierEntity(name = "APMC Mandi Wholesale Hub", contactPerson = "Senthil Kumar", phone = "9443200222", email = "senthil@lakshanaveggie.trade", address = "Oddanchatram Market", vegetableCategories = "Onions, Potatoes, Carrots")
+                )
+                sampleSuppliers.forEach { repository.addOrUpdateSupplier(it) }
+
+                _toastEvent.emit("Default Mandi inventory & suppliers restored!")
+                onResult(true, "Restored 5 Mandi vegetables and 2 suppliers.")
+                syncNow()
+            } catch (e: Exception) {
+                onResult(false, "Restore failed: ${e.message}")
+            }
+        }
+    }
+
     fun restoreDataBackup(jsonString: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             val result = cloudSyncManager.restoreFromBackupJson(jsonString)
