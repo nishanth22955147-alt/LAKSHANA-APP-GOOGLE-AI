@@ -312,9 +312,9 @@ fun OnlineSyncDialog(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Custom Domain & Real-Time Database Connection Hub
+                    // Cloudflare Worker Sync Connection Hub
                     Text(
-                        "CUSTOM DOMAIN & REAL-TIME DATABASE",
+                        "CLOUDFLARE WORKER SYNC",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -336,14 +336,14 @@ fun OnlineSyncDialog(
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        Icons.Default.Language,
+                                        Icons.Default.CloudSync,
                                         contentDescription = null,
                                         tint = SecondaryTeal,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        "Connected Backend Domain",
+                                        "Cloudflare Default Domain",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -360,7 +360,7 @@ fun OnlineSyncDialog(
                                     ) {
                                         Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Edit Domain", style = MaterialTheme.typography.labelSmall)
+                                        Text("Set URL", style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
                             }
@@ -368,40 +368,20 @@ fun OnlineSyncDialog(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             if (isEditingDomain) {
+                                Text(
+                                    "Enter your Cloudflare Worker URL (e.g. from Cloudflare dashboard):",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
                                 OutlinedTextField(
                                     value = domainInput,
                                     onValueChange = { domainInput = it },
-                                    label = { Text("Server API / Database Domain URL") },
-                                    placeholder = { Text("https://lakshanaveggie.trade/api/v1/sync") },
+                                    label = { Text("Cloudflare Worker URL (.workers.dev)") },
+                                    placeholder = { Text("https://my-worker.account.workers.dev") },
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth().testTag("domain_url_input")
                                 )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                // Quick Domain Presets
-                                Text("Quick Presets:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    SuggestionChip(
-                                        onClick = { domainInput = "https://lakshanaveggie.trade/api/v1/sync" },
-                                        label = { Text("lakshanaveggie.trade", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold) },
-                                        modifier = Modifier.weight(1.3f)
-                                    )
-                                    SuggestionChip(
-                                        onClick = { domainInput = "https://api.lakshanaveggie.trade/sync" },
-                                        label = { Text("api.lakshanaveggie.trade", style = MaterialTheme.typography.labelSmall) },
-                                        modifier = Modifier.weight(1.4f)
-                                    )
-                                    SuggestionChip(
-                                        onClick = { domainInput = "https://ais-pre-jpmainaavmvu43mnqemzg3-69947619119.asia-east1.run.app/api/v1/sync" },
-                                        label = { Text("Cloud Run", style = MaterialTheme.typography.labelSmall) },
-                                        modifier = Modifier.weight(1.0f)
-                                    )
-                                }
 
                                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -448,7 +428,7 @@ fun OnlineSyncDialog(
                                         colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
                                         modifier = Modifier.weight(1.2f).testTag("save_domain_button")
                                     ) {
-                                        Text("Save Domain")
+                                        Text("Save URL")
                                     }
                                 }
                             } else {
@@ -465,15 +445,15 @@ fun OnlineSyncDialog(
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
-                                                syncSummary.cloudEndpoint,
+                                                syncSummary.cloudEndpoint.ifEmpty { "Not configured (Tap 'Set URL')" },
                                                 fontFamily = FontFamily.Monospace,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.primary
+                                                color = if (syncSummary.cloudEndpoint.isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
                                             Text(
-                                                "Active real-time synchronization target",
+                                                if (syncSummary.cloudEndpoint.isNotEmpty()) "Active real-time synchronization target" else "Add your Cloudflare Worker URL to start syncing",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )

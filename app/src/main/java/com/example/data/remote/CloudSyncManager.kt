@@ -24,8 +24,22 @@ class CloudSyncManager(
     companion object {
         private const val KEY_LAST_SYNC = "last_sync_time"
         private const val KEY_AUTO_SYNC = "auto_sync_enabled"
-        private const val KEY_ENDPOINT = "cloud_endpoint"
-        const val DEFAULT_ENDPOINT = "https://lakshanaveggie.trade/api/v1/sync"
+        private const val KEY_ENDPOINT = "cloudflare_worker_endpoint"
+        const val DEFAULT_ENDPOINT = ""
+
+        fun normalizeEndpoint(raw: String): String {
+            var trimmed = raw.trim()
+            if (trimmed.isEmpty()) return ""
+            if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+                trimmed = "https://$trimmed"
+            }
+            trimmed = trimmed.trimEnd('/')
+            return if (trimmed.endsWith("/api/v1/sync") || trimmed.endsWith("/sync")) {
+                trimmed
+            } else {
+                "$trimmed/api/v1/sync"
+            }
+        }
     }
 
     fun isNetworkAvailable(): Boolean {
@@ -61,12 +75,9 @@ class CloudSyncManager(
     }
 
     suspend fun testConnection(endpoint: String): Result<String> = withContext(Dispatchers.IO) {
-        val trimmed = endpoint.trim()
+        val trimmed = normalizeEndpoint(endpoint)
         if (trimmed.isEmpty()) {
-            return@withContext Result.failure(IllegalArgumentException("Domain URL cannot be empty"))
-        }
-        if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
-            return@withContext Result.failure(IllegalArgumentException("Domain must start with http:// or https:// (e.g. https://lakshanaveggie.trade)"))
+            return@withContext Result.failure(IllegalArgumentException("Cloudflare Worker URL cannot be empty. Enter your default domain (e.g. https://your-worker.workers.dev)"))
         }
         if (!isNetworkAvailable()) {
             return@withContext Result.failure(IllegalStateException("No active internet connection detected on this device."))
@@ -76,8 +87,8 @@ class CloudSyncManager(
             val url = java.net.URL(trimmed)
             val host = url.host ?: "host"
             val conn = url.openConnection() as java.net.HttpURLConnection
-            conn.connectTimeout = 5000
-            conn.readTimeout = 5000
+            conn.connectTimeout = 6000
+            conn.readTimeout = 6000
             conn.instanceFollowRedirects = true
             conn.requestMethod = "GET"
             conn.setRequestProperty("User-Agent", "Lakshana-Android-Sync/2.0")
@@ -87,22 +98,22 @@ class CloudSyncManager(
             conn.disconnect()
 
             if (responseCode in 200..299) {
-                Result.success("Connection Successful (HTTP $responseCode)! Host '$host' is live, online, and responding.")
+                Result.success("Connection Successful (HTTP $responseCode)! Cloudflare Worker at '$host' is online and responding.")
             } else if (responseCode in 300..399) {
-                Result.success("Domain Active (HTTP $responseCode Redirect). Server at '$host' is online.")
+                Result.success("Worker Active (HTTP $responseCode Redirect). Server at '$host' is online.")
             } else if (responseCode == 404) {
-                Result.failure(Exception("HTTP 404 Not Found at '$host'. The web server is reachable, but this specific path does not exist. Check if /api/v1/sync is deployed."))
+                Result.failure(Exception("HTTP 404 Not Found at '$host'. The worker is reachable, but the endpoint route was not matched."))
             } else {
-                Result.failure(Exception("HTTP $responseCode received from '$host'. Server reached, but reported status $responseCode."))
+                Result.failure(Exception("HTTP $responseCode received from '$host'."))
             }
         } catch (e: java.net.UnknownHostException) {
-            Result.failure(Exception("DNS Lookup Failed: Domain '${e.message}' cannot be resolved. Please verify your domain's DNS A/CNAME records at your domain registrar."))
+            Result.failure(Exception("Worker Domain Not Found: Could not resolve '${e.message}'. Check your Cloudflare Worker name."))
         } catch (e: java.net.ConnectException) {
-            Result.failure(Exception("Connection Refused: Server at ${e.message} is offline or port is closed."))
+            Result.failure(Exception("Connection Refused: Server at ${e.message} is offline."))
         } catch (e: java.net.SocketTimeoutException) {
-            Result.failure(Exception("Connection Timed Out: Server took too long to respond (>5s)."))
+            Result.failure(Exception("Connection Timed Out: Server took too long to respond (>6s)."))
         } catch (e: javax.net.ssl.SSLException) {
-            Result.failure(Exception("SSL Certificate Error: ${e.message}. If domain was just registered, SSL certificate might still be provisioning."))
+            Result.failure(Exception("SSL Certificate Error: ${e.message}"))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -110,7 +121,8 @@ class CloudSyncManager(
 
     suspend fun performOnlineSync(): Result<SyncSummary> = withContext(Dispatchers.IO) {
         val isOnline = isNetworkAvailable()
-        val endpoint = getCloudEndpoint()
+        val rawEndpoint = getCloudEndpoint()
+        val endpoint = normalizeEndpoint(rawEndpoint)
         val autoSync = isAutoSyncEnabled()
 
         val items = repository.allItems.first()
@@ -119,6 +131,10 @@ class CloudSyncManager(
         val transactions = repository.allTransactions.first()
         val users = repository.allUsers.first()
         val movements = repository.allStockMovements.first()
+
+        if (endpoint.isEmpty()) {
+            return@withContext Result.failure(IllegalStateException("No Cloudflare Worker URL configured. Open Online Sync Hub and enter your Cloudflare Worker URL (e.g. https://your-worker.workers.dev)."))
+        }
 
         if (!isOnline) {
             val lastTime = getLastSyncTimestamp()

@@ -1478,7 +1478,7 @@ document.getElementById('clearWebDataBtn')?.addEventListener('click', () => {
 
 // Helper function to build 100% Cross-Platform Compatible Backup JSON
 function generateFullSyncPayload() {
-  const currentDomain = localStorage.getItem('lakshana_custom_domain') || 'https://lakshanaveggie.trade/api/v1/sync';
+  const currentDomain = localStorage.getItem('lakshana_cloudflare_worker_url') || '';
   
   // Format items for Android Room ItemEntity
   const items = inventory.map((it, idx) => ({
@@ -1662,8 +1662,24 @@ async function triggerRealSync(showFeedback = true) {
   if (btn) btn.disabled = true;
   if (triggerBtn) triggerBtn.disabled = true;
 
-  const currentDomain = localStorage.getItem('lakshana_custom_domain') || (window.location.origin.startsWith('http') ? window.location.origin : 'https://lakshanaveggie.trade');
-  const endpoint = currentDomain.endsWith('/api/v1/sync') ? currentDomain : `${currentDomain.replace(/\/$/, '')}/api/v1/sync`;
+  const workerUrl = localStorage.getItem('lakshana_cloudflare_worker_url') || '';
+  if (!workerUrl) {
+    if (showFeedback) {
+      alert('Please enter your Cloudflare Worker URL (e.g. https://your-worker.workers.dev) in the Cloudflare Worker Sync card below to enable real-time sync.');
+    }
+    if (statusEl) {
+      statusEl.querySelector('.status-text').textContent = 'Worker URL Needed';
+      statusEl.querySelector('.status-dot').style.background = '#f59e0b';
+    }
+    if (btn) btn.disabled = false;
+    if (triggerBtn) triggerBtn.disabled = false;
+    return;
+  }
+
+  let endpoint = workerUrl.trim().replace(/\/+$/, '');
+  if (!endpoint.endsWith('/api/v1/sync') && !endpoint.endsWith('/sync')) {
+    endpoint = `${endpoint}/api/v1/sync`;
+  }
 
   try {
     const payload = generateFullSyncPayload();
@@ -1690,18 +1706,18 @@ async function triggerRealSync(showFeedback = true) {
       }
 
       if (showFeedback) {
-        alert(`Online Sync Successful (HTTP ${res.status})!\n\nSynchronized with ${endpoint} at ${timeStr}\n• ${inventory.length} Stock Items\n• ${purchases.length} Purchases\n• ${suppliers.length} Suppliers`);
+        alert(`Online Sync Successful (HTTP ${res.status})!\n\nSynchronized with Cloudflare Worker at ${timeStr}\n• ${inventory.length} Stock Items\n• ${purchases.length} Purchases\n• ${suppliers.length} Suppliers`);
       }
     } else {
-      throw new Error(`Server returned HTTP ${res.status}`);
+      throw new Error(`Cloudflare Worker returned HTTP ${res.status}`);
     }
   } catch (err) {
     if (statusEl) {
-      statusEl.querySelector('.status-text').textContent = 'Local Mode (Cloud Pending)';
-      statusEl.querySelector('.status-dot').style.background = '#f59e0b';
+      statusEl.querySelector('.status-text').textContent = 'Sync Failed (Check URL)';
+      statusEl.querySelector('.status-dot').style.background = '#ef4444';
     }
     if (showFeedback) {
-      alert(`Cloud Sync Endpoint Pending (Server returned HTTP 404)\n\nWhy this happens:\nYour website at lakshanaveggie.trade is hosted statically on GitHub Pages. GitHub Pages does not have an active database server at /api/v1/sync.\n\nHow to fix:\nEnable the Cloudflare Worker route (*lakshanaveggie.trade/api/*) in your Cloudflare dashboard using cloudflare-worker.js. Once active, sync will automatically return HTTP 200 OK!`);
+      alert(`Cloudflare Worker Sync Error:\n${err.message}\n\nPlease check your Cloudflare Worker URL in the settings card below.`);
     }
   } finally {
     if (btn) btn.disabled = false;
@@ -1712,27 +1728,35 @@ async function triggerRealSync(showFeedback = true) {
 document.getElementById('syncNowBtn')?.addEventListener('click', () => triggerRealSync(true));
 document.getElementById('triggerSyncNow')?.addEventListener('click', () => triggerRealSync(true));
 
-// Custom Domain & Database Config
-const savedDomain = localStorage.getItem('lakshana_custom_domain') || 'https://lakshanaveggie.trade/api/v1/sync';
+// Cloudflare Worker URL Config
+const savedWorkerUrl = localStorage.getItem('lakshana_cloudflare_worker_url') || '';
 const domainInput = document.getElementById('customDomainInput');
-if (domainInput) domainInput.value = savedDomain;
+if (domainInput) domainInput.value = savedWorkerUrl;
 
 document.getElementById('saveDomainBtn')?.addEventListener('click', () => {
-  const url = domainInput.value.trim();
+  let url = domainInput.value.trim();
   if (!url) {
-    alert('Please enter a valid domain or endpoint URL');
+    alert('Please enter your Cloudflare Worker URL (e.g. https://your-worker.workers.dev)');
     return;
   }
-  localStorage.setItem('lakshana_custom_domain', url);
-  alert(`Domain updated successfully to: ${url}\nReal-time updates will now sync to this database.`);
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+  }
+  localStorage.setItem('lakshana_cloudflare_worker_url', url);
+  domainInput.value = url;
+  alert(`Cloudflare Worker URL saved!\nURL: ${url}\n\nTesting sync now...`);
+  triggerRealSync(true);
 });
 
 document.getElementById('testDomainPingBtn')?.addEventListener('click', async () => {
-  const url = domainInput.value.trim();
+  let url = domainInput.value.trim();
   const feedback = document.getElementById('domainTestFeedback');
   if (!url) {
-    alert('Please enter a domain URL first');
+    alert('Please enter your Cloudflare Worker URL first');
     return;
+  }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
   }
   feedback.style.display = 'block';
   feedback.style.background = '#eff6ff';
@@ -1740,17 +1764,22 @@ document.getElementById('testDomainPingBtn')?.addEventListener('click', async ()
   feedback.textContent = '⏳ Testing connection to ' + url + '...';
 
   try {
-    const parsed = new URL(url);
-    const pingEndpoint = url.endsWith('/api/v1/sync') ? url : url.replace(/\/$/, '') + '/api/v1/sync';
-    const res = await fetch(pingEndpoint, { method: 'GET', mode: 'cors' }).catch(() => fetch(url, { method: 'GET', mode: 'no-cors' }));
+    const pingEndpoint = (url.endsWith('/api/v1/sync') || url.endsWith('/sync')) ? url : url.replace(/\/$/, '') + '/api/v1/sync';
+    const res = await fetch(pingEndpoint, { method: 'GET' });
     
-    feedback.style.background = '#ecfdf5';
-    feedback.style.color = '#065f46';
-    feedback.innerHTML = `✓ <strong>Connected!</strong> Domain <code>${parsed.host}</code> is reachable and responding.`;
+    if (res.ok) {
+      feedback.style.background = '#ecfdf5';
+      feedback.style.color = '#065f46';
+      feedback.innerHTML = `✓ <strong>Connected!</strong> Cloudflare Worker is online and responding (HTTP ${res.status}).`;
+    } else {
+      feedback.style.background = '#fffbeb';
+      feedback.style.color = '#b45309';
+      feedback.innerHTML = `⚠️ Worker reached, but status code is HTTP ${res.status}. Check endpoint route.`;
+    }
   } catch (e) {
     feedback.style.background = '#fef2f2';
     feedback.style.color = '#991b1b';
-    feedback.innerHTML = `✕ <strong>Connection Failed:</strong> ${e.message}. Domain may not be deployed yet or DNS records are still propagating.`;
+    feedback.innerHTML = `✕ <strong>Connection Failed:</strong> ${e.message}. Verify your Cloudflare Worker URL.`;
   }
 });
 
@@ -1951,7 +1980,7 @@ export default {
         const raw = await env.SYNC_KV.get('latest_sync');
         if (raw) data = JSON.parse(raw);
       }
-      return new Response(JSON.stringify(data || { status: 'online', domain: 'lakshanaveggie.trade' }), {
+      return new Response(JSON.stringify(data || { status: 'online', domain: 'cloudflare-worker' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
@@ -1983,7 +2012,6 @@ export default {
     zip.file('cloudflare-worker.js', workerJs);
     zip.file('package.json', packageJson);
     zip.file('README.md', readmeMd);
-    zip.file('CNAME', 'lakshanaveggie.trade\n');
 
     // Also include a pre-populated backup payload in the zip
     const currentData = generateFullSyncPayload();

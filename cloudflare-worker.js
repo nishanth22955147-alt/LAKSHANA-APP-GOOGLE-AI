@@ -1,13 +1,12 @@
 /**
- * Cloudflare Worker for lakshanaveggie.trade
+ * Cloudflare Worker Default Domain Sync Script
  * Handles real-time Android Mobile App & Web Portal synchronization
  * 
  * SETUP IN CLOUDFLARE DASHBOARD:
- * 1. Go to Workers & Pages -> Create Application -> Create Worker
- * 2. Paste this entire code into the worker editor and click "Deploy"
- * 3. Go to Worker Settings -> Domains & Routes -> Add Custom Domain or Route:
- *    Route: *lakshanaveggie.trade/api/* (or Custom Domain: api.lakshanaveggie.trade)
- * 4. Done! Online sync will now return HTTP 200 OK.
+ * 1. Go to Workers & Pages -> Create Worker
+ * 2. Paste this code and click "Deploy"
+ * 3. Copy your default worker URL (e.g. https://<worker-name>.<account>.workers.dev)
+ * 4. Paste that URL into your Mobile App and Web Portal Sync settings!
  */
 
 // In-memory cache fallback (persists across warm worker instances)
@@ -60,8 +59,7 @@ export default {
             itemsCount,
             purchasesCount,
             suppliersCount,
-            message: 'Real-time sync successful with Cloudflare Worker',
-            domain: 'lakshanaveggie.trade'
+            message: 'Real-time sync successful with Cloudflare Worker'
           }), {
             status: 200,
             headers: {
@@ -93,7 +91,6 @@ export default {
       return new Response(JSON.stringify(data || {
         status: 'online',
         endpoint: '/api/v1/sync',
-        domain: 'lakshanaveggie.trade',
         provider: 'Cloudflare Edge Worker',
         timestamp: Date.now(),
         message: 'Sync API is ready to accept mobile & web procurement payloads'

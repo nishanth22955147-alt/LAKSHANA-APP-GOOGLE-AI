@@ -265,8 +265,7 @@
           <h3>Two-Way Cloud Sync</h3>
           <p>Local Room Database on Android devices syncs purchases, stocks, and daily sheets with the Web Portal seamlessly.</p>
           <div class="sync-details">
-            <div class="detail-row"><span>Custom Domain:</span> <strong>https://lakshanaveggie.trade</strong></div>
-            <div class="detail-row"><span>API Sync Endpoint:</span> <code>https://lakshanaveggie.trade/api/v1/sync</code></div>
+            <div class="detail-row"><span>Sync Engine:</span> <strong>Cloudflare Worker (.workers.dev)</strong></div>
             <div class="detail-row"><span>Admin Contact:</span> <strong>8608414322</strong></div>
             <div class="detail-row"><span>Auto-Sync:</span> <span class="badge badge-success">Enabled</span></div>
           </div>
@@ -285,26 +284,21 @@
         </div>
 
         <div class="sync-card">
-          <div class="sync-icon">🌐</div>
-          <h3>Custom Domain & Real-Time DB</h3>
-          <p>Connected to <code>lakshanaveggie.trade</code> with instant two-way synchronization.</p>
+          <div class="sync-icon">☁️</div>
+          <h3>Cloudflare Worker Sync</h3>
+          <p>Syncs directly with your default Cloudflare Worker domain (<code>.workers.dev</code>).</p>
           <div style="margin: 0.75rem 0;">
-            <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Backend Server / Database URL:</label>
-            <input type="text" id="customDomainInput" class="form-input" value="https://lakshanaveggie.trade/api/v1/sync" style="font-family: monospace; font-size: 0.8125rem;" />
+            <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Cloudflare Worker URL (.workers.dev):</label>
+            <input type="text" id="customDomainInput" class="form-input" placeholder="https://my-worker.account.workers.dev" style="font-family: monospace; font-size: 0.8125rem;" />
           </div>
           <div id="domainTestFeedback" style="display: none; padding: 0.5rem; border-radius: 6px; font-size: 0.75rem; margin-bottom: 0.75rem;"></div>
           <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
             <button class="btn btn-outline" style="flex: 1;" id="testDomainPingBtn">⚡ Test Ping</button>
-            <button class="btn btn-primary" style="flex: 1;" id="saveDomainBtn">Save Domain</button>
+            <button class="btn btn-primary" style="flex: 1;" id="saveDomainBtn">Save URL</button>
           </div>
-          <details style="font-size: 0.75rem; background: #f8fafc; padding: 0.5rem; border-radius: 6px; border: 1px solid #e2e8f0;">
-            <summary style="font-weight: 600; cursor: pointer; color: #1e293b;">Cloudflare DNS Settings for lakshanaveggie.trade</summary>
-            <p style="margin-top: 0.5rem; line-height: 1.4; color: #475569;">
-              1. <strong>Cloudflare CNAME / A:</strong> Point <code>lakshanaveggie.trade</code> and <code>api.lakshanaveggie.trade</code> to your hosting server.<br/>
-              2. <strong>SSL/TLS:</strong> Set to Full (strict) in Cloudflare.<br/>
-              3. <strong>Real-Time Updates:</strong> Both mobile app and web portal push real-time sync payloads to <code>https://lakshanaveggie.trade/api/v1/sync</code>.
-            </p>
-          </details>
+          <p style="font-size: 0.75rem; color: #64748b; line-height: 1.4; margin: 0;">
+            💡 Paste the public default domain from your Cloudflare Worker dashboard (ends with <code>.workers.dev</code>). No custom domain or DNS setup needed!
+          </p>
         </div>
 
         <div class="sync-card">
@@ -313,7 +307,7 @@
           <p>Instantly transfer records between this Web Portal and your Android device with zero cloud dependency.</p>
           <div class="sync-details">
             <div class="detail-row"><span>Mobile Sync Format:</span> <strong>JSON v2.0 Dual-Schema</strong></div>
-            <div class="detail-row"><span>Supported Domains:</span> <code>lakshanaveggie.trade</code></div>
+            <div class="detail-row"><span>Sync Target:</span> <code>Cloudflare Worker</code></div>
             <div class="detail-row"><span>Quick Actions:</span> <span class="badge badge-success">Direct Import & Export</span></div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem;">
@@ -722,7 +716,7 @@
                   <span style="font-size: 0.6875rem; background: #bae6fd; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Cloudflare Ready</span>
                 </div>
               </div>
-              <p>Complete web bundle (HTML, CSS, JS, cloudflare-worker.js, CNAME). Ready to host with Cloudflare on lakshanaveggie.trade.</p>
+              <p>Complete web bundle (HTML, CSS, JS, cloudflare-worker.js). Ready to host on Cloudflare Pages or any web host.</p>
             </div>
             <button class="btn btn-primary btn-block" id="downloadWebAppZipBtn" style="background: #0284c7;">
               📦 Download Web App ZIP

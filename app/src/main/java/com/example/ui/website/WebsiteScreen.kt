@@ -91,12 +91,12 @@ fun WebsiteScreen(
     val primaryDomain = if (syncSummary.cloudEndpoint.isNotBlank()) {
         try {
             val uri = Uri.parse(syncSummary.cloudEndpoint)
-            "${uri.scheme}://${uri.host ?: "lakshanaveggie.trade"}"
+            "${uri.scheme}://${uri.host ?: ""}"
         } catch (e: Exception) {
-            "https://lakshanaveggie.trade"
+            syncSummary.cloudEndpoint
         }
     } else {
-        "https://lakshanaveggie.trade"
+        "file:///android_asset/website/index.html"
     }
 
     val webPortalUrl = primaryDomain
@@ -416,34 +416,20 @@ fun WebsiteScreen(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // Quick Domain Presets
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    OutlinedButton(
-                                        onClick = { customVercelUrl = "https://lakshanaveggie.trade" },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                                        modifier = Modifier.height(28.dp)
-                                    ) {
-                                        Text("lakshanaveggie.trade", style = MaterialTheme.typography.labelSmall)
-                                    }
-                                    OutlinedButton(
-                                        onClick = { customVercelUrl = "https://www.lakshanaveggie.trade" },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                                        modifier = Modifier.height(28.dp)
-                                    ) {
-                                        Text("www.lakshanaveggie.trade", style = MaterialTheme.typography.labelSmall)
-                                    }
-                                }
+                                // Cloudflare Worker URL
+                                Text(
+                                    "Enter your Cloudflare Worker URL (e.g. https://my-worker.account.workers.dev):",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 OutlinedTextField(
                                     value = customVercelUrl,
                                     onValueChange = { customVercelUrl = it },
-                                    label = { Text("Custom Domain / Web Hosting URL") },
-                                    placeholder = { Text("https://lakshanaveggie.trade") },
+                                    label = { Text("Cloudflare Worker URL (.workers.dev)") },
+                                    placeholder = { Text("https://my-worker.account.workers.dev") },
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth()
                                 )
