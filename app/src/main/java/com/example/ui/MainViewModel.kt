@@ -437,6 +437,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.addOrUpdateSupplier(supplier)
             _toastEvent.emit("Supplier '${supplier.name}' saved")
+            if (cloudSyncManager.isAutoSyncEnabled() && cloudSyncManager.isNetworkAvailable()) {
+                syncNow()
+            }
         }
     }
 
@@ -476,6 +479,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
             repository.createSinglePurchase(entry, autoUpdateStock)
             _toastEvent.emit("Purchase $poNumber ($date) created (₹$total). Stock updated.")
+            if (cloudSyncManager.isAutoSyncEnabled() && cloudSyncManager.isNetworkAvailable()) {
+                syncNow()
+            }
         }
     }
 
@@ -527,6 +533,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _toastEvent.emit("Imported $importedCount items! Automatic stock updates applied.")
                 _excelParseResult.value = null
                 onComplete(batchId, result.grandTotalAmount)
+                if (cloudSyncManager.isAutoSyncEnabled() && cloudSyncManager.isNetworkAvailable()) {
+                    syncNow()
+                }
             } finally {
                 _isExcelProcessing.value = false
             }

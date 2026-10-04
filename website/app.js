@@ -29,12 +29,16 @@ let purchases = JSON.parse(localStorage.getItem('lakshana_web_purchases')) || []
 let inventory = JSON.parse(localStorage.getItem('lakshana_web_inventory')) || [];
 let suppliers = JSON.parse(localStorage.getItem('lakshana_web_suppliers')) || [];
 
-function saveState() {
+function saveState(triggerAutoSync = true) {
   localStorage.setItem('lakshana_web_purchases', JSON.stringify(purchases));
   localStorage.setItem('lakshana_web_inventory', JSON.stringify(inventory));
   localStorage.setItem('lakshana_web_suppliers', JSON.stringify(suppliers));
   if (currentUser) {
     renderAll();
+  }
+  if (triggerAutoSync && currentUser) {
+    // Automatically push to cloud without requiring manual actions or JSON uploads
+    triggerRealSync(false);
   }
 }
 
@@ -97,6 +101,8 @@ function setCurrentUser(user) {
   renderHeaderAuth();
   if (currentUser) {
     renderAll();
+    // Auto-fetch latest phone updates seamlessly
+    setTimeout(() => { triggerRealSync(false); }, 600);
   }
 }
 
@@ -1573,7 +1579,78 @@ document.getElementById('copySyncPayloadBtn')?.addEventListener('click', () => {
 });
 
 // Trigger Real Sync with Custom Domain / Backend
-async function triggerRealSync() {
+// Two-Way Sync Merger: Merges incoming records from Mobile App into Web Portal
+function mergeRemoteDataIntoLocal(data) {
+  let changed = false;
+  const remoteItems = Array.isArray(data.items) ? data.items : (Array.isArray(data.inventory) ? data.inventory : null);
+  if (remoteItems && remoteItems.length > 0) {
+    remoteItems.forEach(it => {
+      const existing = inventory.find(i => (i.name || '').toLowerCase() === (it.name || '').toLowerCase());
+      const stock = parseFloat(it.currentStockKgs !== undefined ? it.currentStockKgs : it.stockKgs) || 0;
+      const boxes = parseInt(it.totalBoxes !== undefined ? it.totalBoxes : it.boxes) || 0;
+      const rate = parseFloat(it.defaultRatePerKg !== undefined ? it.defaultRatePerKg : it.avgRate) || 0;
+      if (!existing) {
+        inventory.push({
+          name: it.name,
+          icon: it.icon || '🥬',
+          stockKgs: stock,
+          boxes: boxes,
+          avgRate: rate,
+          category: it.category || 'Vegetables'
+        });
+        changed = true;
+      }
+    });
+  }
+
+  if (Array.isArray(data.purchases) && data.purchases.length > 0) {
+    data.purchases.forEach(rp => {
+      const bId = rp.batchId || ('PO-' + (rp.id || Date.now()));
+      if (!purchases.some(p => p.batchId === bId)) {
+        purchases.unshift({
+          date: rp.date,
+          batchId: bId,
+          item: rp.itemName || rp.item || 'Vegetable',
+          boxes: parseInt(rp.boxes) || 0,
+          qtyKgs: parseFloat(rp.qtyKgs) || 0,
+          rate: parseFloat(rp.rate) || 0,
+          total: parseFloat(rp.totalAmount !== undefined ? rp.totalAmount : rp.total) || 0,
+          supplier: rp.supplierName || rp.supplier || 'Direct Mandi Farmer',
+          paid: rp.status === 'PAID' || rp.paid === true,
+          settlementDate: rp.settlementDate || '',
+          settlementMode: rp.paymentMethod || rp.settlementMode || 'Cash',
+          recordedBy: rp.recordedBy || 'Mobile App Sync'
+        });
+        changed = true;
+      }
+    });
+  }
+
+  if (Array.isArray(data.suppliers) && data.suppliers.length > 0) {
+    data.suppliers.forEach(rs => {
+      if (!suppliers.some(s => (s.name || '').toLowerCase() === (rs.name || '').toLowerCase())) {
+        suppliers.push({
+          name: rs.name,
+          contact: rs.phone || rs.contact || '8608414322',
+          location: rs.address || rs.location || 'Mandi Yard',
+          balanceDue: parseFloat(rs.outstandingPayable !== undefined ? rs.outstandingPayable : rs.balanceDue) || 0,
+          active: true
+        });
+        changed = true;
+      }
+    });
+  }
+
+  if (changed) {
+    localStorage.setItem('lakshana_web_purchases', JSON.stringify(purchases));
+    localStorage.setItem('lakshana_web_inventory', JSON.stringify(inventory));
+    localStorage.setItem('lakshana_web_suppliers', JSON.stringify(suppliers));
+    renderAll();
+  }
+}
+
+// Trigger Real Sync with Custom Domain / Backend
+async function triggerRealSync(showFeedback = true) {
   const statusEl = document.getElementById('cloudSyncStatus');
   const btn = document.getElementById('syncNowBtn');
   const triggerBtn = document.getElementById('triggerSyncNow');
@@ -1606,24 +1683,34 @@ async function triggerRealSync() {
       }
       const timeLabel = document.getElementById('lastSyncTimeLabel');
       if (timeLabel) timeLabel.textContent = `Synced at ${timeStr}`;
-      alert(`Online Sync Successful (HTTP ${res.status})!\n\nSynchronized with ${endpoint} at ${timeStr}\n• ${inventory.length} Stock Items\n• ${purchases.length} Purchases\n• ${suppliers.length} Suppliers`);
+
+      // Automatically merge any records that were added from the Android Mobile App
+      if (data && (Array.isArray(data.items) || Array.isArray(data.purchases) || Array.isArray(data.inventory))) {
+        mergeRemoteDataIntoLocal(data);
+      }
+
+      if (showFeedback) {
+        alert(`Online Sync Successful (HTTP ${res.status})!\n\nSynchronized with ${endpoint} at ${timeStr}\n• ${inventory.length} Stock Items\n• ${purchases.length} Purchases\n• ${suppliers.length} Suppliers`);
+      }
     } else {
       throw new Error(`Server returned HTTP ${res.status}`);
     }
   } catch (err) {
     if (statusEl) {
-      statusEl.querySelector('.status-text').textContent = 'Local Mode';
+      statusEl.querySelector('.status-text').textContent = 'Offline/Local Mode';
       statusEl.querySelector('.status-dot').style.background = '#ef4444';
     }
-    alert(`Could not connect to sync endpoint (${err.message}).\n\nIf you are on static hosting (Firebase/Vercel/GitHub Pages), a server is not running on this domain.\n\nUse "Export Hub" ➔ "Copy Mobile App JSON" or "Import Mobile App JSON" to sync all records with your phone instantly!`);
+    if (showFeedback) {
+      alert(`Could not connect to sync endpoint (${err.message}).\n\nEnsure Cloudflare Worker route (*lakshanaveggie.trade/api/*) is enabled in your Cloudflare dashboard.`);
+    }
   } finally {
     if (btn) btn.disabled = false;
     if (triggerBtn) triggerBtn.disabled = false;
   }
 }
 
-document.getElementById('syncNowBtn')?.addEventListener('click', triggerRealSync);
-document.getElementById('triggerSyncNow')?.addEventListener('click', triggerRealSync);
+document.getElementById('syncNowBtn')?.addEventListener('click', () => triggerRealSync(true));
+document.getElementById('triggerSyncNow')?.addEventListener('click', () => triggerRealSync(true));
 
 // Custom Domain & Database Config
 const savedDomain = localStorage.getItem('lakshana_custom_domain') || 'https://lakshanaveggie.trade/api/v1/sync';
