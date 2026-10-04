@@ -48,81 +48,172 @@
     </div>
   </header>
 
-  <!-- DEDICATED ADMIN / STAFF AUTHENTICATION SCREEN (DEFAULT VIEW FOR VISITORS / LOGGED OUT) -->
+  <!-- DEDICATED ADMIN / STAFF AUTHENTICATION SCREEN (MIRRORS ANDROID LoginScreen.kt) -->
   <div id="authScreen" class="auth-screen-container">
     <div class="auth-card-wrapper">
       <div class="auth-card">
-        <div class="auth-card-badge">
-          <span>🔒 RESTRICTED ACCESS • AUTHORIZED PERSONNEL ONLY</span>
+        <!-- Top App Bar Simulation matching Android TopAppBar -->
+        <div class="auth-top-bar">
+          <div class="auth-top-shield">
+            <span>🛡️</span>
+          </div>
+          <div>
+            <h3 class="auth-top-title">Lakshana Veggie</h3>
+            <p class="auth-top-sub" id="authTopSub">Secure Staff Sign In</p>
+          </div>
         </div>
 
-        <h2 class="auth-title">Internal Inventory & Mandi Portal</h2>
-        <p class="auth-subtitle">
-          Internal warehouse stocks, daily procurement ledger, and vendor settlements. Public customer access to inventory data is restricted.
-        </p>
+        <!-- Full Brand Logo Header matching LakshanaLogoHeader.kt -->
+        <div class="mandi-brand-header-card">
+          <div class="mandi-truck-badge">
+            <span>🚚</span>
+            <span style="font-size: 1.1rem; margin-left: -4px;">🥕</span>
+          </div>
+          <h2 class="mandi-brand-title">LAKSHANA VEGGIE EXPRESS</h2>
+          <p class="mandi-brand-tagline">Fresh From Mandi To Your Doorstep</p>
+          <div class="mandi-brand-pill">Direct Mandi Procurement & Warehouse Inventory</div>
+        </div>
 
-        <div class="auth-tabs">
-          <button type="button" class="auth-tab-btn active" id="portalTabLogin">Sign In</button>
-          <button type="button" class="auth-tab-btn" id="portalTabRegister">Request Access</button>
+        <!-- Auth Mode Selector Tabs: [ Sign In ] | [ Register ] -->
+        <div class="auth-mode-tabs">
+          <button type="button" class="auth-mode-tab active" id="portalTabLogin">
+            <span>🔑</span> Sign In
+          </button>
+          <button type="button" class="auth-mode-tab" id="portalTabRegister">
+            <span>👤</span> Register
+          </button>
         </div>
 
         <div id="portalAuthAlert" class="auth-alert-box" style="display:none;"></div>
 
-        <!-- 1-Click Fast Admin Sign In -->
-        <button type="button" class="quick-admin-login-btn" id="portalQuickAdminBtn">
-          ⚡ <span>1-Click Fill Admin Credentials (<strong>8608414322 / PIN: 5147</strong>)</span>
-        </button>
+        <!-- LOGIN FORM CONTAINER -->
+        <div id="loginFormContainer">
+          <!-- Mobile & PIN Login Notice Card -->
+          <div class="auth-notice-card">
+            <span class="auth-notice-icon">🔒</span>
+            <div>
+              <h4 class="auth-notice-title">Mobile & PIN Login</h4>
+              <p class="auth-notice-desc">Sign in with your registered mobile and 4-digit security PIN</p>
+            </div>
+          </div>
 
-        <!-- LOGIN FORM -->
-        <form id="portalLoginForm" onsubmit="event.preventDefault(); handlePortalLoginSubmit();">
-          <div class="form-group">
-            <label for="portalLoginMobile">Registered Mobile Number (10 digits)</label>
-            <input type="tel" id="portalLoginMobile" class="form-input" placeholder="e.g. 8608414322" maxlength="10" required />
+          <!-- Quick Admin Fill Chip matching mobile app -->
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 0.75rem;">
+            <button type="button" class="quick-admin-login-btn" id="portalQuickAdminBtn" title="Fill Admin 8608414322 / PIN 5147">
+              ⚡ <span>Fill Admin Login (<strong>8608414322</strong> / PIN <strong>5147</strong>)</span>
+            </button>
           </div>
-          <div class="form-group">
-            <label for="portalLoginPin">4-Digit Security PIN</label>
-            <input type="password" id="portalLoginPin" class="form-input" placeholder="Enter 4-digit PIN" maxlength="4" required />
-          </div>
-          <button type="submit" class="btn btn-primary btn-block" style="padding: 0.85rem; font-size: 1rem; font-weight: 700; margin-top: 1rem;">
-            🔓 Unlock Management Portal
-          </button>
-        </form>
 
-        <!-- REGISTER FORM -->
-        <form id="portalRegisterForm" style="display: none;" onsubmit="event.preventDefault(); handlePortalRegisterSubmit();">
-          <div class="form-group">
-            <label for="portalRegName">Full Name</label>
-            <input type="text" id="portalRegName" class="form-input" placeholder="e.g. Rajesh Kumar" required />
+          <!-- LOGIN FORM -->
+          <form id="portalLoginForm" onsubmit="event.preventDefault(); handlePortalLoginSubmit();">
+            <div class="form-group">
+              <label for="portalLoginMobile">Registered Mobile Number</label>
+              <div class="input-with-icon">
+                <span class="input-icon">📱</span>
+                <input type="tel" id="portalLoginMobile" class="form-input" placeholder="e.g. 8608414322" maxlength="10" required />
+                <button type="button" class="input-clear-btn" id="clearMobileBtn" title="Clear">✕</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="portalLoginPin">Security PIN</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🔑</span>
+                <input type="password" id="portalLoginPin" class="form-input" placeholder="4-digit PIN" maxlength="4" required />
+                <button type="button" class="input-eye-btn" id="togglePinVisibilityBtn" title="Show / Hide PIN">👁️</button>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: -0.25rem; margin-bottom: 1rem;">
+              <span style="font-size: 0.75rem; color: #64748b;">Default Admin PIN: <strong>5147</strong></span>
+              <button type="button" class="forgot-pin-btn" id="forgotPinLink">Forgot PIN?</button>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="padding: 0.85rem; font-size: 1rem; font-weight: 700; border-radius: 12px;">
+              🔓 Sign In to Lakshana Veggie
+            </button>
+          </form>
+        </div>
+
+        <!-- REGISTER FORM CONTAINER -->
+        <div id="registerFormContainer" style="display: none;">
+          <div class="auth-notice-card" style="background: #eff6ff; border-color: #bfdbfe;">
+            <span class="auth-notice-icon">📋</span>
+            <div>
+              <h4 class="auth-notice-title" style="color: #1e40af;">Staff Registration</h4>
+              <p class="auth-notice-desc" style="color: #1e3a8a;">New accounts require approval from administrator (8608414322)</p>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="portalRegMobile">Mobile Number (10 digits)</label>
-            <input type="tel" id="portalRegMobile" class="form-input" placeholder="e.g. 9840123456" maxlength="10" required />
-          </div>
-          <div class="form-group">
-            <label for="portalRegPin">Choose 4-Digit Security PIN</label>
-            <input type="password" id="portalRegPin" class="form-input" placeholder="4 digits (e.g. 1234)" maxlength="4" required />
-          </div>
-          <div class="form-group">
-            <label for="portalRegDept">Department</label>
-            <select id="portalRegDept" class="form-input">
-              <option value="Procurement">Procurement (Purchase Officer)</option>
-              <option value="Warehouse">Warehouse (Inventory Clerk)</option>
-              <option value="Operations">Operations (Manager)</option>
-              <option value="Accounts">Accounts & Settle</option>
-              <option value="Auditor">Auditor (Viewer)</option>
-            </select>
-          </div>
-          <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
-            * Note: Admin credentials (mobile <code>8608414322</code> / PIN <code>5147</code>) receive immediate full Administrator access.
-          </p>
-          <button type="submit" class="btn btn-primary btn-block" style="padding: 0.85rem; font-size: 1rem; font-weight: 700; margin-top: 1rem;">
-            Submit Staff Registration
-          </button>
-        </form>
+
+          <form id="portalRegisterForm" onsubmit="event.preventDefault(); handlePortalRegisterSubmit();">
+            <div class="form-group">
+              <label for="portalRegName">Full Name</label>
+              <div class="input-with-icon">
+                <span class="input-icon">👤</span>
+                <input type="text" id="portalRegName" class="form-input" placeholder="e.g. Rajesh Kumar" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="portalRegMobile">Mobile Number (10 digits)</label>
+              <div class="input-with-icon">
+                <span class="input-icon">📱</span>
+                <input type="tel" id="portalRegMobile" class="form-input" placeholder="e.g. 9840123456" maxlength="10" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="portalRegPin">Choose 4-Digit Security PIN</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🔑</span>
+                <input type="password" id="portalRegPin" class="form-input" placeholder="4 digits (e.g. 1234)" maxlength="4" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="portalRegDept">Department / Role</label>
+              <select id="portalRegDept" class="form-input">
+                <option value="Procurement">Procurement (Purchase Officer)</option>
+                <option value="Warehouse">Warehouse (Inventory Clerk)</option>
+                <option value="Operations">Operations (Manager)</option>
+                <option value="Accounts">Accounts & Settle</option>
+                <option value="Auditor">Auditor (Viewer)</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="padding: 0.85rem; font-size: 1rem; font-weight: 700; border-radius: 12px; margin-top: 1rem;">
+              Submit Staff Registration
+            </button>
+          </form>
+        </div>
 
         <div class="auth-card-footer">
           <p>🛡️ Powered by Lakshana Veggie Android & Cloud Sync Architecture</p>
-          <p>Admin Support: <strong>8608414322</strong></p>
+          <p>Domain: <strong>lakshanaveggie.trade</strong> • Admin Support: <strong>8608414322</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORGOT PIN MODAL -->
+  <div class="modal" id="forgotPinModal">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3>🔑 Security PIN Recovery</h3>
+        <button class="modal-close" onclick="document.getElementById('forgotPinModal').classList.remove('open')">✕</button>
+      </div>
+      <div style="padding: 1.25rem 0;">
+        <p style="font-size: 0.875rem; color: #334155; line-height: 1.5; margin-bottom: 1rem;">
+          For security, PIN resets must be confirmed by the primary system administrator.
+        </p>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+          <div style="font-weight: 700; color: #166534; font-size: 0.875rem;">Administrator Contact:</div>
+          <div style="font-size: 1.125rem; font-weight: 800; color: #15803d; margin: 0.25rem 0;">8608414322</div>
+          <div style="font-size: 0.75rem; color: #166534;">Default Admin PIN: <strong>5147</strong></div>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <a href="tel:8608414322" class="btn btn-primary" style="flex: 1; text-align: center; text-decoration: none;">📞 Call Admin</a>
+          <a href="https://wa.me/918608414322?text=Hello%20Lakshana%20Admin,%20please%20reset%20my%20web%20portal%20PIN" target="_blank" class="btn btn-outline" style="flex: 1; text-align: center; text-decoration: none;">💬 WhatsApp</a>
         </div>
       </div>
     </div>

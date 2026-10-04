@@ -343,7 +343,7 @@ fun OnlineSyncDialog(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        "Cloudflare Default Domain",
+                                        "Connected Backend Domain",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -369,7 +369,7 @@ fun OnlineSyncDialog(
 
                             if (isEditingDomain) {
                                 Text(
-                                    "Enter your Cloudflare Worker URL (e.g. from Cloudflare dashboard):",
+                                    "Default domain is lakshanaveggie.trade (or enter custom Cloudflare Worker URL):",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -377,11 +377,29 @@ fun OnlineSyncDialog(
                                 OutlinedTextField(
                                     value = domainInput,
                                     onValueChange = { domainInput = it },
-                                    label = { Text("Cloudflare Worker URL (.workers.dev)") },
-                                    placeholder = { Text("https://my-worker.account.workers.dev") },
+                                    label = { Text("Server API / Sync Domain URL") },
+                                    placeholder = { Text("https://lakshanaveggie.trade/api/v1/sync") },
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth().testTag("domain_url_input")
                                 )
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    SuggestionChip(
+                                        onClick = { domainInput = "https://lakshanaveggie.trade/api/v1/sync" },
+                                        label = { Text("lakshanaveggie.trade", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    SuggestionChip(
+                                        onClick = { domainInput = "https://api.lakshanaveggie.trade/sync" },
+                                        label = { Text("api.lakshanaveggie.trade", style = MaterialTheme.typography.labelSmall) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
 
                                 Spacer(modifier = Modifier.height(10.dp))
 

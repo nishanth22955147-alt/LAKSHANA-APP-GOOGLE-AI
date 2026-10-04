@@ -25,7 +25,7 @@ class CloudSyncManager(
         private const val KEY_LAST_SYNC = "last_sync_time"
         private const val KEY_AUTO_SYNC = "auto_sync_enabled"
         private const val KEY_ENDPOINT = "cloudflare_worker_endpoint"
-        const val DEFAULT_ENDPOINT = ""
+        const val DEFAULT_ENDPOINT = "https://lakshanaveggie.trade/api/v1/sync"
 
         fun normalizeEndpoint(raw: String): String {
             var trimmed = raw.trim()

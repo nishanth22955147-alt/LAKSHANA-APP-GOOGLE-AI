@@ -418,18 +418,40 @@ fun WebsiteScreen(
 
                                 // Cloudflare Worker URL
                                 Text(
-                                    "Enter your Cloudflare Worker URL (e.g. https://my-worker.account.workers.dev):",
+                                    "Connected domain lakshanaveggie.trade (or Cloudflare Worker):",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = { customVercelUrl = "https://lakshanaveggie.trade" },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                        modifier = Modifier.height(28.dp)
+                                    ) {
+                                        Text("lakshanaveggie.trade", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                    OutlinedButton(
+                                        onClick = { customVercelUrl = "https://lakshanaveggie.trade/api/v1/sync" },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                        modifier = Modifier.height(28.dp)
+                                    ) {
+                                        Text("/api/v1/sync", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 OutlinedTextField(
                                     value = customVercelUrl,
                                     onValueChange = { customVercelUrl = it },
-                                    label = { Text("Cloudflare Worker URL (.workers.dev)") },
-                                    placeholder = { Text("https://my-worker.account.workers.dev") },
+                                    label = { Text("Server API / Domain URL") },
+                                    placeholder = { Text("https://lakshanaveggie.trade/api/v1/sync") },
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth()
                                 )

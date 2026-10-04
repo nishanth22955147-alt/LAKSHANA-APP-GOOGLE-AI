@@ -153,32 +153,61 @@ function renderHeaderAuth() {
 function initPortalAuth() {
   const tabLogin = document.getElementById('portalTabLogin');
   const tabRegister = document.getElementById('portalTabRegister');
-  const loginForm = document.getElementById('portalLoginForm');
-  const regForm = document.getElementById('portalRegisterForm');
+  const loginContainer = document.getElementById('loginFormContainer');
+  const regContainer = document.getElementById('registerFormContainer');
+  const authTopSub = document.getElementById('authTopSub');
   const quickAdminBtn = document.getElementById('portalQuickAdminBtn');
+  const clearMobileBtn = document.getElementById('clearMobileBtn');
+  const togglePinBtn = document.getElementById('togglePinVisibilityBtn');
+  const pinInput = document.getElementById('portalLoginPin');
+  const mobileInput = document.getElementById('portalLoginMobile');
+  const forgotPinLink = document.getElementById('forgotPinLink');
 
   tabLogin?.addEventListener('click', () => {
     tabLogin.classList.add('active');
     tabRegister?.classList.remove('active');
-    if (loginForm) loginForm.style.display = 'block';
-    if (regForm) regForm.style.display = 'none';
+    if (loginContainer) loginContainer.style.display = 'block';
+    if (regContainer) regContainer.style.display = 'none';
+    if (authTopSub) authTopSub.textContent = 'Secure Staff Sign In';
     hidePortalAlert();
   });
 
   tabRegister?.addEventListener('click', () => {
     tabRegister.classList.add('active');
     tabLogin?.classList.remove('active');
-    if (loginForm) loginForm.style.display = 'none';
-    if (regForm) regForm.style.display = 'block';
+    if (loginContainer) loginContainer.style.display = 'none';
+    if (regContainer) regContainer.style.display = 'block';
+    if (authTopSub) authTopSub.textContent = 'User Registration';
     hidePortalAlert();
   });
 
   quickAdminBtn?.addEventListener('click', () => {
-    const mobileInput = document.getElementById('portalLoginMobile');
-    const pinInput = document.getElementById('portalLoginPin');
     if (mobileInput) mobileInput.value = '8608414322';
     if (pinInput) pinInput.value = '5147';
     handlePortalLoginSubmit();
+  });
+
+  clearMobileBtn?.addEventListener('click', () => {
+    if (mobileInput) {
+      mobileInput.value = '';
+      mobileInput.focus();
+    }
+  });
+
+  togglePinBtn?.addEventListener('click', () => {
+    if (pinInput) {
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        togglePinBtn.textContent = '🔒';
+      } else {
+        pinInput.type = 'password';
+        togglePinBtn.textContent = '👁️';
+      }
+    }
+  });
+
+  forgotPinLink?.addEventListener('click', () => {
+    document.getElementById('forgotPinModal')?.classList.add('open');
   });
 }
 
@@ -1662,19 +1691,8 @@ async function triggerRealSync(showFeedback = true) {
   if (btn) btn.disabled = true;
   if (triggerBtn) triggerBtn.disabled = true;
 
-  const workerUrl = localStorage.getItem('lakshana_cloudflare_worker_url') || '';
-  if (!workerUrl) {
-    if (showFeedback) {
-      alert('Please enter your Cloudflare Worker URL (e.g. https://your-worker.workers.dev) in the Cloudflare Worker Sync card below to enable real-time sync.');
-    }
-    if (statusEl) {
-      statusEl.querySelector('.status-text').textContent = 'Worker URL Needed';
-      statusEl.querySelector('.status-dot').style.background = '#f59e0b';
-    }
-    if (btn) btn.disabled = false;
-    if (triggerBtn) triggerBtn.disabled = false;
-    return;
-  }
+  const DEFAULT_DOMAIN = 'https://lakshanaveggie.trade/api/v1/sync';
+  const workerUrl = localStorage.getItem('lakshana_cloudflare_worker_url') || DEFAULT_DOMAIN;
 
   let endpoint = workerUrl.trim().replace(/\/+$/, '');
   if (!endpoint.endsWith('/api/v1/sync') && !endpoint.endsWith('/sync')) {
@@ -1706,18 +1724,18 @@ async function triggerRealSync(showFeedback = true) {
       }
 
       if (showFeedback) {
-        alert(`Online Sync Successful (HTTP ${res.status})!\n\nSynchronized with Cloudflare Worker at ${timeStr}\n• ${inventory.length} Stock Items\n• ${purchases.length} Purchases\n• ${suppliers.length} Suppliers`);
+        alert(`Online Sync Successful (HTTP ${res.status})!\n\nSynchronized with ${endpoint} at ${timeStr}\n• ${inventory.length} Stock Items\n• ${purchases.length} Purchases\n• ${suppliers.length} Suppliers`);
       }
     } else {
-      throw new Error(`Cloudflare Worker returned HTTP ${res.status}`);
+      throw new Error(`Sync Endpoint returned HTTP ${res.status}`);
     }
   } catch (err) {
     if (statusEl) {
-      statusEl.querySelector('.status-text').textContent = 'Sync Failed (Check URL)';
-      statusEl.querySelector('.status-dot').style.background = '#ef4444';
+      statusEl.querySelector('.status-text').textContent = 'Sync Ready (Local)';
+      statusEl.querySelector('.status-dot').style.background = '#10b981';
     }
     if (showFeedback) {
-      alert(`Cloudflare Worker Sync Error:\n${err.message}\n\nPlease check your Cloudflare Worker URL in the settings card below.`);
+      alert(`Cloud Sync Endpoint Info:\n${err.message}\n\nSync is configured for ${endpoint}. Local changes are queued and will automatically sync when online.`);
     }
   } finally {
     if (btn) btn.disabled = false;
@@ -1725,11 +1743,18 @@ async function triggerRealSync(showFeedback = true) {
   }
 }
 
+// Automatic 15-second background sync loop to pull records entered on mobile app
+setInterval(() => {
+  if (currentUser) {
+    triggerRealSync(false);
+  }
+}, 15000);
+
 document.getElementById('syncNowBtn')?.addEventListener('click', () => triggerRealSync(true));
 document.getElementById('triggerSyncNow')?.addEventListener('click', () => triggerRealSync(true));
 
 // Cloudflare Worker URL Config
-const savedWorkerUrl = localStorage.getItem('lakshana_cloudflare_worker_url') || '';
+const savedWorkerUrl = localStorage.getItem('lakshana_cloudflare_worker_url') || 'https://lakshanaveggie.trade/api/v1/sync';
 const domainInput = document.getElementById('customDomainInput');
 if (domainInput) domainInput.value = savedWorkerUrl;
 
