@@ -47,7 +47,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "procure_flow_db"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(dropAllTables = true)
                     .addCallback(DatabaseCallback(scope))
                     .build()
                 INSTANCE = instance

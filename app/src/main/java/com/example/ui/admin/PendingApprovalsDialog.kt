@@ -272,7 +272,7 @@ fun PendingUserApprovalItem(
                     label = { Text("Assign User Role") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = roleDropdownExpanded) },
                     modifier = Modifier
-                        .menuAnchor()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                         .fillMaxWidth()
                 )
                 ExposedDropdownMenu(
@@ -311,7 +311,7 @@ fun PendingUserApprovalItem(
                     label = { Text("Assign Department / Operational Area") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = departmentDropdownExpanded) },
                     modifier = Modifier
-                        .menuAnchor()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                         .fillMaxWidth()
                 )
                 ExposedDropdownMenu(

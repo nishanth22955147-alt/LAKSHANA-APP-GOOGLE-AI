@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -114,7 +115,7 @@ fun LoginScreen(
                     onClick = { viewModel.toggleAuthMode(false) },
                     text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Login, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Sign In", fontWeight = FontWeight.Bold)
                         }
@@ -236,16 +237,30 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // Forgot PIN Row
+                // Forgot PIN & Quick Demo Fill Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    FilledTonalButton(
+                        onClick = {
+                            viewModel.updateMobileInput("8608414322")
+                            viewModel.updatePinInput("5147")
+                        },
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                        modifier = Modifier.height(30.dp).testTag("quick_admin_fill_button")
+                    ) {
+                        Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Fill Admin Login", style = MaterialTheme.typography.labelSmall)
+                    }
+
                     TextButton(
                         onClick = { isForgotPinDialogOpen = true },
                         modifier = Modifier.testTag("forgot_pin_button")
                     ) {
-                        Icon(Icons.Default.HelpOutline, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Forgot PIN?", style = MaterialTheme.typography.labelMedium)
                     }
@@ -299,7 +314,7 @@ fun LoginScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Text("Authenticating...")
                     } else {
-                        Icon(Icons.Default.Login, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Log In to Lakshana Veggie", fontWeight = FontWeight.Bold)
                     }

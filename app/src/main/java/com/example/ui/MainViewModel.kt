@@ -759,12 +759,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val result = cloudSyncManager.restoreFromBackupJson(jsonString)
             if (result.isSuccess) {
-                val count = result.getOrThrow()
-                _toastEvent.emit("Restored $count records from backup successfully!")
-                onResult(true, "Successfully restored $count records.")
+                val summary = result.getOrThrow()
+                _toastEvent.emit(summary)
+                onResult(true, summary)
                 syncNow()
             } else {
-                onResult(false, "Restore failed: ${result.exceptionOrNull()?.message}")
+                val err = "Restore failed: ${result.exceptionOrNull()?.message}"
+                _toastEvent.emit(err)
+                onResult(false, err)
+            }
+        }
+    }
+
+    fun shareBackupFile(context: Context) {
+        viewModelScope.launch {
+            val json = cloudSyncManager.exportFullBackupJson()
+            val file = cloudSyncManager.saveBackupToCacheFile(json)
+            try {
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    file
+                )
+                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "application/json"
+                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                    putExtra(android.content.Intent.EXTRA_SUBJECT, "Lakshana Veggie Database Backup JSON")
+                    putExtra(android.content.Intent.EXTRA_TEXT, "Lakshana Veggie Procurement & Inventory Backup JSON for Direct Mobile & Web Sync")
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                context.startActivity(android.content.Intent.createChooser(intent, "Share Lakshana Backup JSON"))
+            } catch (e: Exception) {
+                // Fallback to text share
+                val sendIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(android.content.Intent.EXTRA_TEXT, json)
+                    putExtra(android.content.Intent.EXTRA_SUBJECT, "Lakshana Veggie Database Backup JSON")
+                }
+                context.startActivity(android.content.Intent.createChooser(sendIntent, "Share Backup JSON"))
             }
         }
     }

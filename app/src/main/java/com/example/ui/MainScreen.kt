@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -108,7 +109,7 @@ fun MainScreen(
             NavItem(NavigationDestination.Items, "Items", Icons.Default.Inventory2, "nav_items"),
             NavItem(NavigationDestination.Purchase, "Purchase", Icons.Default.ShoppingBag, "nav_purchase"),
             NavItem(NavigationDestination.Supplier, "Supplier", Icons.Default.Storefront, "nav_supplier"),
-            NavItem(NavigationDestination.Transaction, "Transaction", Icons.Default.ReceiptLong, "nav_transaction"),
+            NavItem(NavigationDestination.Transaction, "Transaction", Icons.AutoMirrored.Filled.ReceiptLong, "nav_transaction"),
             NavItem(NavigationDestination.Reports, "Reports", Icons.Default.Assessment, "nav_reports"),
             NavItem(NavigationDestination.Inventory, "Inventory", Icons.Default.Warehouse, "nav_inventory"),
             NavItem(NavigationDestination.Website, "Website", Icons.Default.Language, "nav_website")
@@ -316,7 +317,7 @@ fun MainScreen(
 
                     // Feature Item: Transaction Reports
                     NavigationDrawerItem(
-                        icon = { Icon(Icons.Default.ReceiptLong, contentDescription = null) },
+                        icon = { Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null) },
                         label = { Text("Transaction Reports") },
                         selected = currentDestination == NavigationDestination.Transaction,
                         onClick = {
@@ -381,7 +382,7 @@ fun MainScreen(
 
                     // Log Out
                     NavigationDrawerItem(
-                        icon = { Icon(Icons.Default.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                        icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
                         label = { Text("Log Out", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.SemiBold) },
                         selected = false,
                         onClick = {
@@ -573,7 +574,7 @@ fun MainScreen(
                                         isUserMenuExpanded = false
                                         isLogoutConfirmOpen = true
                                     },
-                                    leadingIcon = { Icon(Icons.Default.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
                                 )
                             }
                         }

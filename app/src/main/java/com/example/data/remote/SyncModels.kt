@@ -19,6 +19,6 @@ data class SyncSummary(
     val stockMovementsCount: Int = 0,
     val isOnline: Boolean = true,
     val statusMessage: String = "Ready to synchronize with Lakshana Cloud",
-    val cloudEndpoint: String = "https://lakshana-veggie.web.app/api/v1/sync",
+    val cloudEndpoint: String = "https://lakshanaveggie.trade/api/v1/sync",
     val autoSyncEnabled: Boolean = true
 )

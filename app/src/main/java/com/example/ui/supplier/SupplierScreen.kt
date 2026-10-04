@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -441,7 +442,7 @@ fun SupplierContactCard(
                         contentColor = SuccessGreen
                     )
                 ) {
-                    Icon(Icons.Default.Chat, contentDescription = "WhatsApp", modifier = Modifier.size(16.dp))
+                    Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "WhatsApp", modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("WhatsApp", style = MaterialTheme.typography.labelSmall)
                 }
@@ -609,7 +610,7 @@ fun SupplierDetailDialog(
                         modifier = Modifier.weight(1.2f),
                         colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
                     ) {
-                        Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("WhatsApp")
                     }
@@ -645,7 +646,7 @@ fun SupplierDetailDialog(
                         DetailRowItem(Icons.Default.LocationOn, "Mandi / Yard Address", supplier.address)
                     }
                     if (supplier.notes.isNotBlank()) {
-                        DetailRowItem(Icons.Default.Notes, "Notes & Terms", supplier.notes)
+                        DetailRowItem(Icons.AutoMirrored.Filled.Notes, "Notes & Terms", supplier.notes)
                     }
                 }
 

@@ -3,7 +3,10 @@ package com.example.ui.components
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,6 +33,7 @@ import com.example.ui.MainViewModel
 import com.example.ui.theme.SecondaryTeal
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningAmber
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -45,6 +50,26 @@ fun OnlineSyncDialog(
     val syncSummary by viewModel.syncSummary.collectAsState()
     val isSyncing by viewModel.isSyncing.collectAsState()
     val scrollState = rememberScrollState()
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val jsonText = inputStream?.bufferedReader()?.use { it.readText() } ?: ""
+                if (jsonText.isNotBlank()) {
+                    viewModel.restoreDataBackup(jsonText) { success, msg ->
+                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    Toast.makeText(context, "Selected backup file was empty", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error reading backup file: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     var showRestorePrompt by remember { mutableStateOf(false) }
     var restoreJsonInput by remember { mutableStateOf("") }
@@ -242,7 +267,7 @@ fun OnlineSyncDialog(
                         SyncStatBadge(
                             label = "Payments",
                             count = "${syncSummary.transactionsCount}",
-                            icon = Icons.Default.ReceiptLong,
+                            icon = Icons.AutoMirrored.Filled.ReceiptLong,
                             modifier = Modifier.weight(1f)
                         )
                         SyncStatBadge(
@@ -372,9 +397,9 @@ fun OnlineSyncDialog(
                                         modifier = Modifier.weight(1.4f)
                                     )
                                     SuggestionChip(
-                                        onClick = { domainInput = "https://lakshana-veggie.web.app/api/v1/sync" },
-                                        label = { Text("Web App", style = MaterialTheme.typography.labelSmall) },
-                                        modifier = Modifier.weight(0.9f)
+                                        onClick = { domainInput = "https://ais-pre-jpmainaavmvu43mnqemzg3-69947619119.asia-east1.run.app/api/v1/sync" },
+                                        label = { Text("Cloud Run", style = MaterialTheme.typography.labelSmall) },
+                                        modifier = Modifier.weight(1.0f)
                                     )
                                 }
 
@@ -522,7 +547,7 @@ fun OnlineSyncDialog(
                                     ) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(
-                                                Icons.Default.MenuBook,
+                                                Icons.AutoMirrored.Filled.MenuBook,
                                                 contentDescription = null,
                                                 tint = MaterialTheme.colorScheme.primary,
                                                 modifier = Modifier.size(16.dp)
@@ -571,7 +596,7 @@ fun OnlineSyncDialog(
 
                     // Cloud Data Backup & Restore
                     Text(
-                        "DATA PORTABILITY & BACKUP",
+                        "DIRECT WEB & MOBILE DATA PORTABILITY",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -579,10 +604,53 @@ fun OnlineSyncDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    // Row 1: Import Actions
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        Button(
+                            onClick = {
+                                try {
+                                    filePickerLauncher.launch("*/*")
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.FileOpen, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Pick File (.json)", style = MaterialTheme.typography.labelSmall)
+                        }
+
+                        OutlinedButton(
+                            onClick = { showRestorePrompt = true },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.ContentPaste, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Paste JSON", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Row 2: Export Actions
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { viewModel.shareBackupFile(context) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Share .json File", style = MaterialTheme.typography.labelSmall)
+                        }
+
                         OutlinedButton(
                             onClick = {
                                 viewModel.exportDataBackup { json ->
@@ -596,46 +664,121 @@ fun OnlineSyncDialog(
                         ) {
                             Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Copy Backup", style = MaterialTheme.typography.labelSmall)
-                        }
-
-                        OutlinedButton(
-                            onClick = { showRestorePrompt = true },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.Restore, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Restore JSON", style = MaterialTheme.typography.labelSmall)
+                            Text("Copy JSON", style = MaterialTheme.typography.labelSmall)
                         }
                     }
 
                     if (showRestorePrompt) {
                         Spacer(modifier = Modifier.height(10.dp))
-                        OutlinedTextField(
-                            value = restoreJsonInput,
-                            onValueChange = { restoreJsonInput = it },
-                            label = { Text("Paste Backup JSON") },
-                            placeholder = { Text("{\"app\": \"Lakshana Veggie\"...}") },
-                            modifier = Modifier.fillMaxWidth(),
-                            maxLines = 4
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            TextButton(onClick = { showRestorePrompt = false }) {
-                                Text("Cancel")
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = {
-                                    if (restoreJsonInput.isNotBlank()) {
-                                        viewModel.restoreDataBackup(restoreJsonInput) { success, msg ->
-                                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                                            if (success) showRestorePrompt = false
-                                        }
+                        Card(
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "Paste Backup JSON from Web / Device",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    TextButton(
+                                        onClick = {
+                                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                            val clipText = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+                                            if (clipText.isNotBlank()) {
+                                                restoreJsonInput = clipText
+                                                Toast.makeText(context, "Pasted from clipboard!", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                    ) {
+                                        Icon(Icons.Default.ContentPaste, contentDescription = null, modifier = Modifier.size(14.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Paste from Clipboard", style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
-                            ) {
-                                Text("Confirm Restore")
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                OutlinedTextField(
+                                    value = restoreJsonInput,
+                                    onValueChange = { restoreJsonInput = it },
+                                    label = { Text("Backup JSON Content") },
+                                    placeholder = { Text("{\"app\": \"Lakshana Veggie\", \"items\": [...], \"purchases\": [...]}...") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    maxLines = 5
+                                )
+
+                                // Live JSON Inspection Preview
+                                val parsedPreview = remember(restoreJsonInput) {
+                                    if (restoreJsonInput.trim().startsWith("{")) {
+                                        try {
+                                            val root = JSONObject(restoreJsonInput)
+                                            val iCount = if (root.has("items")) root.getJSONArray("items").length() else if (root.has("inventory")) root.getJSONArray("inventory").length() else 0
+                                            val pCount = if (root.has("purchases")) root.getJSONArray("purchases").length() else 0
+                                            val sCount = if (root.has("suppliers")) root.getJSONArray("suppliers").length() else 0
+                                            val uCount = if (root.has("users")) root.getJSONArray("users").length() else 0
+                                            "✓ Valid JSON: $iCount items, $pCount purchases, $sCount suppliers, $uCount users detected"
+                                        } catch (e: Exception) {
+                                            null
+                                        }
+                                    } else null
+                                }
+
+                                parsedPreview?.let { previewText ->
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = SuccessGreen.copy(alpha = 0.15f),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            previewText,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = SuccessGreen,
+                                            fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    TextButton(onClick = {
+                                        showRestorePrompt = false
+                                        restoreJsonInput = ""
+                                    }) {
+                                        Text("Cancel")
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Button(
+                                        onClick = {
+                                            if (restoreJsonInput.isNotBlank()) {
+                                                viewModel.restoreDataBackup(restoreJsonInput) { success, msg ->
+                                                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                                    if (success) {
+                                                        showRestorePrompt = false
+                                                        restoreJsonInput = ""
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        enabled = restoreJsonInput.isNotBlank(),
+                                        colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
+                                    ) {
+                                        Text("Confirm Import & Restore")
+                                    }
+                                }
                             }
                         }
                     }

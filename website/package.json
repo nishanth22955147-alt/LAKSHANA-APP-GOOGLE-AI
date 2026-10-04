@@ -1,0 +1,17 @@
+{
+  "name": "lakshana-veggie-web-portal",
+  "version": "2.0.0",
+  "description": "Lakshana Veggie Online Mandi Procurement & Inventory Management Web Portal",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "lakshana",
+    "veggie",
+    "mandi",
+    "procurement",
+    "inventory"
+  ],
+  "author": "Lakshana Veggie",
+  "license": "ISC"
+}

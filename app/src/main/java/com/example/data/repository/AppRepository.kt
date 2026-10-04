@@ -329,6 +329,43 @@ class AppRepository(
     }
 
     // Purchase Management & Daily Excel Sheet Import
+    suspend fun addOrUpdatePurchase(purchase: PurchaseEntryEntity): Long = withContext(Dispatchers.IO) {
+        val existing = if (purchase.id != 0L) purchaseDao.getPurchaseById(purchase.id) else null
+        if (existing != null) {
+            purchaseDao.updatePurchase(purchase)
+            purchase.id
+        } else {
+            purchaseDao.insertPurchase(purchase)
+        }
+    }
+
+    suspend fun addOrUpdateTransaction(transaction: TransactionEntity): Long = withContext(Dispatchers.IO) {
+        val existing = if (transaction.id != 0L) transactionDao.getTransactionById(transaction.id) else null
+        if (existing != null) {
+            transactionDao.updateTransaction(transaction)
+            transaction.id
+        } else {
+            transactionDao.insertTransaction(transaction)
+        }
+    }
+
+    suspend fun addOrUpdateUserFromBackup(user: UserEntity): Long = withContext(Dispatchers.IO) {
+        val existing = userDao.getUserByMobile(user.mobileNumber)
+        if (existing != null) {
+            val updated = existing.copy(
+                fullName = user.fullName,
+                role = user.role,
+                department = user.department,
+                isActive = user.isActive,
+                isApproved = user.isApproved
+            )
+            userDao.updateUser(updated)
+            existing.id
+        } else {
+            userDao.insertUser(user)
+        }
+    }
+
     suspend fun updatePurchase(purchase: PurchaseEntryEntity) = withContext(Dispatchers.IO) {
         purchaseDao.updatePurchase(purchase)
     }
