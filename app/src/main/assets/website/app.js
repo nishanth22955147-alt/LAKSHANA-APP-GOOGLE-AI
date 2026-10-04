@@ -1836,6 +1836,19 @@ async function downloadWebAppZip() {
     zip.file('vercel.json', vercelJson);
     zip.file('package.json', packageJson);
     zip.file('README.md', readmeMd);
+    zip.file('CNAME', 'lakshanaveggie.trade\n');
+
+    let syncApiCode = await getFileContent('api/v1/sync.js');
+    if (!syncApiCode) {
+      syncApiCode = `module.exports = (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  return res.status(200).json({ status: 'success', syncedAt: Date.now(), domain: 'lakshanaveggie.trade' });
+};`;
+    }
+    zip.file('api/v1/sync.js', syncApiCode);
 
     // Also include a pre-populated backup payload in the zip
     const currentData = generateFullSyncPayload();
