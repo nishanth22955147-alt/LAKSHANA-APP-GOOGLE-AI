@@ -17,29 +17,26 @@ When you open your domain and see **"Page Not Found"**, it is caused by one of t
 
 ---
 
-## 🛠️ Step-by-Step DNS Records for `lakshanaveggie.trade`
+## 🛠️ Step-by-Step DNS & Cloudflare Worker for `lakshanaveggie.trade`
 
-Log in to where you bought your domain (GoDaddy, Namecheap, Cloudflare, Hostinger), go to **DNS Management**, and configure:
+Your domain is managed on **Cloudflare**. To sync your mobile app and website:
 
-| Type | Name / Host | Value / Target | TTL |
-|---|---|---|---|
-| **A** | `@` (or leave blank) | `76.76.21.21` (or your server IP) | Auto / 3600 |
-| **CNAME** | `www` | `cname.vercel-dns.com` (or `lakshanaveggie.trade`) | Auto / 3600 |
-
-*Important: Delete any old default `A` records pointing to parking pages (e.g. GoDaddy parking page IP).*
+1. **Website Hosting**: Your website files (`index.html`, `styles.css`, `app.js`) are served directly on your custom domain via GitHub Pages or Cloudflare Pages with `CNAME lakshanaveggie.trade`.
+2. **Cloud Sync Engine**: The `cloudflare-worker.js` script handles real-time synchronization between the web portal and Android phone:
+   - Go to Cloudflare Dashboard ➔ **Workers & Pages** ➔ **Create Worker**
+   - Paste the code from `cloudflare-worker.js`
+   - Click **Deploy**
+   - Under Worker **Settings** ➔ **Domains & Routes**, add route `*lakshanaveggie.trade/api/*` (or add Custom Domain `sync.lakshanaveggie.trade`)
 
 ---
 
-## 📱 Connecting Your Android App to Your Custom Domain
+## 📱 Connecting Your Android App to Cloudflare Sync
 
-Once your domain is live:
 1. Open the **Lakshana Veggie** Android App.
-2. Tap the **Website / ⚡ Web Sync & Backup** tab.
-3. Under **Custom Domain & Cloud Endpoint**, select or type:
+2. Tap the **Website / ⚡ Web Sync & Backup** tab (or **Online Sync Hub** in header).
+3. Under **Cloud Endpoint**, verify or set:
    ```text
-   https://lakshanaveggie.trade
+   https://lakshanaveggie.trade/api/v1/sync
    ```
 4. Tap **Test Ping** (verifies connection).
-5. Tap **Save URL** and press **Synchronize with Website Now**.
-
-Your Android Room database and Web Portal are now fully linked through your custom domain!
+5. Tap **Synchronize Now**. All records are synchronized in real-time!

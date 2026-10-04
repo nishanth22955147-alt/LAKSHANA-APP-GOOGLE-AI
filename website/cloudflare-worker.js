@@ -30,8 +30,9 @@ export default {
       });
     }
 
-    // Match the API sync endpoint
-    if (url.pathname === '/api/v1/sync' || url.pathname === '/sync') {
+    // Match the API sync endpoint (handles trailing slashes and query params)
+    const cleanPath = url.pathname.replace(/\/+$/, '');
+    if (cleanPath === '/api/v1/sync' || cleanPath === '/sync' || cleanPath.startsWith('/api/v1/sync')) {
       if (request.method === 'POST') {
         try {
           const payload = await request.json();

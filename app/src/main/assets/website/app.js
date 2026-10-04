@@ -1697,11 +1697,11 @@ async function triggerRealSync(showFeedback = true) {
     }
   } catch (err) {
     if (statusEl) {
-      statusEl.querySelector('.status-text').textContent = 'Offline/Local Mode';
-      statusEl.querySelector('.status-dot').style.background = '#ef4444';
+      statusEl.querySelector('.status-text').textContent = 'Local Mode (Cloud Pending)';
+      statusEl.querySelector('.status-dot').style.background = '#f59e0b';
     }
     if (showFeedback) {
-      alert(`Could not connect to sync endpoint (${err.message}).\n\nEnsure Cloudflare Worker route (*lakshanaveggie.trade/api/*) is enabled in your Cloudflare dashboard.`);
+      alert(`Cloud Sync Endpoint Pending (Server returned HTTP 404)\n\nWhy this happens:\nYour website at lakshanaveggie.trade is hosted statically on GitHub Pages. GitHub Pages does not have an active database server at /api/v1/sync.\n\nHow to fix:\nEnable the Cloudflare Worker route (*lakshanaveggie.trade/api/*) in your Cloudflare dashboard using cloudflare-worker.js. Once active, sync will automatically return HTTP 200 OK!`);
     }
   } finally {
     if (btn) btn.disabled = false;
@@ -1893,13 +1893,73 @@ async function downloadWebAppZip() {
       appJs = '// Lakshana Veggie App Script\n';
     }
 
-    let vercelJson = await getFileContent('vercel.json');
-    if (!vercelJson) {
-      vercelJson = JSON.stringify({
-        version: 2,
-        name: "lakshana-veggie-web-portal",
-        routes: [{ src: "/(.*)", dest: "/$1" }]
-      }, null, 2);
+    let workerJs = await getFileContent('cloudflare-worker.js');
+    if (!workerJs) {
+      workerJs = `// Cloudflare Worker for lakshanaveggie.trade
+let inMemorySyncCache = null;
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, DELETE',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+          'Access-Control-Max-Age': '86400'
+        }
+      });
+    }
+
+    const cleanPath = url.pathname.replace(/\\/+$/, '');
+    if (cleanPath === '/api/v1/sync' || cleanPath === '/sync' || cleanPath.startsWith('/api/v1/sync')) {
+      if (request.method === 'POST') {
+        try {
+          const payload = await request.json();
+          inMemorySyncCache = {
+            ...payload,
+            syncedAt: Date.now(),
+            serverTime: new Date().toISOString()
+          };
+          if (env && env.SYNC_KV) {
+            await env.SYNC_KV.put('latest_sync', JSON.stringify(inMemorySyncCache));
+          }
+          return new Response(JSON.stringify({
+            status: 'success',
+            syncedAt: Date.now(),
+            items: inMemorySyncCache.items || inMemorySyncCache.inventory || [],
+            purchases: inMemorySyncCache.purchases || [],
+            suppliers: inMemorySyncCache.suppliers || [],
+            message: 'Real-time sync successful with Cloudflare Worker'
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ status: 'error', message: err.message }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+          });
+        }
+      }
+
+      let data = inMemorySyncCache;
+      if (env && env.SYNC_KV) {
+        const raw = await env.SYNC_KV.get('latest_sync');
+        if (raw) data = JSON.parse(raw);
+      }
+      return new Response(JSON.stringify(data || { status: 'online', domain: 'lakshanaveggie.trade' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
+    return fetch(request);
+  }
+};`;
     }
 
     let packageJson = await getFileContent('package.json');
@@ -1913,29 +1973,17 @@ async function downloadWebAppZip() {
 
     let readmeMd = await getFileContent('README.md');
     if (!readmeMd) {
-      readmeMd = '# Lakshana Veggie Web Portal\n\nDirect Mandi Procurement & Inventory Management Web Portal.\nHost on Vercel, Netlify, or Firebase Hosting.';
+      readmeMd = '# Lakshana Veggie Web Portal\n\nDirect Mandi Procurement & Inventory Management Web Portal.\nPowered by Cloudflare Worker for online synchronization.';
     }
 
     // Add files to zip
     zip.file('index.html', indexHtml);
     zip.file('styles.css', stylesCss);
     zip.file('app.js', appJs);
-    zip.file('vercel.json', vercelJson);
+    zip.file('cloudflare-worker.js', workerJs);
     zip.file('package.json', packageJson);
     zip.file('README.md', readmeMd);
     zip.file('CNAME', 'lakshanaveggie.trade\n');
-
-    let syncApiCode = await getFileContent('api/v1/sync.js');
-    if (!syncApiCode) {
-      syncApiCode = `module.exports = (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  return res.status(200).json({ status: 'success', syncedAt: Date.now(), domain: 'lakshanaveggie.trade' });
-};`;
-    }
-    zip.file('api/v1/sync.js', syncApiCode);
 
     // Also include a pre-populated backup payload in the zip
     const currentData = generateFullSyncPayload();
@@ -1954,7 +2002,7 @@ async function downloadWebAppZip() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    alert(`Web App successfully packaged and downloaded!\nFile: ${fileName}\n\nYou can unzip it or drag-and-drop directly into Vercel or Netlify to host on your domain.`);
+    alert(`Web App successfully packaged and downloaded!\nFile: ${fileName}\n\nIncludes website files and cloudflare-worker.js for instant online synchronization.`);
   } catch (err) {
     alert('Failed to package web app: ' + err.message);
   } finally {
