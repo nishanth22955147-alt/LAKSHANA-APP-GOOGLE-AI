@@ -78,6 +78,7 @@ fun OnlineSyncDialog(
     var isTestingConnection by remember { mutableStateOf(false) }
     var testResultMsg by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     var showArchitectureGuide by remember { mutableStateOf(false) }
+    var showTroubleshooting by remember { mutableStateOf(false) }
 
     val formattedLastSync = remember(syncSummary.lastSyncTimestamp) {
         if (syncSummary.lastSyncTimestamp > 0) {
@@ -161,36 +162,118 @@ fun OnlineSyncDialog(
                         .weight(1f)
                         .verticalScroll(scrollState)
                 ) {
-                    // Connection Status Card
+                    // Dynamic Connection & Sync State Status Card
+                    val isError = syncSummary.syncState == SyncState.ERROR || syncSummary.statusMessage.contains("404") || syncSummary.statusMessage.contains("failed", ignoreCase = true)
+                    val isSuccess = syncSummary.syncState == SyncState.SUCCESS
+                    val isSyncingNow = syncSummary.syncState == SyncState.SYNCING || isSyncing
+                    val isOffline = !syncSummary.isOnline || syncSummary.syncState == SyncState.OFFLINE
+
                     Card(
                         shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (syncSummary.isOnline) SuccessGreen.copy(alpha = 0.12f) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                            containerColor = when {
+                                isError -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.45f)
+                                isSuccess -> SuccessGreen.copy(alpha = 0.12f)
+                                isSyncingNow -> SecondaryTeal.copy(alpha = 0.15f)
+                                isOffline -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            }
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                if (syncSummary.isOnline) Icons.Default.CloudDone else Icons.Default.CloudOff,
-                                contentDescription = null,
-                                tint = if (syncSummary.isOnline) SuccessGreen else MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(28.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    if (syncSummary.isOnline) "🟢 Online • Connected to Cloud" else "🔴 Offline Mode",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    when {
+                                        isError -> Icons.Default.CloudOff
+                                        isSuccess -> Icons.Default.CloudDone
+                                        isSyncingNow -> Icons.Default.CloudSync
+                                        isOffline -> Icons.Default.CloudOff
+                                        else -> Icons.Default.CloudQueue
+                                    },
+                                    contentDescription = null,
+                                    tint = when {
+                                        isError -> MaterialTheme.colorScheme.error
+                                        isSuccess -> SuccessGreen
+                                        isSyncingNow -> SecondaryTeal
+                                        isOffline -> MaterialTheme.colorScheme.onSurfaceVariant
+                                        else -> MaterialTheme.colorScheme.primary
+                                    },
+                                    modifier = Modifier.size(28.dp)
                                 )
-                                Text(
-                                    syncSummary.statusMessage,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        when {
+                                            isError -> "⚠️ Cloud Sync Notice (HTTP 404 / Route Inactive)"
+                                            isSuccess -> "🟢 Online • Cloud Synchronized"
+                                            isSyncingNow -> "🔄 Synchronizing with Cloud..."
+                                            isOffline -> "🔴 Device Offline (Local Storage Active)"
+                                            else -> "☁️ Ready to Synchronize"
+                                        },
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = when {
+                                            isError -> MaterialTheme.colorScheme.error
+                                            isSuccess -> SuccessGreen
+                                            else -> MaterialTheme.colorScheme.onSurface
+                                        }
+                                    )
+                                    Text(
+                                        syncSummary.statusMessage,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            if (isError || syncSummary.statusMessage.contains("404")) {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text("Why is Cloud Sync not working?", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                            }
+                                            TextButton(
+                                                onClick = { showTroubleshooting = !showTroubleshooting },
+                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+                                            ) {
+                                                Text(if (showTroubleshooting) "Hide Details" else "View Fix", style = MaterialTheme.typography.labelSmall)
+                                            }
+                                        }
+
+                                        if (showTroubleshooting) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                "1. Domain lakshanaveggie.trade is serving static pages, but HTTP POST to '/api/v1/sync' returns 404 because the Cloudflare Worker backend is not yet bound to this route.\n\n" +
+                                                "2. How to Fix on Cloudflare (2 Mins):\n" +
+                                                "   • Open Cloudflare Dashboard ➔ Workers & Pages ➔ Create Worker\n" +
+                                                "   • Paste the code from 'cloudflare-worker.js' (included in project) and click Deploy\n" +
+                                                "   • Under Worker Settings ➔ Domains & Routes, add route: *lakshanaveggie.trade/api/*\n\n" +
+                                                "3. Instant 100% Offline Workaround:\n" +
+                                                "   • Your data is completely safe in your local Android phone database.\n" +
+                                                "   • You can tap 'Copy JSON' or 'Share .json File' below to transfer records directly into your website without requiring the worker!",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

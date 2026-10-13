@@ -6,11 +6,14 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.net.http.SslError
 import android.view.View
 import android.webkit.RenderProcessGoneDetail
+import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -39,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import com.example.data.remote.SyncState
 import com.example.ui.MainViewModel
 import com.example.ui.theme.SecondaryTeal
 import com.example.ui.theme.SuccessGreen
@@ -318,6 +322,7 @@ fun WebsiteScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
+                                val isSyncError = syncSummary.syncState == SyncState.ERROR || syncSummary.statusMessage.contains("404")
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -330,13 +335,28 @@ fun WebsiteScreen(
                                     }
                                     Surface(
                                         shape = RoundedCornerShape(6.dp),
-                                        color = if (syncSummary.isOnline) SuccessGreen.copy(alpha = 0.2f) else MaterialTheme.colorScheme.errorContainer
+                                        color = when {
+                                            isSyncError -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
+                                            syncSummary.syncState == SyncState.SUCCESS -> SuccessGreen.copy(alpha = 0.2f)
+                                            !syncSummary.isOnline -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                                            else -> SecondaryTeal.copy(alpha = 0.2f)
+                                        }
                                     ) {
                                         Text(
-                                            if (syncSummary.isOnline) "🟢 Online" else "🔴 Offline",
+                                            when {
+                                                isSyncError -> "⚠️ Route Inactive (404)"
+                                                syncSummary.syncState == SyncState.SUCCESS -> "🟢 Synced"
+                                                !syncSummary.isOnline -> "🔴 Offline"
+                                                else -> "☁️ Ready"
+                                            },
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (syncSummary.isOnline) SuccessGreen else MaterialTheme.colorScheme.error,
+                                            color = when {
+                                                isSyncError -> MaterialTheme.colorScheme.error
+                                                syncSummary.syncState == SyncState.SUCCESS -> SuccessGreen
+                                                !syncSummary.isOnline -> MaterialTheme.colorScheme.error
+                                                else -> SecondaryTeal
+                                            },
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }
@@ -351,9 +371,9 @@ fun WebsiteScreen(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    "Synchronize purchases, warehouse stock, Mandi vendors, and payment receipts directly between your mobile phone and the web portal.",
+                                    if (isSyncError) syncSummary.statusMessage else "Synchronize purchases, warehouse stock, Mandi vendors, and payment receipts directly between your mobile phone and the web portal.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (isSyncError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
 
                                 Spacer(modifier = Modifier.height(12.dp))
@@ -1331,20 +1351,31 @@ fun EmbeddedWebPortalView(
                 AndroidView(
                     factory = { ctx ->
                         WebView(ctx).apply {
-                            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
+                            settings.databaseEnabled = true
                             settings.allowFileAccess = true
                             settings.allowContentAccess = true
                             settings.loadWithOverviewMode = true
                             settings.useWideViewPort = true
                             settings.builtInZoomControls = true
                             settings.displayZoomControls = false
+                            settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                            settings.cacheMode = WebSettings.LOAD_DEFAULT
 
                             webViewClient = object : WebViewClient() {
                                 override fun onPageFinished(view: WebView?, url: String?) {
                                     super.onPageFinished(view, url)
                                     isLoading = false
+                                }
+
+                                override fun onReceivedSslError(
+                                    view: WebView?,
+                                    handler: SslErrorHandler?,
+                                    error: SslError?
+                                ) {
+                                    // Allow secure Cloudflare SSL connection without interrupting WebView
+                                    handler?.proceed()
                                 }
 
                                 override fun onReceivedError(
@@ -1373,6 +1404,12 @@ fun EmbeddedWebPortalView(
 
                             loadUrl(currentUrl)
                             webViewInstance = this
+                        }
+                    },
+                    update = { webView ->
+                        val target = if (loadMode == "local") "file:///android_asset/website/index.html" else targetDomain
+                        if (webView.url != target) {
+                            webView.loadUrl(target)
                         }
                     },
                     modifier = Modifier.fillMaxSize()
