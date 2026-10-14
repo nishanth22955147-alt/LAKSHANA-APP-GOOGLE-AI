@@ -115,25 +115,7 @@
 
     <div class="btn-action-group">
       <a href="index.html" class="btn-primary" id="homeBtn">Open Lakshana Web Portal</a>
-      <button class="btn-secondary" onclick="window.location.reload()">Refresh Page</button>
-    </div>
-
-    <div class="countdown-text" id="countdownMsg">
-      Redirecting to portal homepage in <span id="timerSpan">3</span>s...
     </div>
   </div>
-
-  <script>
-    let secondsLeft = 3;
-    const timerSpan = document.getElementById('timerSpan');
-    const interval = setInterval(() => {
-      secondsLeft--;
-      if (timerSpan) timerSpan.innerText = secondsLeft;
-      if (secondsLeft <= 0) {
-        clearInterval(interval);
-        window.location.href = 'index.html';
-      }
-    }, 1000);
-  </script>
 </body>
 </html>

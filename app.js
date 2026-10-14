@@ -105,8 +105,8 @@ if (!users.some(u => u.mobileNumber === '8608414322')) {
   localStorage.setItem('lakshana_web_users', JSON.stringify(users));
 }
 
-// Ensure default admin is active so content is immediately visible on first load
-let currentUser = JSON.parse(localStorage.getItem('lakshana_web_current_user')) || DEFAULT_ADMIN;
+// Default to null so login interface is displayed for unauthenticated users
+let currentUser = JSON.parse(localStorage.getItem('lakshana_web_current_user')) || null;
 
 function saveUsers() {
   localStorage.setItem('lakshana_web_users', JSON.stringify(users));
@@ -270,7 +270,7 @@ function hidePortalAlert() {
   if (el) el.style.display = 'none';
 }
 
-window.handlePortalLoginSubmit = function() {
+function handlePortalLoginSubmit() {
   const mobile = document.getElementById('portalLoginMobile')?.value.trim();
   const pin = document.getElementById('portalLoginPin')?.value.trim();
 
@@ -321,9 +321,10 @@ window.handlePortalLoginSubmit = function() {
   user.lastLoginAt = Date.now();
   saveUsers();
   setCurrentUser(user);
-};
+}
+window.handlePortalLoginSubmit = handlePortalLoginSubmit;
 
-window.handlePortalRegisterSubmit = function() {
+function handlePortalRegisterSubmit() {
   const name = document.getElementById('portalRegName')?.value.trim();
   const mobile = document.getElementById('portalRegMobile')?.value.trim();
   const pin = document.getElementById('portalRegPin')?.value.trim();
@@ -361,7 +362,8 @@ window.handlePortalRegisterSubmit = function() {
   } else {
     showPortalAlert(`Registration submitted for ${name}! Please ask Admin (8608414322) to approve your account.`, false);
   }
-};
+}
+window.handlePortalRegisterSubmit = handlePortalRegisterSubmit;
 
 function openAuthModal(initialTab = 'login') {
   switchAuthTab(initialTab);
@@ -578,7 +580,7 @@ function renderAdminUsersTable() {
   });
 }
 
-window.approveUserById = function(userId) {
+function approveUserById(userId) {
   const u = users.find(x => x.id === userId);
   if (u) {
     u.isApproved = true;
@@ -587,25 +589,28 @@ window.approveUserById = function(userId) {
     renderAdminUsersTable();
     alert(`Account for ${u.fullName} (${u.mobileNumber}) approved successfully!`);
   }
-};
+}
+window.approveUserById = approveUserById;
 
-window.changeUserRoleById = function(userId, newRole) {
+function changeUserRoleById(userId, newRole) {
   const u = users.find(x => x.id === userId);
   if (u) {
     u.role = newRole;
     saveUsers();
     alert(`Updated ${u.fullName}'s role to ${newRole}`);
   }
-};
+}
+window.changeUserRoleById = changeUserRoleById;
 
-window.toggleUserActiveById = function(userId) {
+function toggleUserActiveById(userId) {
   const u = users.find(x => x.id === userId);
   if (u) {
     u.isActive = !u.isActive;
     saveUsers();
     renderAdminUsersTable();
   }
-};
+}
+window.toggleUserActiveById = toggleUserActiveById;
 
 // Admin Add Staff Directly
 document.getElementById('adminCreateUserBtn')?.addEventListener('click', () => {
@@ -900,13 +905,14 @@ document.querySelectorAll('.upload-tab-btn').forEach(btn => {
   });
 });
 
-window.openNewPurchaseModal = function() {
+function openNewPurchaseModal() {
   if (!currentUser) {
     openAuthModal();
     return;
   }
-  document.getElementById('newPurchaseModal').classList.add('open');
-};
+  document.getElementById('newPurchaseModal')?.classList.add('open');
+}
+window.openNewPurchaseModal = openNewPurchaseModal;
 
 document.getElementById('openNewPurchaseBtn')?.addEventListener('click', openNewPurchaseModal);
 
@@ -1296,7 +1302,7 @@ document.getElementById('modeUpiBtn')?.addEventListener('click', () => {
   document.getElementById('upiFields').style.display = 'block';
 });
 
-window.openSettlementModal = function(batchId) {
+function openSettlementModal(batchId) {
   if (!currentUser) {
     openAuthModal();
     return;
@@ -1321,7 +1327,8 @@ window.openSettlementModal = function(batchId) {
   document.getElementById('settleUpiRef').value = Math.floor(100000000000 + Math.random() * 900000000000).toString();
 
   document.getElementById('settlePaymentModal').classList.add('open');
-};
+}
+window.openSettlementModal = openSettlementModal;
 
 document.getElementById('confirmSettlementBtn')?.addEventListener('click', () => {
   if (!currentSettlePurchase) return;
@@ -1734,10 +1741,16 @@ function mergeRemoteDataIntoLocal(data) {
 
   if (Array.isArray(data.purchases) && data.purchases.length > 0) {
     data.purchases.forEach(rp => {
-      const bId = rp.batchId || ('PO-' + (rp.id || Date.now()));
-      if (!purchases.some(p => p.batchId === bId)) {
+      const bId = rp.batchId || rp.poNumber || ('PO-' + (rp.id || 'ITEM'));
+      const exists = purchases.some(p => 
+        (p.batchId && p.batchId === bId) || 
+        (p.poNumber && p.poNumber === (rp.poNumber || bId)) ||
+        (p.id && rp.id && p.id === rp.id)
+      );
+      if (!exists) {
         purchases.unshift({
-          date: rp.date,
+          id: rp.id || Date.now(),
+          poNumber: rp.poNumber || bId,
           batchId: bId,
           item: rp.itemName || rp.item || 'Vegetable',
           boxes: parseInt(rp.boxes) || 0,
@@ -1745,7 +1758,7 @@ function mergeRemoteDataIntoLocal(data) {
           rate: parseFloat(rp.rate) || 0,
           total: parseFloat(rp.totalAmount !== undefined ? rp.totalAmount : rp.total) || 0,
           supplier: rp.supplierName || rp.supplier || 'Direct Mandi Farmer',
-          paid: rp.status === 'PAID' || rp.paid === true,
+          paid: rp.status === 'PAID' || rp.paymentStatus === 'PAID' || rp.paid === true,
           settlementDate: rp.settlementDate || '',
           settlementMode: rp.paymentMethod || rp.settlementMode || 'Cash',
           recordedBy: rp.recordedBy || 'Mobile App Sync'
@@ -1757,12 +1770,17 @@ function mergeRemoteDataIntoLocal(data) {
 
   if (Array.isArray(data.suppliers) && data.suppliers.length > 0) {
     data.suppliers.forEach(rs => {
-      if (!suppliers.some(s => (s.name || '').toLowerCase() === (rs.name || '').toLowerCase())) {
+      const exists = suppliers.some(s => 
+        (s.name || '').trim().toLowerCase() === (rs.name || '').trim().toLowerCase() ||
+        (s.id && rs.id && s.id === rs.id)
+      );
+      if (!exists) {
         suppliers.push({
+          id: rs.id || Date.now(),
           name: rs.name,
-          contact: rs.phone || rs.contact || '8608414322',
-          location: rs.address || rs.location || 'Mandi Yard',
-          balanceDue: parseFloat(rs.outstandingPayable !== undefined ? rs.outstandingPayable : rs.balanceDue) || 0,
+          contact: rs.contactNumber || rs.phone || rs.contact || '8608414322',
+          location: rs.location || rs.address || 'Mandi Yard',
+          balanceDue: parseFloat(rs.outstandingBalance !== undefined ? rs.outstandingBalance : (rs.outstandingPayable !== undefined ? rs.outstandingPayable : rs.balanceDue)) || 0,
           active: true
         });
         changed = true;

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lakshana Veggie - Online Mandi & Procurement Web Portal</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥕</text></svg>" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -113,7 +114,7 @@
               <label for="portalLoginMobile">Registered Mobile Number</label>
               <div class="input-with-icon">
                 <span class="input-icon">📱</span>
-                <input type="tel" id="portalLoginMobile" class="form-input" placeholder="e.g. 8608414322" maxlength="10" required />
+                <input type="tel" id="portalLoginMobile" class="form-input" placeholder="e.g. 8608414322" maxlength="10" autocomplete="username tel" required />
                 <button type="button" class="input-clear-btn" id="clearMobileBtn" title="Clear">✕</button>
               </div>
             </div>
@@ -122,7 +123,7 @@
               <label for="portalLoginPin">Security PIN</label>
               <div class="input-with-icon">
                 <span class="input-icon">🔑</span>
-                <input type="password" id="portalLoginPin" class="form-input" placeholder="4-digit PIN" maxlength="4" required />
+                <input type="password" id="portalLoginPin" class="form-input" placeholder="4-digit PIN" maxlength="4" autocomplete="current-password" required />
                 <button type="button" class="input-eye-btn" id="togglePinVisibilityBtn" title="Show / Hide PIN">👁️</button>
               </div>
             </div>
@@ -153,7 +154,7 @@
               <label for="portalRegName">Full Name</label>
               <div class="input-with-icon">
                 <span class="input-icon">👤</span>
-                <input type="text" id="portalRegName" class="form-input" placeholder="e.g. Rajesh Kumar" required />
+                <input type="text" id="portalRegName" class="form-input" placeholder="e.g. Rajesh Kumar" autocomplete="name" required />
               </div>
             </div>
 
@@ -161,7 +162,7 @@
               <label for="portalRegMobile">Mobile Number (10 digits)</label>
               <div class="input-with-icon">
                 <span class="input-icon">📱</span>
-                <input type="tel" id="portalRegMobile" class="form-input" placeholder="e.g. 9840123456" maxlength="10" required />
+                <input type="tel" id="portalRegMobile" class="form-input" placeholder="e.g. 9840123456" maxlength="10" autocomplete="tel" required />
               </div>
             </div>
 
@@ -169,7 +170,7 @@
               <label for="portalRegPin">Choose 4-Digit Security PIN</label>
               <div class="input-with-icon">
                 <span class="input-icon">🔑</span>
-                <input type="password" id="portalRegPin" class="form-input" placeholder="4 digits (e.g. 1234)" maxlength="4" required />
+                <input type="password" id="portalRegPin" class="form-input" placeholder="4 digits (e.g. 1234)" maxlength="4" autocomplete="new-password" required />
               </div>
             </div>
 

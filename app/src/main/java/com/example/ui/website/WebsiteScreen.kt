@@ -227,9 +227,24 @@ fun WebsiteScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Button(
+                            onClick = { activeWebTab = 1 },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            modifier = Modifier.weight(1.2f)
+                        ) {
+                            Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Open In-App Portal")
+                        }
+
+                        OutlinedButton(
                             onClick = {
                                 try {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(webPortalUrl)).apply {
+                                    val targetUrl = if (webPortalUrl.startsWith("file://")) {
+                                        "https://lakshanaveggie.trade"
+                                    } else {
+                                        webPortalUrl
+                                    }
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl)).apply {
                                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                     }
                                     context.startActivity(intent)
@@ -237,21 +252,11 @@ fun WebsiteScreen(
                                     Toast.makeText(context, "Opening Web Portal: $webPortalUrl", Toast.LENGTH_SHORT).show()
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.weight(1.2f)
+                            modifier = Modifier.weight(1.1f)
                         ) {
-                            Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Open in Browser")
-                        }
-
-                        OutlinedButton(
-                            onClick = { viewModel.syncNow() },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Sync Now")
+                            Text("Open in Browser")
                         }
                     }
                 }
@@ -1167,11 +1172,22 @@ fun EmbeddedWebPortalView(
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
     var hasRenderCrashed by remember { mutableStateOf(false) }
+    var lastLoadedTarget by remember { mutableStateOf("") }
 
     val currentUrl = if (loadMode == "local") {
         "file:///android_asset/website/index.html"
     } else {
         targetDomain
+    }
+
+    LaunchedEffect(loadMode, targetDomain) {
+        val target = if (loadMode == "local") "file:///android_asset/website/index.html" else targetDomain
+        if (target != lastLoadedTarget && webViewInstance != null) {
+            lastLoadedTarget = target
+            isLoading = true
+            loadError = null
+            webViewInstance?.loadUrl(target)
+        }
     }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -1190,11 +1206,15 @@ fun EmbeddedWebPortalView(
                     FilterChip(
                         selected = loadMode == "local",
                         onClick = {
-                            loadMode = "local"
-                            loadError = null
-                            hasRenderCrashed = false
-                            isLoading = true
-                            webViewInstance?.loadUrl("file:///android_asset/website/index.html")
+                            if (loadMode != "local") {
+                                loadMode = "local"
+                                loadError = null
+                                hasRenderCrashed = false
+                                isLoading = true
+                                val target = "file:///android_asset/website/index.html"
+                                lastLoadedTarget = target
+                                webViewInstance?.loadUrl(target)
+                            }
                         },
                         label = { Text("Local In-App", style = MaterialTheme.typography.labelSmall) },
                         leadingIcon = {
@@ -1205,11 +1225,14 @@ fun EmbeddedWebPortalView(
                     FilterChip(
                         selected = loadMode == "remote",
                         onClick = {
-                            loadMode = "remote"
-                            loadError = null
-                            hasRenderCrashed = false
-                            isLoading = true
-                            webViewInstance?.loadUrl(targetDomain)
+                            if (loadMode != "remote") {
+                                loadMode = "remote"
+                                loadError = null
+                                hasRenderCrashed = false
+                                isLoading = true
+                                lastLoadedTarget = targetDomain
+                                webViewInstance?.loadUrl(targetDomain)
+                            }
                         },
                         label = { Text("lakshanaveggie.trade", style = MaterialTheme.typography.labelSmall) },
                         leadingIcon = {
@@ -1273,7 +1296,9 @@ fun EmbeddedWebPortalView(
                                 loadMode = "local"
                                 loadError = null
                                 isLoading = true
-                                webViewInstance?.loadUrl("file:///android_asset/website/index.html")
+                                val target = "file:///android_asset/website/index.html"
+                                lastLoadedTarget = target
+                                webViewInstance?.loadUrl(target)
                             },
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                             modifier = Modifier.height(30.dp)
@@ -1351,6 +1376,7 @@ fun EmbeddedWebPortalView(
                 AndroidView(
                     factory = { ctx ->
                         WebView(ctx).apply {
+                            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
                             settings.databaseEnabled = true
@@ -1402,15 +1428,14 @@ fun EmbeddedWebPortalView(
                             }
                             webChromeClient = WebChromeClient()
 
-                            loadUrl(currentUrl)
+                            val initialTarget = if (loadMode == "local") "file:///android_asset/website/index.html" else targetDomain
+                            lastLoadedTarget = initialTarget
+                            loadUrl(initialTarget)
                             webViewInstance = this
                         }
                     },
-                    update = { webView ->
-                        val target = if (loadMode == "local") "file:///android_asset/website/index.html" else targetDomain
-                        if (webView.url != target) {
-                            webView.loadUrl(target)
-                        }
+                    update = {
+                        // Keep update empty so recompositions do not trigger page reloads!
                     },
                     modifier = Modifier.fillMaxSize()
                 )

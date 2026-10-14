@@ -1,0 +1,4438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lakshana Veggie - Online Mandi & Procurement Web Portal</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥕</text></svg>" />
+  <style>
+:root {
+  --primary: #15803d;
+  --primary-light: #22c55e;
+  --primary-dark: #166534;
+  --secondary: #0d9488;
+  --secondary-light: #14b8a6;
+  --accent: #6366f1;
+  --bg: #f8fafc;
+  --card-bg: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --radius: 12px;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.site-header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-logo {
+  width: 44px;
+  height: 44px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--primary-dark);
+}
+
+.brand-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cloud-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-outline {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-outline:hover {
+  background: #f1f5f9;
+}
+
+.btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+/* Ticker */
+.ticker-bar {
+  background: #0f172a;
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  padding: 0.4rem 0;
+  overflow: hidden;
+}
+
+.ticker-wrap {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ticker-content {
+  display: inline-block;
+  padding-left: 100%;
+  animation: ticker 35s linear infinite;
+}
+
+.ticker-content span {
+  margin-right: 2.5rem;
+  color: #e2e8f0;
+}
+
+@keyframes ticker {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-100%, 0, 0); }
+}
+
+/* Main Layout */
+.main-content {
+  max-width: 1280px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.bg-green { background: #ecfdf5; }
+.bg-teal { background: #f0fdfa; }
+.bg-purple { background: #eef2ff; }
+.bg-amber { background: #fffbeb; }
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.stat-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Tabs */
+.portal-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.panel-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.section-desc {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.panel-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  width: 240px;
+}
+
+/* Table */
+.table-container {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  box-shadow: var(--shadow);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.data-table th {
+  background: #f1f5f9;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table tr:hover {
+  background: #f8fafc;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-success { background: #dcfce7; color: #15803d; }
+.badge-warning { background: #fef3c7; color: #b45309; }
+
+/* Inventory Grid */
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.veg-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.veg-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.veg-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.veg-stock {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.veg-details {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Suppliers Grid */
+.suppliers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.supplier-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.supplier-card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.supplier-card p {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+/* Sync Hub */
+.sync-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.sync-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.sync-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.sync-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.sync-card p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.sync-details {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.sync-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal.open {
+  display: flex;
+}
+
+.modal-dialog {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 650px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.upload-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.upload-tab-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.upload-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.upload-tab-content {
+  display: none;
+}
+
+.upload-tab-content.active {
+  display: block;
+}
+
+.modal-instruction {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.drop-zone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background: #f8fafc;
+  margin-bottom: 1rem;
+}
+
+.drop-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.file-label {
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.paste-section label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.paste-section textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+}
+
+.image-sample-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.auto-update-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+  background: #f0fdf4;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background: #f8fafc;
+}
+
+.site-footer {
+  margin-top: 3rem;
+  border-top: 1px solid var(--border);
+  background: #ffffff;
+  padding: 1.5rem;
+}
+
+.footer-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Export Hub Styles */
+.export-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.export-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.export-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary);
+}
+
+.export-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.export-card-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #f1f5f9;
+}
+
+.export-card h4 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.export-card p {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 1rem;
+}
+
+/* Date Stepper (DDMMYY) Styles */
+.date-stepper-group {
+  margin-bottom: 1rem;
+}
+
+.date-stepper-group label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.date-ddmmyy-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.date-stepper-controls {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.date-step-btn {
+  background: #e2e8f0;
+  border: none;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  color: #334155;
+  transition: background 0.15s;
+}
+
+.date-step-btn:hover {
+  background: #cbd5e1;
+}
+
+.date-stepper-display {
+  flex: 1;
+  text-align: center;
+  padding: 0.4rem 0.5rem;
+  background: #ffffff;
+}
+
+.date-stepper-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.date-stepper-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.date-preset-chips {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.date-preset-chip {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.date-preset-chip:hover {
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+.form-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.form-group {
+  margin-bottom: 0.85rem;
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.form-calculated-box {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* User Profile & Auth in Header */
+.user-profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  padding: 0.3rem 0.65rem;
+  border-radius: 24px;
+}
+
+.user-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, #15803d, #22c55e);
+}
+
+.user-info-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.user-name-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.user-role-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.role-admin { background: #fee2e2; color: #991b1b; }
+.role-manager { background: #ccfbf1; color: #0f766e; }
+.role-purchaser { background: #ede9fe; color: #5b21b6; }
+.role-inventory_clerk { background: #fef3c7; color: #92400e; }
+.role-viewer { background: #e2e8f0; color: #334155; }
+
+/* Empty States */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: #ffffff;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+}
+
+.empty-state h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.4rem;
+}
+
+.empty-state p {
+  font-size: 0.875rem;
+  color: #64748b;
+  max-width: 440px;
+  margin: 0 auto 1.25rem auto;
+}
+
+/* Auth Modal Specifics */
+.auth-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 1.25rem;
+}
+
+.auth-tab-btn {
+  flex: 1;
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.auth-tab-btn.active {
+  color: var(--primary);
+}
+
+.auth-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+}
+
+.auth-alert-box {
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  margin-bottom: 1rem;
+}
+
+.auth-alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.auth-alert-info {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.quick-admin-login-btn {
+  width: 100%;
+  background: #f0fdf4;
+  border: 1px dashed #86efac;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #166534;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background 0.15s;
+}
+
+.quick-admin-login-btn:hover {
+  background: #dcfce7;
+}
+
+/* User Management Table in Admin Modal */
+.user-mgmt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  margin-top: 1rem;
+}
+
+.user-mgmt-table th, .user-mgmt-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.user-mgmt-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+}
+
+/* Dedicated Admin Authentication Screen (Default Visitor View) */
+.auth-screen-container {
+  min-height: calc(100vh - 160px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.25rem;
+  background: radial-gradient(circle at 80% 20%, #ecfdf5 0%, #f8fafc 55%, #f1f5f9 100%);
+}
+
+.auth-card-wrapper {
+  width: 100%;
+  max-width: 480px;
+}
+
+.auth-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+  padding: 2.25rem;
+}
+
+.auth-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 9999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-bottom: 1.25rem;
+}
+
+.auth-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+  line-height: 1.25;
+}
+
+.auth-subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.auth-card-footer {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #f1f5f9;
+  text-align: center;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.auth-card-footer strong {
+  color: #0f172a;
+}
+
+/* Android Top App Bar Replica */
+.auth-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.auth-top-shield {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #dcfce7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.auth-top-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #14532d;
+  margin: 0;
+}
+
+.auth-top-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Lakshana Logo Header Badge Replica */
+.mandi-brand-header-card {
+  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  box-shadow: 0 10px 15px -3px rgba(27, 94, 32, 0.25);
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mandi-truck-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+}
+
+.mandi-brand-title {
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.25rem 0;
+  color: #ffffff;
+}
+
+.mandi-brand-tagline {
+  font-size: 0.8rem;
+  opacity: 0.95;
+  margin: 0 0 0.5rem 0;
+  color: #dcfce7;
+}
+
+.mandi-brand-pill {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #f0fdf4;
+}
+
+/* Auth Mode Tabs */
+.auth-mode-tabs {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 1.25rem;
+}
+
+.auth-mode-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-mode-tab.active {
+  background: #ffffff;
+  color: #15803d;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Auth Notice Card */
+.auth-notice-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.auth-notice-icon {
+  font-size: 1.4rem;
+  color: #15803d;
+}
+
+.auth-notice-title {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #166534;
+  margin: 0;
+}
+
+.auth-notice-desc {
+  font-size: 0.75rem;
+  color: #15803d;
+  margin: 0;
+}
+
+/* Input With Icon & Buttons */
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 1.1rem;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.input-with-icon .form-input {
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+}
+
+.input-clear-btn,
+.input-eye-btn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.input-clear-btn:hover,
+.input-eye-btn:hover {
+  color: #334155;
+}
+
+.forgot-pin-btn {
+  background: transparent;
+  border: none;
+  color: #15803d;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.forgot-pin-btn:hover {
+  color: #166534;
+}
+
+
+</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+  <!-- Top Navigation Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-logo">
+          <span>🥕</span>
+        </div>
+        <div>
+          <h1 class="brand-title">LAKSHANA VEGGIE</h1>
+          <p class="brand-sub">Internal Mandi Procurement & Inventory Management System</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <!-- Auth Profile / Login Button Container -->
+        <div id="headerAuthContainer">
+          <!-- Dynamically populated: User Profile Badge or Login Button -->
+        </div>
+
+        <div id="authenticatedHeaderActions" style="display: none; align-items: center; gap: 0.5rem;">
+          <div class="cloud-status-badge" id="cloudSyncStatus">
+            <span class="status-dot"></span>
+            <span class="status-text">Cloud Synchronized</span>
+          </div>
+          <button class="btn btn-outline" id="openExportHubBtn">
+            <span class="icon">📦</span> Export Hub
+          </button>
+          <button class="btn btn-outline" id="syncNowBtn">
+            <span class="icon">🔄</span> Sync Online
+          </button>
+          <button class="btn btn-primary" id="openUploadModalBtn">
+            <span class="icon">📤</span> Upload Daily Sheet
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- DEDICATED ADMIN / STAFF AUTHENTICATION SCREEN (MIRRORS ANDROID LoginScreen.kt) -->
+  <div id="authScreen" class="auth-screen-container">
+    <div class="auth-card-wrapper">
+      <div class="auth-card">
+        <!-- Top App Bar Simulation matching Android TopAppBar -->
+        <div class="auth-top-bar">
+          <div class="auth-top-shield">
+            <span>🛡️</span>
+          </div>
+          <div>
+            <h3 class="auth-top-title">Lakshana Veggie</h3>
+            <p class="auth-top-sub" id="authTopSub">Secure Staff Sign In</p>
+          </div>
+        </div>
+
+        <!-- Full Brand Logo Header matching LakshanaLogoHeader.kt -->
+        <div class="mandi-brand-header-card">
+          <div class="mandi-truck-badge">
+            <span>🚚</span>
+            <span style="font-size: 1.1rem; margin-left: -4px;">🥕</span>
+          </div>
+          <h2 class="mandi-brand-title">LAKSHANA VEGGIE EXPRESS</h2>
+          <p class="mandi-brand-tagline">Fresh From Mandi To Your Doorstep</p>
+          <div class="mandi-brand-pill">Direct Mandi Procurement & Warehouse Inventory</div>
+        </div>
+
+        <!-- Auth Mode Selector Tabs: [ Sign In ] | [ Register ] -->
+        <div class="auth-mode-tabs">
+          <button type="button" class="auth-mode-tab active" id="portalTabLogin">
+            <span>🔑</span> Sign In
+          </button>
+          <button type="button" class="auth-mode-tab" id="portalTabRegister">
+            <span>👤</span> Register
+          </button>
+        </div>
+
+        <div id="portalAuthAlert" class="auth-alert-box" style="display:none;"></div>
+
+        <!-- LOGIN FORM CONTAINER -->
+        <div id="loginFormContainer">
+          <!-- Mobile & PIN Login Notice Card -->
+          <div class="auth-notice-card">
+            <span class="auth-notice-icon">🔒</span>
+            <div>
+              <h4 class="auth-notice-title">Mobile & PIN Login</h4>
+              <p class="auth-notice-desc">Sign in with your registered mobile and 4-digit security PIN</p>
+            </div>
+          </div>
+
+          <!-- Quick Admin Fill & Instant Access Chips -->
+          <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-bottom: 0.75rem; flex-wrap: wrap;">
+            <button type="button" class="quick-admin-login-btn" id="portalQuickAdminBtn" title="Instant Admin 8608414322 / PIN 5147">
+              ⚡ <span>Instant Admin Login (<strong>8608414322</strong> / PIN <strong>5147</strong>)</span>
+            </button>
+            <button type="button" class="btn btn-outline" id="portalGuestViewBtn" style="padding: 0.4rem 0.85rem; font-size: 0.82rem; border-radius: 9999px;">
+              👁️ <span>View Mandi Dashboard as Guest</span>
+            </button>
+          </div>
+
+          <!-- LOGIN FORM -->
+          <form id="portalLoginForm" onsubmit="event.preventDefault(); handlePortalLoginSubmit();">
+            <div class="form-group">
+              <label for="portalLoginMobile">Registered Mobile Number</label>
+              <div class="input-with-icon">
+                <span class="input-icon">📱</span>
+                <input type="tel" id="portalLoginMobile" class="form-input" placeholder="e.g. 8608414322" maxlength="10" autocomplete="username tel" required />
+                <button type="button" class="input-clear-btn" id="clearMobileBtn" title="Clear">✕</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="portalLoginPin">Security PIN</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🔑</span>
+                <input type="password" id="portalLoginPin" class="form-input" placeholder="4-digit PIN" maxlength="4" autocomplete="current-password" required />
+                <button type="button" class="input-eye-btn" id="togglePinVisibilityBtn" title="Show / Hide PIN">👁️</button>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: -0.25rem; margin-bottom: 1rem;">
+              <span style="font-size: 0.75rem; color: #64748b;">Default Admin PIN: <strong>5147</strong></span>
+              <button type="button" class="forgot-pin-btn" id="forgotPinLink">Forgot PIN?</button>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="padding: 0.85rem; font-size: 1rem; font-weight: 700; border-radius: 12px;">
+              🔓 Sign In to Lakshana Veggie
+            </button>
+          </form>
+        </div>
+
+        <!-- REGISTER FORM CONTAINER -->
+        <div id="registerFormContainer" style="display: none;">
+          <div class="auth-notice-card" style="background: #eff6ff; border-color: #bfdbfe;">
+            <span class="auth-notice-icon">📋</span>
+            <div>
+              <h4 class="auth-notice-title" style="color: #1e40af;">Staff Registration</h4>
+              <p class="auth-notice-desc" style="color: #1e3a8a;">New accounts require approval from administrator (8608414322)</p>
+            </div>
+          </div>
+
+          <form id="portalRegisterForm" onsubmit="event.preventDefault(); handlePortalRegisterSubmit();">
+            <div class="form-group">
+              <label for="portalRegName">Full Name</label>
+              <div class="input-with-icon">
+                <span class="input-icon">👤</span>
+                <input type="text" id="portalRegName" class="form-input" placeholder="e.g. Rajesh Kumar" autocomplete="name" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="portalRegMobile">Mobile Number (10 digits)</label>
+              <div class="input-with-icon">
+                <span class="input-icon">📱</span>
+                <input type="tel" id="portalRegMobile" class="form-input" placeholder="e.g. 9840123456" maxlength="10" autocomplete="tel" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="portalRegPin">Choose 4-Digit Security PIN</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🔑</span>
+                <input type="password" id="portalRegPin" class="form-input" placeholder="4 digits (e.g. 1234)" maxlength="4" autocomplete="new-password" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="portalRegDept">Department / Role</label>
+              <select id="portalRegDept" class="form-input">
+                <option value="Procurement">Procurement (Purchase Officer)</option>
+                <option value="Warehouse">Warehouse (Inventory Clerk)</option>
+                <option value="Operations">Operations (Manager)</option>
+                <option value="Accounts">Accounts & Settle</option>
+                <option value="Auditor">Auditor (Viewer)</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="padding: 0.85rem; font-size: 1rem; font-weight: 700; border-radius: 12px; margin-top: 1rem;">
+              Submit Staff Registration
+            </button>
+          </form>
+        </div>
+
+        <div class="auth-card-footer">
+          <p>🛡️ Powered by Lakshana Veggie Android & Cloud Sync Architecture</p>
+          <p>Domain: <strong>lakshanaveggie.trade</strong> • Admin Support: <strong>8608414322</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORGOT PIN MODAL -->
+  <div class="modal" id="forgotPinModal">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3>🔑 Security PIN Recovery</h3>
+        <button class="modal-close" onclick="document.getElementById('forgotPinModal').classList.remove('open')">✕</button>
+      </div>
+      <div style="padding: 1.25rem 0;">
+        <p style="font-size: 0.875rem; color: #334155; line-height: 1.5; margin-bottom: 1rem;">
+          For security, PIN resets must be confirmed by the primary system administrator.
+        </p>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+          <div style="font-weight: 700; color: #166534; font-size: 0.875rem;">Administrator Contact:</div>
+          <div style="font-size: 1.125rem; font-weight: 800; color: #15803d; margin: 0.25rem 0;">8608414322</div>
+          <div style="font-size: 0.75rem; color: #166534;">Default Admin PIN: <strong>5147</strong></div>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <a href="tel:8608414322" class="btn btn-primary" style="flex: 1; text-align: center; text-decoration: none;">📞 Call Admin</a>
+          <a href="https://wa.me/918608414322?text=Hello%20Lakshana%20Admin,%20please%20reset%20my%20web%20portal%20PIN" target="_blank" class="btn btn-outline" style="flex: 1; text-align: center; text-decoration: none;">💬 WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-content" id="authenticatedMainContent" style="display: none;">
+    <!-- Quick Stats Cards (Calculated from Real Data) -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon bg-green">📦</div>
+        <div class="stat-info">
+          <span class="stat-label">Total Stock in Warehouse</span>
+          <h3 class="stat-value" id="totalStockKgs">0 <small>kgs</small></h3>
+          <span class="stat-sub" id="totalBoxesCount">0 boxes / crates</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-teal">💰</div>
+        <div class="stat-info">
+          <span class="stat-label">Today's Total Purchases</span>
+          <h3 class="stat-value" id="todayPurchasesTotal">₹0.00</h3>
+          <span class="stat-sub" id="todayIntakeBatchesSub">0 daily intake batches</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-purple">🚚</div>
+        <div class="stat-info">
+          <span class="stat-label">Active Mandi Suppliers</span>
+          <h3 class="stat-value" id="activeSuppliersCount">0</h3>
+          <span class="stat-sub">Direct farm & APMC merchants</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-amber">⚡</div>
+        <div class="stat-info">
+          <span class="stat-label">Online Sync State</span>
+          <h3 class="stat-value" style="color: #10b981;" id="syncStateText">Connected</h3>
+          <span class="stat-sub" id="lastSyncTimeLabel">Ready to sync</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="portal-tabs">
+      <button class="tab-btn active" data-tab="purchases">📑 Daily Purchase Manifest</button>
+      <button class="tab-btn" data-tab="inventory">🥕 Live Inventory & Stocks</button>
+      <button class="tab-btn" data-tab="suppliers">🏢 Mandi Suppliers</button>
+      <button class="tab-btn" data-tab="sync">☁️ Cloud Synchronize Hub</button>
+    </div>
+
+    <!-- TAB 1: DAILY PURCHASES -->
+    <section class="tab-panel active" id="tab-purchases">
+      <div class="panel-header">
+        <div>
+          <h2>Daily Purchases Ledger</h2>
+          <p class="section-desc">Date, Item, Boxes, Quantity in Kgs, Rate per Kg and Auto-Calculated Total (Qty * Rate)</p>
+        </div>
+        <div class="panel-controls">
+          <input type="text" id="purchaseSearch" class="search-input" placeholder="Search item or supplier..." />
+          <button class="btn btn-outline" id="exportPurchasesCsvBtn" title="Download daily purchases as CSV/Excel">📥 Export CSV</button>
+          <button class="btn btn-outline" id="printReportBtn">🖨️ Print Manifest</button>
+          <button class="btn btn-outline" onclick="document.getElementById('uploadModal').classList.add('open')">
+            📤 Bulk Upload
+          </button>
+          <button class="btn btn-primary" id="openNewPurchaseBtn" onclick="document.getElementById('newPurchaseModal').classList.add('open')">
+            + New Purchase
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table" id="purchasesTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Batch / PO #</th>
+              <th>Vegetable Item</th>
+              <th>Boxes</th>
+              <th>Qty (Kgs)</th>
+              <th>Rate / Kg</th>
+              <th>Total Amount (₹)</th>
+              <th>Supplier</th>
+              <th>Payment</th>
+            </tr>
+          </thead>
+          <tbody id="purchasesTbody">
+            <!-- Populated dynamically via app.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: INVENTORY -->
+    <section class="tab-panel" id="tab-inventory">
+      <div class="panel-header">
+        <div>
+          <h2>Current Vegetable Stock Levels</h2>
+          <p class="section-desc">Real-time stock balance updated automatically upon daily sheet uploads</p>
+        </div>
+        <div class="panel-controls">
+          <input type="text" id="inventorySearch" class="search-input" placeholder="Search vegetables..." />
+          <button class="btn btn-outline" id="exportInventoryCsvBtn">📥 Export Stock CSV</button>
+        </div>
+      </div>
+
+      <div class="inventory-grid" id="inventoryCardsGrid">
+        <!-- Rendered via app.js -->
+      </div>
+    </section>
+
+    <!-- TAB 3: SUPPLIERS -->
+    <section class="tab-panel" id="tab-suppliers">
+      <div class="panel-header">
+        <div>
+          <h2>Mandi Vendor & Farm Suppliers Directory</h2>
+          <p class="section-desc">Registered procurement partners, contacts, and payment balances</p>
+        </div>
+        <div class="panel-controls">
+          <button class="btn btn-outline" id="exportSuppliersCsvBtn">📥 Export Vendors CSV</button>
+          <button class="btn btn-primary" id="openNewSupplierModalBtn">+ Register Mandi Vendor</button>
+        </div>
+      </div>
+      <div class="suppliers-grid" id="suppliersGrid">
+        <!-- Rendered via app.js -->
+      </div>
+    </section>
+
+    <!-- TAB 4: CLOUD SYNCHRONIZE HUB -->
+    <section class="tab-panel" id="tab-sync">
+      <div class="panel-header">
+        <div>
+          <h2>Online Cloud Synchronize Dashboard</h2>
+          <p class="section-desc">Real-time synchronization between Android Mobile App & Web Portal</p>
+        </div>
+      </div>
+
+      <div class="sync-grid">
+        <div class="sync-card">
+          <div class="sync-icon">☁️</div>
+          <h3>Two-Way Cloud Sync</h3>
+          <p>Local Room Database on Android devices syncs purchases, stocks, and daily sheets with the Web Portal seamlessly.</p>
+          <div class="sync-details">
+            <div class="detail-row"><span>Sync Engine:</span> <strong>Cloudflare Worker (.workers.dev)</strong></div>
+            <div class="detail-row"><span>Admin Contact:</span> <strong>8608414322</strong></div>
+            <div class="detail-row"><span>Auto-Sync:</span> <span class="badge badge-success">Enabled</span></div>
+          </div>
+          <button class="btn btn-primary btn-block" id="triggerSyncNow">Synchronize Now</button>
+        </div>
+
+        <div class="sync-card">
+          <div class="sync-icon">💾</div>
+          <h3>Backup & Data Restore Hub</h3>
+          <p>Restore from Cloudflare cloud storage, load sample Mandi inventory, or import JSON backup.</p>
+          <div class="sync-buttons">
+            <button class="btn btn-primary btn-block" id="pullFromCloudBtn">☁️ Pull & Restore from Server</button>
+            <button class="btn btn-outline btn-block" id="restoreSampleDataBtn">🔄 Restore Sample Mandi Data</button>
+            <button class="btn btn-outline btn-block" id="exportBackupBtn">📥 Export JSON Backup</button>
+            <button class="btn btn-outline btn-block" id="openImportBackupModalBtn">📥 Import Mobile App JSON</button>
+            <button class="btn btn-outline btn-block" id="clearWebDataBtn" style="color: #dc2626; border-color: #fca5a5;">🗑️ Reset / Clear All Records</button>
+          </div>
+        </div>
+
+        <div class="sync-card">
+          <div class="sync-icon">🌐</div>
+          <h3>Connected Backend Domain & Real-Time Sync</h3>
+          <p>Two-way real-time sync with Android mobile app. Default domain: <code>https://lakshanaveggie.trade/api/v1/sync</code></p>
+          <div style="margin: 0.75rem 0;">
+            <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Server API / Sync Domain URL:</label>
+            <input type="text" id="customDomainInput" class="form-input" value="https://lakshanaveggie.trade/api/v1/sync" placeholder="https://lakshanaveggie.trade/api/v1/sync" style="font-family: monospace; font-size: 0.8125rem;" />
+          </div>
+          <div style="display: flex; gap: 0.4rem; margin-bottom: 0.75rem;">
+            <button type="button" class="btn btn-outline btn-sm" style="flex: 1; font-size: 0.72rem; padding: 0.25rem;" onclick="document.getElementById('customDomainInput').value='https://lakshanaveggie.trade/api/v1/sync'">lakshanaveggie.trade</button>
+            <button type="button" class="btn btn-outline btn-sm" style="flex: 1; font-size: 0.72rem; padding: 0.25rem;" onclick="document.getElementById('customDomainInput').value='https://api.lakshanaveggie.trade/sync'">api.lakshanaveggie.trade</button>
+          </div>
+          <div id="domainTestFeedback" style="display: none; padding: 0.5rem; border-radius: 6px; font-size: 0.75rem; margin-bottom: 0.75rem;"></div>
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <button class="btn btn-outline" style="flex: 1;" id="testDomainPingBtn">⚡ Test Ping</button>
+            <button class="btn btn-primary" style="flex: 1;" id="saveDomainBtn">Save URL</button>
+          </div>
+          <p style="font-size: 0.75rem; color: #64748b; line-height: 1.4; margin: 0;">
+            💡 Both your mobile app and website use the exact same URL: <code>https://lakshanaveggie.trade/api/v1/sync</code>.
+          </p>
+        </div>
+
+        <div class="sync-card">
+          <div class="sync-icon">📱</div>
+          <h3>Direct Mobile App Bridge</h3>
+          <p>Instantly transfer records between this Web Portal and your Android device with zero cloud dependency.</p>
+          <div class="sync-details">
+            <div class="detail-row"><span>Mobile Sync Format:</span> <strong>JSON v2.0 Dual-Schema</strong></div>
+            <div class="detail-row"><span>Sync Target:</span> <code>Cloudflare Worker</code></div>
+            <div class="detail-row"><span>Quick Actions:</span> <span class="badge badge-success">Direct Import & Export</span></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem;">
+            <button class="btn btn-primary btn-block" onclick="document.getElementById('importBackupModal').classList.add('open')">📥 Direct Mobile Backup Import</button>
+            <button class="btn btn-outline btn-block" id="copySyncPayloadBtn">📋 Copy Web Sync Payload</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- DAILY SHEET UPLOAD MODAL -->
+  <div class="modal" id="uploadModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Upload Daily Purchase Sheet (Direct Excel or CSV)</h3>
+        <button class="modal-close" onclick="document.getElementById('uploadModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="upload-tabs">
+          <button class="upload-tab-btn active" data-utab="excel">Direct Excel / CSV</button>
+          <button class="upload-tab-btn" data-utab="image">Image Format (Mandi Bill)</button>
+        </div>
+
+        <div class="upload-tab-content active" id="utab-excel">
+          <p class="modal-instruction">Upload an Excel (.xlsx / .csv) file or paste entries with columns: <strong>Date, Supplier, Items, Boxes, Qty(kgs), Rate, Total</strong></p>
+          <div class="drop-zone" id="excelDropZone">
+            <span class="drop-icon">📊</span>
+            <p>Drag and drop Excel/CSV file here or <label for="fileInput" class="file-label">Browse File</label></p>
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.txt" style="display:none;" />
+          </div>
+          <div class="paste-section">
+            <label>Or Paste CSV / Tabular Entries:</label>
+            <textarea id="excelPasteArea" rows="4" placeholder="Date,Supplier,Items,Boxes,Qty(kgs),Rate,Total&#10;2026-09-28,Lakshana Agro,Country Tomatoes,10,200.0,32.00,6400.00"></textarea>
+          </div>
+        </div>
+
+        <div class="upload-tab-content" id="utab-image">
+          <p class="modal-instruction">Upload an image / photo of your handwritten or printed Mandi arrival slip for automatic optical parsing:</p>
+          <div class="drop-zone" id="imageDropZone">
+            <span class="drop-icon">📷</span>
+            <p>Upload Mandi bill photo <label for="imageInput" class="file-label">Choose Photo</label></p>
+            <input type="file" id="imageInput" accept="image/*" style="display:none;" />
+          </div>
+        </div>
+
+        <div class="auto-update-toggle">
+          <input type="checkbox" id="autoUpdateInventory" checked />
+          <label for="autoUpdateInventory">Automatically increment warehouse inventory stocks and crates upon upload</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('uploadModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" id="processUploadBtn">Parse & Integrate Daily Sheet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE NEW PURCHASE MODAL (WITH DATE FORWARD & BACKWARD DDMMYY) -->
+  <div class="modal" id="newPurchaseModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Create New Purchase Order</h3>
+        <button class="modal-close" onclick="document.getElementById('newPurchaseModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Date Stepper Forward & Backward (DDMMYY) -->
+        <div class="date-stepper-group">
+          <label>
+            <span>Purchase Date</span>
+            <span class="date-ddmmyy-badge" id="newPoDdmmyyBadge">DDMMYY: 270926</span>
+          </label>
+          <div class="date-stepper-controls">
+            <button type="button" class="date-step-btn" id="newPoDateBackBtn" title="Previous Day (Backward)">◀</button>
+            <div class="date-stepper-display">
+              <div class="date-stepper-value" id="newPoDateDisplay">27-09-26</div>
+              <div class="date-stepper-sub" id="newPoDateSub">Sunday, 27 Sep 2026 (Today)</div>
+            </div>
+            <button type="button" class="date-step-btn" id="newPoDateFwdBtn" title="Next Day (Forward)">▶</button>
+          </div>
+          <div class="date-preset-chips">
+            <button type="button" class="date-preset-chip" id="newPoDateYest">◀ Yesterday</button>
+            <button type="button" class="date-preset-chip" id="newPoDateToday">Today</button>
+            <button type="button" class="date-preset-chip" id="newPoDateTom">Tomorrow ▶</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="newPoItem">Vegetable Item Name</label>
+          <input type="text" id="newPoItem" class="form-input" placeholder="e.g. Country Tomatoes, Red Onions..." value="Fresh Country Tomatoes" />
+        </div>
+
+        <div class="form-group">
+          <label for="newPoSupplier">Vendor / Mandi Supplier</label>
+          <input type="text" id="newPoSupplier" class="form-input" placeholder="e.g. Lakshana Agro Farms" value="Lakshana Agro Farms" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="newPoBoxes">Boxes / Crates</label>
+            <input type="number" id="newPoBoxes" class="form-input" value="10" min="1" />
+          </div>
+          <div class="form-group">
+            <label for="newPoQty">Quantity (Kgs)</label>
+            <input type="number" id="newPoQty" class="form-input" value="200" step="0.5" min="1" />
+          </div>
+          <div class="form-group">
+            <label for="newPoRate">Rate per Kg (₹)</label>
+            <input type="number" id="newPoRate" class="form-input" value="35.00" step="0.5" min="0" />
+          </div>
+        </div>
+
+        <div class="form-calculated-box">
+          <span>Auto-Calculated Total (Qty * Rate):</span>
+          <strong style="color: #15803d; font-size: 1.1rem;" id="newPoTotalDisplay">₹7,000.00</strong>
+        </div>
+
+        <div class="auto-update-toggle">
+          <input type="checkbox" id="newPoUpdateStock" checked />
+          <label for="newPoUpdateStock">Auto-update warehouse stock and crates upon saving purchase</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('newPurchaseModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" id="saveNewPoBtn">Create Purchase Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PURCHASE PAYMENT SETTLEMENT MODAL (WITH DATE FORWARD & BACKWARD DDMMYY) -->
+  <div class="modal" id="settlePaymentModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Purchase Payment Settlement (Cash / UPI)</h3>
+        <button class="modal-close" onclick="document.getElementById('settlePaymentModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f1f5f9; border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong id="settlePoBatch" style="font-family: monospace;">BATCH-20260925-02</strong>
+              <div id="settlePoItem" style="font-size: 0.8125rem; color: #64748b;">Baby Potatoes • Green Valley Mandi</div>
+            </div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: #15803d;" id="settlePoAmount">₹31,250.00</div>
+          </div>
+        </div>
+
+        <!-- Settlement Date Forward & Backward (DDMMYY) -->
+        <div class="date-stepper-group">
+          <label>
+            <span>Settlement Date</span>
+            <span class="date-ddmmyy-badge" id="settleDdmmyyBadge">DDMMYY: 270926</span>
+          </label>
+          <div class="date-stepper-controls">
+            <button type="button" class="date-step-btn" id="settleDateBackBtn" title="Previous Day (Backward)">◀</button>
+            <div class="date-stepper-display">
+              <div class="date-stepper-value" id="settleDateDisplay">27-09-26</div>
+              <div class="date-stepper-sub" id="settleDateSub">Sunday, 27 Sep 2026 (Today)</div>
+            </div>
+            <button type="button" class="date-step-btn" id="settleDateFwdBtn" title="Next Day (Forward)">▶</button>
+          </div>
+          <div class="date-preset-chips">
+            <button type="button" class="date-preset-chip" id="settleDateYest">◀ Yesterday</button>
+            <button type="button" class="date-preset-chip" id="settleDateToday">Today</button>
+            <button type="button" class="date-preset-chip" id="settleDateTom">Tomorrow ▶</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Payment Mode</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-outline" id="modeCashBtn" style="flex: 1; background: #ecfdf5; border-color: #10b981; color: #065f46; font-weight: bold;">💵 Cash Payment</button>
+            <button type="button" class="btn btn-outline" id="modeUpiBtn" style="flex: 1;">📱 UPI Instant</button>
+          </div>
+        </div>
+
+        <div id="cashFields">
+          <div class="form-group">
+            <label for="settleCashVoucher">Cash Voucher / Physical Receipt Ref</label>
+            <input type="text" id="settleCashVoucher" class="form-input" value="CASH-VCH-8492" />
+          </div>
+        </div>
+
+        <div id="upiFields" style="display: none;">
+          <div class="form-group">
+            <label for="settleUpiRef">12-Digit UPI UTR / Reference</label>
+            <input type="text" id="settleUpiRef" class="form-input" placeholder="e.g. 938471928471" value="948271039482" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('settlePaymentModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" id="confirmSettlementBtn">Verify & Confirm Settlement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTHENTICATION / LOGIN / REGISTER MODAL -->
+  <div class="modal" id="authModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="authModalTitle">🔑 Sign In to Lakshana Veggie</h3>
+        <button class="modal-close" onclick="document.getElementById('authModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab-btn active" id="authTabLogin">Sign In</button>
+          <button type="button" class="auth-tab-btn" id="authTabRegister">Register Account</button>
+        </div>
+
+        <div id="authAlert" class="auth-alert-box" style="display:none;"></div>
+
+        <!-- 1-Click Default Admin Button -->
+        <button type="button" class="quick-admin-login-btn" id="quickAdminLoginBtn">
+          ⚡ <span>1-Click Sign In as <strong>Default Admin (8608414322 / PIN: 5147)</strong></span>
+        </button>
+
+        <!-- LOGIN FORM -->
+        <div id="loginFormSection">
+          <div class="form-group">
+            <label for="loginMobile">Registered Mobile Number (10 digits)</label>
+            <input type="tel" id="loginMobile" class="form-input" placeholder="e.g. 8608414322" maxlength="10" />
+          </div>
+          <div class="form-group">
+            <label for="loginPin">4-Digit Security PIN</label>
+            <input type="password" id="loginPin" class="form-input" placeholder="4 digits (default: 5147)" maxlength="4" />
+          </div>
+          <button class="btn btn-primary btn-block" id="submitLoginBtn" style="margin-top: 1rem;">
+            Sign In to Portal
+          </button>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div id="registerFormSection" style="display: none;">
+          <div class="form-group">
+            <label for="regFullName">Full Name</label>
+            <input type="text" id="regFullName" class="form-input" placeholder="e.g. Rajesh Kumar" />
+          </div>
+          <div class="form-group">
+            <label for="regMobile">Mobile Number (10 digits)</label>
+            <input type="tel" id="regMobile" class="form-input" placeholder="e.g. 9840123456" maxlength="10" />
+          </div>
+          <div class="form-group">
+            <label for="regPin">Choose 4-Digit Security PIN</label>
+            <input type="password" id="regPin" class="form-input" placeholder="4-digit PIN (e.g. 1234)" maxlength="4" />
+          </div>
+          <div class="form-group">
+            <label for="regDepartment">Department / Role</label>
+            <select id="regDepartment" class="form-input">
+              <option value="Procurement">Procurement (Purchase Officer)</option>
+              <option value="Warehouse">Warehouse (Inventory Clerk)</option>
+              <option value="Operations">Operations (Manager)</option>
+              <option value="Accounts">Accounts & Settle</option>
+              <option value="Auditor">Auditor (Viewer)</option>
+            </select>
+          </div>
+          <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
+            * Note: Admin credentials (mobile <code>8608414322</code> / PIN <code>5147</code>) receive immediate <strong>ADMIN</strong> role. All other staff accounts will be approved by Administrator.
+          </p>
+          <button class="btn btn-primary btn-block" id="submitRegisterBtn" style="margin-top: 1rem;">
+            Register Account
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN USER MANAGEMENT MODAL -->
+  <div class="modal" id="adminUsersModal">
+    <div class="modal-dialog" style="max-width: 760px;">
+      <div class="modal-header">
+        <h3>👥 Staff & Role Management</h3>
+        <button class="modal-close" onclick="document.getElementById('adminUsersModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.8125rem; color: #64748b;">
+          Manage registered procurement officers, managers, and inventory clerks. Roles and approval status synchronize with the mobile application.
+        </p>
+
+        <!-- Quick Add Staff Section -->
+        <details style="margin: 0.85rem 0; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);">
+          <summary style="font-weight: 700; font-size: 0.8125rem; cursor: pointer; color: var(--primary);">+ Add New Staff Member Directly</summary>
+          <div style="margin-top: 0.75rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <input type="text" id="adminNewUserName" class="form-input" placeholder="Staff Full Name" />
+            <input type="tel" id="adminNewUserMobile" class="form-input" placeholder="Mobile Number" maxlength="10" />
+            <select id="adminNewUserRole" class="form-input">
+              <option value="PURCHASER">PURCHASER (Purchase Officer)</option>
+              <option value="MANAGER">MANAGER (Operations)</option>
+              <option value="INVENTORY_CLERK">INVENTORY_CLERK (Warehouse)</option>
+              <option value="VIEWER">VIEWER (Auditor)</option>
+              <option value="ADMIN">ADMIN (Full Control)</option>
+            </select>
+            <input type="password" id="adminNewUserPin" class="form-input" placeholder="4-Digit PIN" maxlength="4" value="5147" />
+          </div>
+          <button class="btn btn-primary btn-sm" id="adminCreateUserBtn" style="margin-top: 0.5rem;">Create & Approve Staff</button>
+        </details>
+
+        <div style="overflow-x: auto;">
+          <table class="user-mgmt-table" id="adminUsersTable">
+            <thead>
+              <tr>
+                <th>Staff Name</th>
+                <th>Mobile</th>
+                <th>Role</th>
+                <th>Dept</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTbody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('adminUsersModal').classList.remove('open')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTER NEW SUPPLIER MODAL -->
+  <div class="modal" id="newSupplierModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>+ Register Mandi Vendor / Farmer</h3>
+        <button class="modal-close" onclick="document.getElementById('newSupplierModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="supplierNameInput">Vendor / Farmer Business Name</label>
+          <input type="text" id="supplierNameInput" class="form-input" placeholder="e.g. Krishna Mandi Merchant" />
+        </div>
+        <div class="form-group">
+          <label for="supplierContactInput">Contact Mobile / Phone</label>
+          <input type="tel" id="supplierContactInput" class="form-input" placeholder="e.g. 9840123456" />
+        </div>
+        <div class="form-group">
+          <label for="supplierLocationInput">Mandi Yard / Farm Location</label>
+          <input type="text" id="supplierLocationInput" class="form-input" placeholder="e.g. Koyambedu APMC / Hosur Farm" />
+        </div>
+        <div class="form-group">
+          <label for="supplierOpeningBalance">Initial Outstanding Balance (₹)</label>
+          <input type="number" id="supplierOpeningBalance" class="form-input" value="0.00" step="0.5" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('newSupplierModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" id="saveSupplierBtn">Save Supplier</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORT MOBILE APP BACKUP MODAL -->
+  <div class="modal" id="importBackupModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>📥 Import Mobile App JSON Backup</h3>
+        <button class="modal-close" onclick="document.getElementById('importBackupModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.8125rem; color: #64748b; margin-bottom: 0.75rem;">
+          In your Android app, tap <strong>Online Sync Hub ➔ "Export Full Backup JSON"</strong>, then upload the file or paste the JSON text below. All your real purchases, items, suppliers, and staff records will be imported immediately.
+        </p>
+        <div class="drop-zone" id="backupDropZone" style="margin-bottom: 0.75rem; padding: 1rem;">
+          <span class="drop-icon" style="font-size: 1.5rem;">📁</span>
+          <p>Choose Backup .json File <label for="backupFileInput" class="file-label">Browse File</label></p>
+          <input type="file" id="backupFileInput" accept=".json,application/json" style="display:none;" />
+        </div>
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+            <label for="backupJsonPasteArea" style="margin-bottom: 0;">Or Paste JSON Content Directly:</label>
+            <button type="button" class="btn btn-sm btn-outline" id="pasteFromClipboardBtn" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">📋 Paste from Clipboard</button>
+          </div>
+          <textarea id="backupJsonPasteArea" rows="6" class="form-input" style="font-family: monospace; font-size: 0.75rem;" placeholder='{"app":"Lakshana Veggie","items":[],"purchases":[],"suppliers":[],"users":[]}'></textarea>
+        </div>
+        <div id="backupPreviewStatus" style="display: none; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.75rem; background: #ecfdf5; color: #065f46; font-weight: 600; border: 1px solid #a7f3d0; margin-top: 0.5rem;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('importBackupModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" id="confirmImportBackupBtn">Import & Sync Records</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT HUB MODAL -->
+  <div class="modal" id="exportHubModal">
+    <div class="modal-dialog" style="max-width: 780px;">
+      <div class="modal-header">
+        <h3>📦 Export Center: Web App & Data Files</h3>
+        <button class="modal-close" onclick="document.getElementById('exportHubModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.875rem; color: #64748b; margin-bottom: 1rem;">
+          Download complete project source files, accounting spreadsheets, or database snapshots.
+        </p>
+
+        <div class="export-grid">
+          <!-- CARD 1: EXPORT WEB APP PACKAGE -->
+          <div class="export-card" style="border: 2px solid #0284c7; background: #f0f9ff;">
+            <div>
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background: #e0f2fe;">🚀</div>
+                <div>
+                  <h4 style="color: #0369a1;">Download Web App (.ZIP)</h4>
+                  <span style="font-size: 0.6875rem; background: #bae6fd; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Cloudflare Ready</span>
+                </div>
+              </div>
+              <p>Complete web bundle (HTML, CSS, JS, cloudflare-worker.js). Ready to host on Cloudflare Pages or any web host.</p>
+            </div>
+            <button class="btn btn-primary btn-block" id="downloadWebAppZipBtn" style="background: #0284c7;">
+              📦 Download Web App ZIP
+            </button>
+          </div>
+
+          <!-- CARD 2: EXPORT PURCHASES CSV/EXCEL -->
+          <div class="export-card">
+            <div>
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background: #dcfce7;">📊</div>
+                <div>
+                  <h4>Daily Purchases Ledger</h4>
+                  <span style="font-size: 0.6875rem; background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Excel / CSV</span>
+                </div>
+              </div>
+              <p>All recorded procurement batches with dates, vegetable items, crates, kg quantities, Mandi rates, and settlement totals.</p>
+            </div>
+            <button class="btn btn-outline btn-block" id="exportPurchasesHubBtn">
+              📥 Export Purchases CSV
+            </button>
+          </div>
+
+          <!-- CARD 3: EXPORT INVENTORY CSV -->
+          <div class="export-card">
+            <div>
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background: #fef3c7;">🥕</div>
+                <div>
+                  <h4>Warehouse Stock Inventory</h4>
+                  <span style="font-size: 0.6875rem; background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: 700;">CSV Spreadsheet</span>
+                </div>
+              </div>
+              <p>Current stock balances in kgs and crates, average purchase rates, and threshold alerts for all commodities.</p>
+            </div>
+            <button class="btn btn-outline btn-block" id="exportInventoryHubBtn">
+              📥 Export Stock CSV
+            </button>
+          </div>
+
+          <!-- CARD 4: EXPORT SUPPLIERS CSV -->
+          <div class="export-card">
+            <div>
+              <div class="export-card-header">
+                <div class="export-card-icon" style="background: #f3e8ff;">🏢</div>
+                <div>
+                  <h4>Mandi Suppliers & Balances</h4>
+                  <span style="font-size: 0.6875rem; background: #f3e8ff; color: #7e22ce; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Vendor Ledger</span>
+                </div>
+              </div>
+              <p>Registered farmers, APMC yard vendors, contact phone numbers, addresses, and outstanding payable balances.</p>
+            </div>
+            <button class="btn btn-outline btn-block" id="exportSuppliersHubBtn">
+              📥 Export Vendors CSV
+            </button>
+          </div>
+
+          <!-- CARD 5: EXPORT FULL BACKUP JSON -->
+          <div class="export-card" style="grid-column: 1 / -1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div class="export-card-icon" style="background: #f1f5f9;">📱</div>
+                <div>
+                  <h4 style="margin: 0;">Full Database Snapshot (JSON v2.0)</h4>
+                  <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
+                    100% cross-compatible with the Android Mobile App Room database and Cloud Sync Hub.
+                  </p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-outline" id="copySyncPayloadHubBtn">📋 Copy Payload</button>
+                <button class="btn btn-primary" id="exportBackupHubBtn">📥 Export .json Backup</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('exportHubModal').classList.remove('open')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <p>© 2026 Lakshana Veggie Express • Admin Hotline: <strong>8608414322</strong></p>
+      <p>Android Mobile App & Cloud Web Portal Architecture</p>
+    </div>
+  </footer>
+
+  <script>
+// Lakshana Veggie Express - Web Portal Application Script
+// Real-time Mandi Procurement & Inventory Management
+// Fully synchronized with Android Mobile App Architecture (lakshanaveggie.trade)
+
+// ==========================================
+// 1. DATA STATE MANAGEMENT (ZERO SAMPLE DATA)
+// ==========================================
+
+// Default Mandi Catalog & Procurement Data (Ensures rich content on fresh visit)
+const DEFAULT_INVENTORY = [
+  { id: 101, name: 'Country Tomato (நாட்டு தக்காளி)', category: 'Vegetables', currentStockKgs: 450, totalBoxes: 18, defaultRatePerKg: 28 },
+  { id: 102, name: 'Hybrid Bangalore Tomato (பெங்களூரு தக்காளி)', category: 'Vegetables', currentStockKgs: 620, totalBoxes: 24, defaultRatePerKg: 32 },
+  { id: 103, name: 'Small Onion / Shallots (சின்ன வெங்காயம்)', category: 'Vegetables', currentStockKgs: 380, totalBoxes: 15, defaultRatePerKg: 65 },
+  { id: 104, name: 'Bellary Big Onion (பெரிய வெங்காயம்)', category: 'Vegetables', currentStockKgs: 1250, totalBoxes: 50, defaultRatePerKg: 35 },
+  { id: 105, name: 'Ooty Fresh Carrot (ஊட்டி கேரட்)', category: 'Vegetables', currentStockKgs: 290, totalBoxes: 12, defaultRatePerKg: 45 },
+  { id: 106, name: 'Kolar Potato (உருளைக்கிழங்கு)', category: 'Vegetables', currentStockKgs: 850, totalBoxes: 34, defaultRatePerKg: 30 },
+  { id: 107, name: 'Green Chilli (பச்சை மிளகாய்)', category: 'Vegetables', currentStockKgs: 140, totalBoxes: 7, defaultRatePerKg: 55 },
+  { id: 108, name: 'Cabbage (முட்டைகோஸ்)', category: 'Vegetables', currentStockKgs: 310, totalBoxes: 10, defaultRatePerKg: 18 },
+  { id: 109, name: 'Fresh Ginger (இஞ்சி)', category: 'Vegetables', currentStockKgs: 95, totalBoxes: 4, defaultRatePerKg: 110 },
+  { id: 110, name: 'Garlic (பூண்டு)', category: 'Vegetables', currentStockKgs: 120, totalBoxes: 6, defaultRatePerKg: 180 },
+  { id: 111, name: 'Beetroot (பீட்ரூட்)', category: 'Vegetables', currentStockKgs: 210, totalBoxes: 9, defaultRatePerKg: 25 },
+  { id: 112, name: 'Drumstick (முருங்கைக்காய்)', category: 'Vegetables', currentStockKgs: 85, totalBoxes: 5, defaultRatePerKg: 60 }
+];
+
+const DEFAULT_SUPPLIERS = [
+  { id: 1, name: 'Koyambedu APMC Merchant 14', contactNumber: '9840123456', location: 'Chennai APMC', outstandingBalance: 42500 },
+  { id: 2, name: 'Hosur Direct Farm Producers', contactNumber: '9443210987', location: 'Hosur Valley', outstandingBalance: 28000 },
+  { id: 3, name: 'Ooty Hill Vegetable Cooperative', contactNumber: '9789012345', location: 'Nilgiris / Ooty', outstandingBalance: 15400 },
+  { id: 4, name: 'Nashik Onion Logistics Hub', contactNumber: '9123456789', location: 'Nashik APMC', outstandingBalance: 65000 }
+];
+
+const DEFAULT_PURCHASES = [
+  { id: 1, poNumber: 'PO-TODAY-01', itemName: 'Country Tomato (நாட்டு தக்காளி)', boxes: 18, qtyKgs: 450, rate: 28, totalAmount: 12600, supplierName: 'Hosur Direct Farm Producers', date: new Date().toISOString().slice(0, 10), paymentStatus: 'UNPAID' },
+  { id: 2, poNumber: 'PO-TODAY-02', itemName: 'Bellary Big Onion (பெரிய வெங்காயம்)', boxes: 50, qtyKgs: 1250, rate: 35, totalAmount: 43750, supplierName: 'Nashik Onion Logistics Hub', date: new Date().toISOString().slice(0, 10), paymentStatus: 'PARTIAL' },
+  { id: 3, poNumber: 'PO-TODAY-03', itemName: 'Ooty Fresh Carrot (ஊட்டி கேரட்)', boxes: 12, qtyKgs: 290, rate: 45, totalAmount: 13050, supplierName: 'Ooty Hill Vegetable Cooperative', date: new Date().toISOString().slice(0, 10), paymentStatus: 'UNPAID' },
+  { id: 4, poNumber: 'PO-TODAY-04', itemName: 'Small Onion / Shallots (சின்ன வெங்காயம்)', boxes: 15, qtyKgs: 380, rate: 65, totalAmount: 24700, supplierName: 'Koyambedu APMC Merchant 14', date: new Date().toISOString().slice(0, 10), paymentStatus: 'PAID' }
+];
+
+// Load local storage or default to initial Mandi catalog
+let inventory = JSON.parse(localStorage.getItem('lakshana_web_inventory')) || [];
+let suppliers = JSON.parse(localStorage.getItem('lakshana_web_suppliers')) || [];
+let purchases = JSON.parse(localStorage.getItem('lakshana_web_purchases')) || [];
+
+// Populate rich catalog if first visit
+if (inventory.length === 0) {
+  inventory = [...DEFAULT_INVENTORY];
+  localStorage.setItem('lakshana_web_inventory', JSON.stringify(inventory));
+}
+if (suppliers.length === 0) {
+  suppliers = [...DEFAULT_SUPPLIERS];
+  localStorage.setItem('lakshana_web_suppliers', JSON.stringify(suppliers));
+}
+if (purchases.length === 0) {
+  purchases = [...DEFAULT_PURCHASES];
+  localStorage.setItem('lakshana_web_purchases', JSON.stringify(purchases));
+}
+
+function saveState(triggerAutoSync = true) {
+  localStorage.setItem('lakshana_web_purchases', JSON.stringify(purchases));
+  localStorage.setItem('lakshana_web_inventory', JSON.stringify(inventory));
+  localStorage.setItem('lakshana_web_suppliers', JSON.stringify(suppliers));
+  if (currentUser) {
+    renderAll();
+  }
+  if (triggerAutoSync && currentUser && currentUser.role !== 'VIEWER') {
+    // Automatically push to cloud without requiring manual actions or JSON uploads
+    triggerRealSync(false);
+  }
+}
+
+// ==========================================
+// 2. USER AUTHENTICATION & ROLE MANAGEMENT
+// ==========================================
+
+// Pre-seeded Default Admin user (matching Android App: AppRepository.kt)
+const DEFAULT_ADMIN = {
+  id: 1,
+  mobileNumber: '8608414322',
+  fullName: 'Lakshana Admin',
+  role: 'ADMIN',
+  pinHash: '5147',
+  department: 'Executive Admin',
+  isActive: true,
+  isApproved: true,
+  createdAt: Date.now(),
+  lastLoginAt: Date.now()
+};
+
+const GUEST_VIEWER = {
+  id: 999,
+  mobileNumber: 'Guest',
+  fullName: 'Guest Mandi Viewer',
+  role: 'VIEWER',
+  department: 'Public / Visitor',
+  isActive: true,
+  isApproved: true,
+  createdAt: Date.now(),
+  lastLoginAt: Date.now()
+};
+
+let users = JSON.parse(localStorage.getItem('lakshana_web_users')) || [DEFAULT_ADMIN];
+// Ensure admin exists in user list
+if (!users.some(u => u.mobileNumber === '8608414322')) {
+  users.unshift(DEFAULT_ADMIN);
+  localStorage.setItem('lakshana_web_users', JSON.stringify(users));
+}
+
+// Default to null so login interface is displayed for unauthenticated users
+let currentUser = JSON.parse(localStorage.getItem('lakshana_web_current_user')) || null;
+
+function saveUsers() {
+  localStorage.setItem('lakshana_web_users', JSON.stringify(users));
+}
+
+function updateAuthVisibility() {
+  const authScreen = document.getElementById('authScreen');
+  const mainContent = document.getElementById('authenticatedMainContent');
+  const headerActions = document.getElementById('authenticatedHeaderActions');
+
+  if (currentUser) {
+    if (authScreen) authScreen.style.display = 'none';
+    if (mainContent) mainContent.style.display = 'block';
+    if (headerActions) headerActions.style.display = 'flex';
+  } else {
+    if (authScreen) authScreen.style.display = 'flex';
+    if (mainContent) mainContent.style.display = 'none';
+    if (headerActions) headerActions.style.display = 'none';
+  }
+}
+
+function setCurrentUser(user) {
+  currentUser = user;
+  if (user) {
+    localStorage.setItem('lakshana_web_current_user', JSON.stringify(user));
+  } else {
+    localStorage.removeItem('lakshana_web_current_user');
+  }
+  updateAuthVisibility();
+  renderHeaderAuth();
+  if (currentUser) {
+    renderAll();
+    // Auto-fetch latest phone updates seamlessly
+    setTimeout(() => { triggerRealSync(false); }, 600);
+  }
+}
+
+function renderHeaderAuth() {
+  const container = document.getElementById('headerAuthContainer');
+  if (!container) return;
+
+  if (currentUser) {
+    const roleClass = `role-${currentUser.role.toLowerCase()}`;
+    const initials = currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'LV';
+    const adminMgmtBtn = currentUser.role === 'ADMIN'
+      ? `<button class="btn btn-outline btn-sm" id="headerAdminUsersBtn" title="Manage Staff & Approvals" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">👥 Staff</button>`
+      : '';
+
+    container.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div class="user-profile-badge">
+          <div class="user-avatar-circle">${initials}</div>
+          <div class="user-info-text">
+            <span class="user-name-title">${currentUser.fullName}</span>
+            <span class="user-role-tag ${roleClass}">${currentUser.role}</span>
+          </div>
+        </div>
+        ${adminMgmtBtn}
+        <button class="btn btn-outline btn-sm" id="headerSignOutBtn" title="Sign Out / Lock Portal" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; color: #dc2626; border-color: #fca5a5;">🚪 Exit</button>
+      </div>
+    `;
+
+    document.getElementById('headerSignOutBtn')?.addEventListener('click', () => {
+      if (confirm('Lock management portal and sign out?')) {
+        setCurrentUser(null);
+      }
+    });
+
+    document.getElementById('headerAdminUsersBtn')?.addEventListener('click', () => {
+      openAdminUsersModal();
+    });
+  } else {
+    container.innerHTML = `
+      <span class="badge" style="background: #fef3c7; color: #92400e; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 9999px; font-size: 0.75rem;">
+        🔒 Restricted Internal System
+      </span>
+    `;
+  }
+}
+
+// Portal Authentication Form Handlers
+function initPortalAuth() {
+  const tabLogin = document.getElementById('portalTabLogin');
+  const tabRegister = document.getElementById('portalTabRegister');
+  const loginContainer = document.getElementById('loginFormContainer');
+  const regContainer = document.getElementById('registerFormContainer');
+  const authTopSub = document.getElementById('authTopSub');
+  const quickAdminBtn = document.getElementById('portalQuickAdminBtn');
+  const clearMobileBtn = document.getElementById('clearMobileBtn');
+  const togglePinBtn = document.getElementById('togglePinVisibilityBtn');
+  const pinInput = document.getElementById('portalLoginPin');
+  const mobileInput = document.getElementById('portalLoginMobile');
+  const forgotPinLink = document.getElementById('forgotPinLink');
+
+  tabLogin?.addEventListener('click', () => {
+    tabLogin.classList.add('active');
+    tabRegister?.classList.remove('active');
+    if (loginContainer) loginContainer.style.display = 'block';
+    if (regContainer) regContainer.style.display = 'none';
+    if (authTopSub) authTopSub.textContent = 'Secure Staff Sign In';
+    hidePortalAlert();
+  });
+
+  tabRegister?.addEventListener('click', () => {
+    tabRegister.classList.add('active');
+    tabLogin?.classList.remove('active');
+    if (loginContainer) loginContainer.style.display = 'none';
+    if (regContainer) regContainer.style.display = 'block';
+    if (authTopSub) authTopSub.textContent = 'User Registration';
+    hidePortalAlert();
+  });
+
+  quickAdminBtn?.addEventListener('click', () => {
+    if (mobileInput) mobileInput.value = '8608414322';
+    if (pinInput) pinInput.value = '5147';
+    handlePortalLoginSubmit();
+  });
+
+  document.getElementById('portalGuestViewBtn')?.addEventListener('click', () => {
+    setCurrentUser(GUEST_VIEWER);
+  });
+
+  document.getElementById('portalInstantAdminBtn')?.addEventListener('click', () => {
+    setCurrentUser(DEFAULT_ADMIN);
+  });
+
+  clearMobileBtn?.addEventListener('click', () => {
+    if (mobileInput) {
+      mobileInput.value = '';
+      mobileInput.focus();
+    }
+  });
+
+  togglePinBtn?.addEventListener('click', () => {
+    if (pinInput) {
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        togglePinBtn.textContent = '🔒';
+      } else {
+        pinInput.type = 'password';
+        togglePinBtn.textContent = '👁️';
+      }
+    }
+  });
+
+  forgotPinLink?.addEventListener('click', () => {
+    document.getElementById('forgotPinModal')?.classList.add('open');
+  });
+}
+
+function showPortalAlert(msg, isError = true) {
+  const el = document.getElementById('portalAuthAlert');
+  if (!el) return;
+  el.className = `auth-alert-box ${isError ? 'auth-alert-error' : 'auth-alert-info'}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hidePortalAlert() {
+  const el = document.getElementById('portalAuthAlert');
+  if (el) el.style.display = 'none';
+}
+
+function handlePortalLoginSubmit() {
+  const mobile = document.getElementById('portalLoginMobile')?.value.trim();
+  const pin = document.getElementById('portalLoginPin')?.value.trim();
+
+  if (!mobile) {
+    showPortalAlert('Please enter your 10-digit registered mobile number.', true);
+    return;
+  }
+  if (!pin) {
+    showPortalAlert('Please enter your 4-digit security PIN.', true);
+    return;
+  }
+
+  // Check default admin
+  if (mobile === '8608414322' && pin === '5147') {
+    let admin = users.find(u => u.mobileNumber === '8608414322');
+    if (!admin) {
+      admin = { ...DEFAULT_ADMIN };
+      users.unshift(admin);
+      saveUsers();
+    }
+    admin.lastLoginAt = Date.now();
+    saveUsers();
+    setCurrentUser(admin);
+    return;
+  }
+
+  const user = users.find(u => u.mobileNumber === mobile);
+  if (!user) {
+    showPortalAlert('Mobile number not found. Please click "Request Access" to register.', true);
+    return;
+  }
+
+  if (user.pinHash !== pin) {
+    showPortalAlert('Incorrect PIN. Please try again or contact Admin (8608414322).', true);
+    return;
+  }
+
+  if (!user.isApproved) {
+    showPortalAlert('Account Pending Approval: Awaiting Admin approval.', true);
+    return;
+  }
+
+  if (!user.isActive) {
+    showPortalAlert('Account Deactivated. Please contact Administrator.', true);
+    return;
+  }
+
+  user.lastLoginAt = Date.now();
+  saveUsers();
+  setCurrentUser(user);
+}
+window.handlePortalLoginSubmit = handlePortalLoginSubmit;
+
+function handlePortalRegisterSubmit() {
+  const name = document.getElementById('portalRegName')?.value.trim();
+  const mobile = document.getElementById('portalRegMobile')?.value.trim();
+  const pin = document.getElementById('portalRegPin')?.value.trim();
+  const dept = document.getElementById('portalRegDept')?.value || 'Procurement';
+
+  if (!name || mobile.length < 8 || pin.length < 4) {
+    showPortalAlert('Please enter valid name, 10-digit mobile, and 4-digit PIN.', true);
+    return;
+  }
+
+  if (users.some(u => u.mobileNumber === mobile)) {
+    showPortalAlert(`Mobile ${mobile} is already registered. Please Sign In.`, true);
+    return;
+  }
+
+  const isAdmin = mobile === '8608414322';
+  const newUser = {
+    id: Date.now(),
+    mobileNumber: mobile,
+    fullName: name,
+    role: isAdmin ? 'ADMIN' : (dept === 'Warehouse' ? 'INVENTORY_CLERK' : (dept === 'Operations' ? 'MANAGER' : 'PURCHASER')),
+    pinHash: pin,
+    department: dept,
+    isActive: true,
+    isApproved: isAdmin,
+    createdAt: Date.now(),
+    lastLoginAt: isAdmin ? Date.now() : 0
+  };
+
+  users.push(newUser);
+  saveUsers();
+
+  if (isAdmin) {
+    setCurrentUser(newUser);
+  } else {
+    showPortalAlert(`Registration submitted for ${name}! Please ask Admin (8608414322) to approve your account.`, false);
+  }
+}
+window.handlePortalRegisterSubmit = handlePortalRegisterSubmit;
+
+function openAuthModal(initialTab = 'login') {
+  switchAuthTab(initialTab);
+  document.getElementById('authAlert').style.display = 'none';
+  document.getElementById('authModal').classList.add('open');
+}
+
+function closeAuthModal() {
+  document.getElementById('authModal').classList.remove('open');
+}
+
+function switchAuthTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('authTabLogin').classList.toggle('active', isLogin);
+  document.getElementById('authTabRegister').classList.toggle('active', !isLogin);
+  document.getElementById('loginFormSection').style.display = isLogin ? 'block' : 'none';
+  document.getElementById('registerFormSection').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('authModalTitle').textContent = isLogin ? '🔑 Sign In to Lakshana Veggie' : '📝 Register New Staff Account';
+  document.getElementById('authAlert').style.display = 'none';
+}
+
+function showAuthAlert(msg, isError = true) {
+  const el = document.getElementById('authAlert');
+  el.className = `auth-alert-box ${isError ? 'auth-alert-error' : 'auth-alert-info'}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// 1-Click Fast Admin Sign In
+document.getElementById('quickAdminLoginBtn')?.addEventListener('click', () => {
+  document.getElementById('loginMobile').value = '8608414322';
+  document.getElementById('loginPin').value = '5147';
+  handleLogin();
+});
+
+// Login Form Submit
+document.getElementById('submitLoginBtn')?.addEventListener('click', handleLogin);
+
+function handleLogin() {
+  const mobile = document.getElementById('loginMobile').value.trim();
+  const pin = document.getElementById('loginPin').value.trim();
+
+  if (!mobile) {
+    showAuthAlert('Please enter your 10-digit registered mobile number.', true);
+    return;
+  }
+  if (!pin) {
+    showAuthAlert('Please enter your 4-digit security PIN.', true);
+    return;
+  }
+
+  // Check against registered users
+  let user = users.find(u => u.mobileNumber === mobile);
+
+  // Default admin login or creation on-the-fly
+  if ((!user && mobile === '8608414322' && pin === '5147') || (user && user.mobileNumber === '8608414322' && pin === '5147')) {
+    if (!user) {
+      user = { ...DEFAULT_ADMIN };
+      users.unshift(user);
+      saveUsers();
+    }
+    user.lastLoginAt = Date.now();
+    saveUsers();
+    setCurrentUser(user);
+    closeAuthModal();
+    return;
+  }
+
+  if (!user) {
+    showAuthAlert('Mobile number not found. Please click "Register Account" to create your credentials.', true);
+    return;
+  }
+
+  if (user.pinHash !== pin) {
+    showAuthAlert('Incorrect Security PIN. If forgotten, contact Administrator (8608414322).', true);
+    return;
+  }
+
+  if (!user.isApproved) {
+    showAuthAlert('Account Pending Approval: Your registration has been submitted and is awaiting Admin approval.', true);
+    return;
+  }
+
+  if (!user.isActive) {
+    showAuthAlert('This account is currently deactivated. Please contact Administrator.', true);
+    return;
+  }
+
+  user.lastLoginAt = Date.now();
+  saveUsers();
+  setCurrentUser(user);
+  closeAuthModal();
+}
+
+// Register Form Submit
+document.getElementById('submitRegisterBtn')?.addEventListener('click', () => {
+  const name = document.getElementById('regFullName').value.trim();
+  const mobile = document.getElementById('regMobile').value.trim();
+  const pin = document.getElementById('regPin').value.trim();
+  const dept = document.getElementById('regDepartment').value;
+
+  if (!name) {
+    showAuthAlert('Please enter your full name.', true);
+    return;
+  }
+  if (mobile.length < 8) {
+    showAuthAlert('Please enter a valid 10-digit mobile number.', true);
+    return;
+  }
+  if (pin.length < 4) {
+    showAuthAlert('Security PIN must be at least 4 digits.', true);
+    return;
+  }
+
+  const existing = users.find(u => u.mobileNumber === mobile);
+  if (existing) {
+    showAuthAlert(`Mobile ${mobile} is already registered. Please sign in.`, true);
+    return;
+  }
+
+  const isAdminReg = (mobile === '8608414322' && pin === '5147');
+  const newUser = {
+    id: Date.now(),
+    mobileNumber: mobile,
+    fullName: isAdminReg ? 'Lakshana Admin' : name,
+    role: isAdminReg ? 'ADMIN' : (dept === 'Warehouse' ? 'INVENTORY_CLERK' : (dept === 'Operations' ? 'MANAGER' : (dept === 'Auditor' ? 'VIEWER' : 'PURCHASER'))),
+    pinHash: pin,
+    department: dept,
+    isActive: true,
+    isApproved: isAdminReg, // Admin is immediately approved; others require admin approval
+    createdAt: Date.now(),
+    lastLoginAt: Date.now()
+  };
+
+  users.push(newUser);
+  saveUsers();
+
+  if (isAdminReg) {
+    setCurrentUser(newUser);
+    closeAuthModal();
+  } else {
+    showAuthAlert('Registration submitted successfully! Your account is awaiting Administrator approval.', false);
+    document.getElementById('regFullName').value = '';
+    document.getElementById('regMobile').value = '';
+    document.getElementById('regPin').value = '';
+    setTimeout(() => {
+      switchAuthTab('login');
+      document.getElementById('loginMobile').value = mobile;
+    }, 1500);
+  }
+});
+
+document.getElementById('authTabLogin')?.addEventListener('click', () => switchAuthTab('login'));
+document.getElementById('authTabRegister')?.addEventListener('click', () => switchAuthTab('register'));
+
+// ==========================================
+// 3. ADMIN USER MANAGEMENT & APPROVALS
+// ==========================================
+
+function openAdminUsersModal() {
+  if (!currentUser || currentUser.role !== 'ADMIN') {
+    alert('Access restricted: Only Administrators can manage staff accounts.');
+    return;
+  }
+  renderAdminUsersTable();
+  document.getElementById('adminUsersModal').classList.add('open');
+}
+
+function renderAdminUsersTable() {
+  const tbody = document.getElementById('adminUsersTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  users.forEach(u => {
+    const tr = document.createElement('tr');
+    const isMainAdmin = u.mobileNumber === '8608414322';
+
+    const statusBadge = u.isApproved 
+      ? (u.isActive ? `<span class="badge badge-success">Active</span>` : `<span class="badge" style="background:#fee2e2; color:#991b1b;">Inactive</span>`)
+      : `<span class="badge badge-warning">Pending Approval</span>`;
+
+    const approveBtn = !u.isApproved 
+      ? `<button class="btn btn-sm btn-primary" onclick="approveUserById(${u.id})">✓ Approve</button>`
+      : '';
+
+    const roleSelect = isMainAdmin
+      ? `<strong>ADMIN</strong>`
+      : `<select class="form-input" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;" onchange="changeUserRoleById(${u.id}, this.value)">
+          <option value="PURCHASER" ${u.role === 'PURCHASER' ? 'selected' : ''}>PURCHASER</option>
+          <option value="MANAGER" ${u.role === 'MANAGER' ? 'selected' : ''}>MANAGER</option>
+          <option value="INVENTORY_CLERK" ${u.role === 'INVENTORY_CLERK' ? 'selected' : ''}>INVENTORY_CLERK</option>
+          <option value="VIEWER" ${u.role === 'VIEWER' ? 'selected' : ''}>VIEWER</option>
+          <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>ADMIN</option>
+        </select>`;
+
+    const toggleStatusBtn = isMainAdmin 
+      ? `<span style="font-size: 0.75rem; color: #94a3b8;">Main Admin</span>`
+      : `<button class="btn btn-sm btn-outline" onclick="toggleUserActiveById(${u.id})" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">${u.isActive ? 'Deactivate' : 'Activate'}</button>`;
+
+    tr.innerHTML = `
+      <td><strong>${u.fullName}</strong></td>
+      <td><code>${u.mobileNumber}</code></td>
+      <td>${roleSelect}</td>
+      <td>${u.department || 'Procurement'}</td>
+      <td>${statusBadge}</td>
+      <td>
+        <div style="display: flex; gap: 0.35rem; align-items: center;">
+          ${approveBtn}
+          ${toggleStatusBtn}
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function approveUserById(userId) {
+  const u = users.find(x => x.id === userId);
+  if (u) {
+    u.isApproved = true;
+    u.isActive = true;
+    saveUsers();
+    renderAdminUsersTable();
+    alert(`Account for ${u.fullName} (${u.mobileNumber}) approved successfully!`);
+  }
+}
+window.approveUserById = approveUserById;
+
+function changeUserRoleById(userId, newRole) {
+  const u = users.find(x => x.id === userId);
+  if (u) {
+    u.role = newRole;
+    saveUsers();
+    alert(`Updated ${u.fullName}'s role to ${newRole}`);
+  }
+}
+window.changeUserRoleById = changeUserRoleById;
+
+function toggleUserActiveById(userId) {
+  const u = users.find(x => x.id === userId);
+  if (u) {
+    u.isActive = !u.isActive;
+    saveUsers();
+    renderAdminUsersTable();
+  }
+}
+window.toggleUserActiveById = toggleUserActiveById;
+
+// Admin Add Staff Directly
+document.getElementById('adminCreateUserBtn')?.addEventListener('click', () => {
+  const name = document.getElementById('adminNewUserName').value.trim();
+  const mobile = document.getElementById('adminNewUserMobile').value.trim();
+  const role = document.getElementById('adminNewUserRole').value;
+  const pin = document.getElementById('adminNewUserPin').value.trim();
+
+  if (!name || mobile.length < 8 || pin.length < 4) {
+    alert('Please enter valid staff name, 10-digit mobile, and 4-digit PIN');
+    return;
+  }
+
+  if (users.some(u => u.mobileNumber === mobile)) {
+    alert(`Mobile ${mobile} is already registered.`);
+    return;
+  }
+
+  users.push({
+    id: Date.now(),
+    mobileNumber: mobile,
+    fullName: name,
+    role: role,
+    pinHash: pin,
+    department: role === 'ADMIN' ? 'Executive Admin' : (role === 'INVENTORY_CLERK' ? 'Warehouse' : 'Procurement'),
+    isActive: true,
+    isApproved: true,
+    createdAt: Date.now(),
+    lastLoginAt: 0
+  });
+
+  saveUsers();
+  document.getElementById('adminNewUserName').value = '';
+  document.getElementById('adminNewUserMobile').value = '';
+  renderAdminUsersTable();
+  alert(`Staff member ${name} created and approved successfully!`);
+});
+
+// ==========================================
+// 4. RENDERING & STATS (CALCULATED FROM REAL DATA)
+// ==========================================
+
+function renderAll() {
+  if (!currentUser) {
+    updateAuthVisibility();
+    return;
+  }
+  updateAuthVisibility();
+  renderStats();
+  renderPurchasesTable();
+  renderInventoryGrid();
+  renderSuppliersGrid();
+}
+
+function renderStats() {
+  const totalKgs = inventory.reduce((sum, item) => sum + (item.stockKgs || 0), 0);
+  const totalBoxes = inventory.reduce((sum, item) => sum + (item.boxes || 0), 0);
+  const todayTotal = purchases.reduce((sum, p) => sum + (p.total || 0), 0);
+
+  document.getElementById('totalStockKgs').innerHTML = `${totalKgs.toLocaleString('en-IN', { maximumFractionDigits: 1 })} <small>kgs</small>`;
+  document.getElementById('totalBoxesCount').textContent = `${totalBoxes} boxes / crates`;
+  document.getElementById('todayPurchasesTotal').textContent = `₹${todayTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  document.getElementById('todayIntakeBatchesSub').textContent = `${purchases.length} recorded purchases`;
+  document.getElementById('activeSuppliersCount').textContent = suppliers.filter(s => s.active !== false).length;
+}
+
+// ==========================================
+// 5. PURCHASES LEDGER & SETTLEMENT
+// ==========================================
+
+function renderPurchasesTable(filterText = '') {
+  const tbody = document.getElementById('purchasesTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const filtered = purchases.filter(p => 
+    (p.item || '').toLowerCase().includes(filterText.toLowerCase()) ||
+    (p.supplier || '').toLowerCase().includes(filterText.toLowerCase()) ||
+    (p.batchId || '').toLowerCase().includes(filterText.toLowerCase())
+  );
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="padding: 0;">
+          <div class="empty-state">
+            <div class="empty-state-icon">📑</div>
+            <h3>No Purchases Recorded Yet</h3>
+            <p>Start recording your daily Mandi intake by clicking "+ New Purchase" or uploading your procurement sheet.</p>
+            <button class="btn btn-primary" onclick="openNewPurchaseModal()">+ Add First Purchase</button>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  filtered.forEach(p => {
+    const tr = document.createElement('tr');
+    let paymentCol;
+    if (p.paid) {
+      paymentCol = `<span class="badge badge-success">✓ Settled (${p.settlementDate || p.date})</span>`;
+    } else {
+      paymentCol = `<button class="btn btn-sm btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="openSettlementModal('${p.batchId}')">⚡ Settle Payment</button>`;
+    }
+
+    tr.innerHTML = `
+      <td><strong>${p.date}</strong></td>
+      <td><code>${p.batchId}</code></td>
+      <td><strong>${p.item}</strong></td>
+      <td>${p.boxes || 0}</td>
+      <td>${(p.qtyKgs || 0).toFixed(1)} kgs</td>
+      <td>₹${(p.rate || 0).toFixed(2)}</td>
+      <td><strong style="color: #15803d;">₹${(p.total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></td>
+      <td>${p.supplier}</td>
+      <td>${paymentCol}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ==========================================
+// 6. INVENTORY & STOCK LEVELS
+// ==========================================
+
+function renderInventoryGrid(filterText = '') {
+  const grid = document.getElementById('inventoryCardsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const filtered = inventory.filter(i => (i.name || '').toLowerCase().includes(filterText.toLowerCase()));
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1;">
+        <div class="empty-state">
+          <div class="empty-state-icon">🥕</div>
+          <h3>Warehouse Inventory is Empty</h3>
+          <p>Stock balances will automatically update as you create purchases or upload daily Mandi arrival sheets.</p>
+          <button class="btn btn-primary" onclick="openNewPurchaseModal()">+ Add Vegetable Stock</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'veg-card';
+    card.innerHTML = `
+      <div>
+        <div class="veg-card-header">
+          <span style="font-size: 1.5rem;">${item.icon || '🥬'}</span>
+          <span class="badge badge-success">${item.category || 'Vegetables'}</span>
+        </div>
+        <h4 class="veg-name">${item.name}</h4>
+        <div class="veg-stock">${(item.stockKgs || 0).toLocaleString('en-IN')} <small style="font-size: 0.85rem; font-weight: 500;">kgs</small></div>
+      </div>
+      <div class="veg-details">
+        <div>📦 Available Crates: <strong>${item.boxes || 0} boxes</strong></div>
+        <div>💰 Avg Mandi Rate: <strong>₹${(item.avgRate || 0).toFixed(2)} / kg</strong></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ==========================================
+// 7. MANDI SUPPLIERS & BALANCES
+// ==========================================
+
+function renderSuppliersGrid() {
+  const grid = document.getElementById('suppliersGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  if (suppliers.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1;">
+        <div class="empty-state">
+          <div class="empty-state-icon">🏢</div>
+          <h3>No Mandi Vendors Registered</h3>
+          <p>Vendors will appear automatically when purchases are entered, or you can register your procurement partners directly.</p>
+          <button class="btn btn-primary" onclick="document.getElementById('newSupplierModal').classList.add('open')">+ Register Mandi Vendor</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  suppliers.forEach(s => {
+    const vendorPurchases = purchases.filter(p => 
+      p.supplier && p.supplier.trim().toLowerCase() === s.name.trim().toLowerCase()
+    );
+    const unpaidPurchases = vendorPurchases.filter(p => !p.paid);
+    const ledgerOutstanding = unpaidPurchases.reduce((sum, p) => sum + p.total, 0);
+    const totalPurchased = vendorPurchases.reduce((sum, p) => sum + p.total, 0);
+    const totalSettled = vendorPurchases.filter(p => p.paid).reduce((sum, p) => sum + p.total, 0);
+    const displayBalance = ledgerOutstanding > 0 ? ledgerOutstanding : (s.balanceDue || 0);
+
+    const card = document.createElement('div');
+    card.className = 'supplier-card';
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h3>${s.name}</h3>
+          <p>📍 ${s.location || 'Mandi / Farm Gate'}</p>
+          <p>📱 ${s.contact || '8608414322'}</p>
+        </div>
+        <span class="badge ${displayBalance > 0 ? 'badge-warning' : 'badge-success'}">
+          ${displayBalance > 0 ? 'Payment Due' : 'All Clear'}
+        </span>
+      </div>
+
+      <div style="background:#f8fafc; border:1px solid ${displayBalance > 0 ? '#fde68a' : '#bbf7d0'}; border-radius:8px; padding:0.75rem; margin:0.75rem 0;">
+        <div style="font-size:0.75rem; text-transform:uppercase; font-weight:700; color:${displayBalance > 0 ? '#b45309' : '#15803d'}; letter-spacing:0.05em;">
+          Outstanding Balance
+        </div>
+        <div style="font-size:1.35rem; font-weight:800; color:${displayBalance > 0 ? '#b45309' : '#15803d'};">
+          ₹${displayBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </div>
+        <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">
+          ${unpaidPurchases.length > 0 ? `⚡ Pulled from daily ledger: ${unpaidPurchases.length} unpaid bills` : '✓ All daily ledger purchases settled'}
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; color:#475569; padding-top: 0.25rem;">
+        <div>Total Sourced: <strong style="color:#0f172a;">₹${totalPurchased.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</strong></div>
+        <div>Settled: <strong style="color:#15803d;">₹${totalSettled.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</strong></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// Add Supplier Action
+document.getElementById('openNewSupplierModalBtn')?.addEventListener('click', () => {
+  document.getElementById('newSupplierModal').classList.add('open');
+});
+
+document.getElementById('saveSupplierBtn')?.addEventListener('click', () => {
+  const name = document.getElementById('supplierNameInput').value.trim();
+  const contact = document.getElementById('supplierContactInput').value.trim() || '8608414322';
+  const location = document.getElementById('supplierLocationInput').value.trim() || 'Mandi Yard';
+  const balance = parseFloat(document.getElementById('supplierOpeningBalance').value) || 0;
+
+  if (!name) {
+    alert('Please enter supplier / vendor business name');
+    return;
+  }
+
+  const existing = suppliers.find(s => s.name.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    alert('A supplier with this name already exists.');
+    return;
+  }
+
+  suppliers.push({
+    name,
+    contact,
+    location,
+    balanceDue: balance,
+    active: true
+  });
+
+  saveState();
+  document.getElementById('newSupplierModal').classList.remove('open');
+  document.getElementById('supplierNameInput').value = '';
+  document.getElementById('supplierContactInput').value = '';
+  alert(`Mandi vendor "${name}" registered successfully!`);
+});
+
+// ==========================================
+// 8. TABS & MODALS NAVIGATION
+// ==========================================
+
+document.querySelectorAll('.portal-tabs .tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.portal-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+  });
+});
+
+document.querySelectorAll('.upload-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.upload-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.upload-tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`utab-${btn.dataset.utab}`).classList.add('active');
+  });
+});
+
+function openNewPurchaseModal() {
+  if (!currentUser) {
+    openAuthModal();
+    return;
+  }
+  document.getElementById('newPurchaseModal')?.classList.add('open');
+}
+window.openNewPurchaseModal = openNewPurchaseModal;
+
+document.getElementById('openNewPurchaseBtn')?.addEventListener('click', openNewPurchaseModal);
+
+document.getElementById('openUploadModalBtn')?.addEventListener('click', () => {
+  if (!currentUser) {
+    openAuthModal();
+    return;
+  }
+  document.getElementById('uploadModal').classList.add('open');
+});
+
+// Search filters
+document.getElementById('purchaseSearch')?.addEventListener('input', (e) => {
+  renderPurchasesTable(e.target.value);
+});
+
+document.getElementById('inventorySearch')?.addEventListener('input', (e) => {
+  renderInventoryGrid(e.target.value);
+});
+
+// Print
+document.getElementById('printReportBtn')?.addEventListener('click', () => {
+  window.print();
+});
+
+// ==========================================
+// 9. DATE UTILITIES (DDMMYY FORWARD & BACKWARD)
+// ==========================================
+
+function formatDDMMYY(d) {
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = String(d.getFullYear()).slice(-2);
+  return `${day}-${month}-${year}`;
+}
+
+function formatCompactDDMMYY(d) {
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = String(d.getFullYear()).slice(-2);
+  return `${day}${month}${year}`;
+}
+
+function getHumanDate(d) {
+  const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
+  return d.toLocaleDateString('en-IN', options);
+}
+
+function getRelativeTag(d) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === -1) return 'Yesterday';
+  if (diffDays === 1) return 'Tomorrow';
+  if (diffDays < 0) return `${Math.abs(diffDays)} days ago`;
+  return `In ${diffDays} days`;
+}
+
+// New PO Date Stepper State
+let newPoCurrentDate = new Date();
+
+function updateNewPoDateUI() {
+  const display = formatDDMMYY(newPoCurrentDate);
+  const compact = formatCompactDDMMYY(newPoCurrentDate);
+  const human = getHumanDate(newPoCurrentDate);
+  const rel = getRelativeTag(newPoCurrentDate);
+
+  const badge = document.getElementById('newPoDdmmyyBadge');
+  const disp = document.getElementById('newPoDateDisplay');
+  const sub = document.getElementById('newPoDateSub');
+  if (badge) badge.textContent = `DDMMYY: ${compact}`;
+  if (disp) disp.textContent = display;
+  if (sub) sub.textContent = `${human} (${rel})`;
+}
+
+document.getElementById('newPoDateBackBtn')?.addEventListener('click', () => {
+  newPoCurrentDate.setDate(newPoCurrentDate.getDate() - 1);
+  updateNewPoDateUI();
+});
+
+document.getElementById('newPoDateFwdBtn')?.addEventListener('click', () => {
+  newPoCurrentDate.setDate(newPoCurrentDate.getDate() + 1);
+  updateNewPoDateUI();
+});
+
+document.getElementById('newPoDateYest')?.addEventListener('click', () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  newPoCurrentDate = d;
+  updateNewPoDateUI();
+});
+
+document.getElementById('newPoDateToday')?.addEventListener('click', () => {
+  newPoCurrentDate = new Date();
+  updateNewPoDateUI();
+});
+
+document.getElementById('newPoDateTom')?.addEventListener('click', () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  newPoCurrentDate = d;
+  updateNewPoDateUI();
+});
+
+// Auto-Calculate New PO Total
+function updateNewPoCalculatedTotal() {
+  const qty = parseFloat(document.getElementById('newPoQty').value) || 0;
+  const rate = parseFloat(document.getElementById('newPoRate').value) || 0;
+  const total = qty * rate;
+  document.getElementById('newPoTotalDisplay').textContent = `₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+document.getElementById('newPoQty')?.addEventListener('input', updateNewPoCalculatedTotal);
+document.getElementById('newPoRate')?.addEventListener('input', updateNewPoCalculatedTotal);
+
+// Save New PO
+document.getElementById('saveNewPoBtn')?.addEventListener('click', () => {
+  if (!currentUser) {
+    openAuthModal();
+    return;
+  }
+
+  const item = document.getElementById('newPoItem').value.trim();
+  const supplier = document.getElementById('newPoSupplier').value.trim() || 'Direct Mandi Farmer';
+  const boxes = parseInt(document.getElementById('newPoBoxes').value) || 1;
+  const qty = parseFloat(document.getElementById('newPoQty').value) || 0;
+  const rate = parseFloat(document.getElementById('newPoRate').value) || 0;
+  const autoStock = document.getElementById('newPoUpdateStock').checked;
+
+  if (!item || qty <= 0 || rate <= 0) {
+    alert('Please enter valid item name, quantity and rate per kg.');
+    return;
+  }
+
+  const total = Math.round(qty * rate * 100) / 100;
+  const poDate = formatDDMMYY(newPoCurrentDate);
+  const poNumber = 'PO-' + Date.now().toString().slice(-6);
+
+  purchases.unshift({
+    date: poDate,
+    batchId: poNumber,
+    item: item,
+    boxes: boxes,
+    qtyKgs: qty,
+    rate: rate,
+    total: total,
+    supplier: supplier,
+    paid: false,
+    recordedBy: currentUser.fullName
+  });
+
+  // Automatically register supplier if not present
+  const existingSup = suppliers.find(s => s.name.trim().toLowerCase() === supplier.toLowerCase());
+  if (existingSup) {
+    existingSup.balanceDue = (existingSup.balanceDue || 0) + total;
+  } else {
+    suppliers.push({
+      name: supplier,
+      contact: '8608414322',
+      location: 'Direct Mandi / Farm Gate',
+      balanceDue: total,
+      active: true
+    });
+  }
+
+  // Update Inventory Stock
+  if (autoStock) {
+    const existingItem = inventory.find(i => i.name.toLowerCase().includes(item.toLowerCase()));
+    if (existingItem) {
+      existingItem.stockKgs += qty;
+      existingItem.boxes += boxes;
+      existingItem.avgRate = Math.round(((existingItem.avgRate + rate) / 2) * 100) / 100;
+    } else {
+      let icon = '🥬';
+      const lower = item.toLowerCase();
+      if (lower.includes('tomato')) icon = '🍅';
+      else if (lower.includes('onion')) icon = '🧅';
+      else if (lower.includes('carrot')) icon = '🥕';
+      else if (lower.includes('potato')) icon = '🥔';
+      else if (lower.includes('chilli') || lower.includes('chili')) icon = '🌶️';
+      else if (lower.includes('cauliflower') || lower.includes('cabbage')) icon = '🥦';
+      else if (lower.includes('capsicum')) icon = '🫑';
+
+      inventory.push({
+        name: item,
+        icon: icon,
+        stockKgs: qty,
+        boxes: boxes,
+        avgRate: rate,
+        category: 'Vegetables'
+      });
+    }
+  }
+
+  saveState();
+  document.getElementById('newPurchaseModal').classList.remove('open');
+  alert(`Purchase Order ${poNumber} for ${qty} kgs ${item} created successfully!`);
+});
+
+// Process Daily Sheet Upload
+document.getElementById('processUploadBtn')?.addEventListener('click', () => {
+  if (!currentUser) {
+    openAuthModal();
+    return;
+  }
+
+  const pasteText = document.getElementById('excelPasteArea').value.trim();
+  const autoUpdate = document.getElementById('autoUpdateInventory').checked;
+
+  if (!pasteText) {
+    alert('Please enter or paste purchase sheet rows in CSV / Tabular format (Date, Supplier, Items, Boxes, Qty, Rate, Total)');
+    return;
+  }
+
+  const lines = pasteText.split('\n').filter(l => l.trim().length > 0);
+  const batchId = 'BATCH-' + Date.now().toString().slice(-6);
+  let importedCount = 0;
+
+  lines.forEach(line => {
+    const parts = line.split(',').map(s => s.trim());
+    if (parts.length >= 6 && !parts[0].toLowerCase().includes('date')) {
+      let date, supplier, item, boxes, qtyKgs, rate, total;
+      if (parts.length >= 7) {
+        date = parts[0];
+        supplier = parts[1] || 'Direct Mandi Farmer';
+        item = parts[2];
+        boxes = parseInt(parts[3]) || 0;
+        qtyKgs = parseFloat(parts[4]) || 0;
+        rate = parseFloat(parts[5]) || 0;
+        total = qtyKgs * rate;
+      } else {
+        date = parts[0];
+        supplier = 'Direct Mandi Farmer';
+        item = parts[1];
+        boxes = parseInt(parts[2]) || 0;
+        qtyKgs = parseFloat(parts[3]) || 0;
+        rate = parseFloat(parts[4]) || 0;
+        total = qtyKgs * rate;
+      }
+
+      if (item && qtyKgs > 0) {
+        purchases.unshift({
+          date,
+          batchId,
+          item,
+          boxes,
+          qtyKgs,
+          rate,
+          total,
+          supplier,
+          paid: false,
+          recordedBy: currentUser.fullName
+        });
+
+        // Supplier balance sync
+        const cleanSup = supplier ? supplier.trim() : '';
+        if (cleanSup) {
+          const existingSup = suppliers.find(s => s.name.trim().toLowerCase() === cleanSup.toLowerCase());
+          if (!existingSup) {
+            suppliers.push({
+              name: cleanSup,
+              contact: '8608414322',
+              location: 'Direct Mandi / Farm Gate',
+              balanceDue: total,
+              active: true
+            });
+          } else {
+            existingSup.balanceDue = (existingSup.balanceDue || 0) + total;
+          }
+        }
+
+        // Inventory sync
+        if (autoUpdate) {
+          const existing = inventory.find(i => i.name.toLowerCase().includes(item.toLowerCase()));
+          if (existing) {
+            existing.stockKgs += qtyKgs;
+            existing.boxes += boxes;
+          } else {
+            inventory.push({
+              name: item,
+              icon: '🥬',
+              stockKgs: qtyKgs,
+              boxes: boxes,
+              avgRate: rate,
+              category: 'Vegetables'
+            });
+          }
+        }
+        importedCount++;
+      }
+    }
+  });
+
+  if (importedCount > 0) {
+    saveState();
+    document.getElementById('uploadModal').classList.remove('open');
+    document.getElementById('excelPasteArea').value = '';
+    alert(`Successfully processed ${importedCount} purchase items into batch ${batchId}!`);
+  } else {
+    alert('Could not parse rows. Please ensure lines are comma separated with: Date, Supplier, Items, Boxes, Qty, Rate, Total');
+  }
+});
+
+// ==========================================
+// 10. PAYMENT SETTLEMENT MODAL (CASH / UPI)
+// ==========================================
+
+let currentSettlePurchase = null;
+let currentSettleMode = 'Cash';
+let settleCurrentDate = new Date();
+
+function updateSettleDateUI() {
+  const display = formatDDMMYY(settleCurrentDate);
+  const compact = formatCompactDDMMYY(settleCurrentDate);
+  const human = getHumanDate(settleCurrentDate);
+  const rel = getRelativeTag(settleCurrentDate);
+
+  const badge = document.getElementById('settleDdmmyyBadge');
+  const disp = document.getElementById('settleDateDisplay');
+  const sub = document.getElementById('settleDateSub');
+  if (badge) badge.textContent = `DDMMYY: ${compact}`;
+  if (disp) disp.textContent = display;
+  if (sub) sub.textContent = `${human} (${rel})`;
+}
+
+document.getElementById('settleDateBackBtn')?.addEventListener('click', () => {
+  settleCurrentDate.setDate(settleCurrentDate.getDate() - 1);
+  updateSettleDateUI();
+});
+
+document.getElementById('settleDateFwdBtn')?.addEventListener('click', () => {
+  settleCurrentDate.setDate(settleCurrentDate.getDate() + 1);
+  updateSettleDateUI();
+});
+
+document.getElementById('settleDateYest')?.addEventListener('click', () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  settleCurrentDate = d;
+  updateSettleDateUI();
+});
+
+document.getElementById('settleDateToday')?.addEventListener('click', () => {
+  settleCurrentDate = new Date();
+  updateSettleDateUI();
+});
+
+document.getElementById('settleDateTom')?.addEventListener('click', () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  settleCurrentDate = d;
+  updateSettleDateUI();
+});
+
+document.getElementById('modeCashBtn')?.addEventListener('click', () => {
+  currentSettleMode = 'Cash';
+  document.getElementById('modeCashBtn').style.background = '#ecfdf5';
+  document.getElementById('modeCashBtn').style.borderColor = '#10b981';
+  document.getElementById('modeCashBtn').style.color = '#065f46';
+  document.getElementById('modeCashBtn').style.fontWeight = 'bold';
+
+  document.getElementById('modeUpiBtn').style.background = 'transparent';
+  document.getElementById('modeUpiBtn').style.borderColor = '#cbd5e1';
+  document.getElementById('modeUpiBtn').style.color = '#334155';
+  document.getElementById('modeUpiBtn').style.fontWeight = 'normal';
+
+  document.getElementById('cashFields').style.display = 'block';
+  document.getElementById('upiFields').style.display = 'none';
+});
+
+document.getElementById('modeUpiBtn')?.addEventListener('click', () => {
+  currentSettleMode = 'UPI';
+  document.getElementById('modeUpiBtn').style.background = '#f0fdfa';
+  document.getElementById('modeUpiBtn').style.borderColor = '#0d9488';
+  document.getElementById('modeUpiBtn').style.color = '#0f766e';
+  document.getElementById('modeUpiBtn').style.fontWeight = 'bold';
+
+  document.getElementById('modeCashBtn').style.background = 'transparent';
+  document.getElementById('modeCashBtn').style.borderColor = '#cbd5e1';
+  document.getElementById('modeCashBtn').style.color = '#334155';
+  document.getElementById('modeCashBtn').style.fontWeight = 'normal';
+
+  document.getElementById('cashFields').style.display = 'none';
+  document.getElementById('upiFields').style.display = 'block';
+});
+
+function openSettlementModal(batchId) {
+  if (!currentUser) {
+    openAuthModal();
+    return;
+  }
+
+  // Role check: Only ADMIN and MANAGER can settle payments
+  if (currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER') {
+    alert(`Access Denied: Payment settlement is restricted to Managers and Administrators (Your role: ${currentUser.role})`);
+    return;
+  }
+
+  const p = purchases.find(item => item.batchId === batchId);
+  if (!p) return;
+  currentSettlePurchase = p;
+  settleCurrentDate = new Date();
+  updateSettleDateUI();
+
+  document.getElementById('settlePoBatch').textContent = p.batchId;
+  document.getElementById('settlePoItem').textContent = `${p.item} • ${p.supplier}`;
+  document.getElementById('settlePoAmount').textContent = `₹${p.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+  document.getElementById('settleCashVoucher').value = 'CASH-VCH-' + Math.floor(1000 + Math.random() * 9000);
+  document.getElementById('settleUpiRef').value = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+
+  document.getElementById('settlePaymentModal').classList.add('open');
+}
+window.openSettlementModal = openSettlementModal;
+
+document.getElementById('confirmSettlementBtn')?.addEventListener('click', () => {
+  if (!currentSettlePurchase) return;
+  const settlementDateStr = formatDDMMYY(settleCurrentDate);
+  const ref = currentSettleMode === 'Cash' 
+    ? document.getElementById('settleCashVoucher').value.trim() 
+    : document.getElementById('settleUpiRef').value.trim();
+
+  currentSettlePurchase.paid = true;
+  currentSettlePurchase.settlementDate = settlementDateStr;
+  currentSettlePurchase.settlementRef = ref;
+  currentSettlePurchase.settlementMode = currentSettleMode;
+  currentSettlePurchase.settledBy = currentUser ? currentUser.fullName : 'Admin';
+
+  // Deduct from supplier balanceDue
+  const sup = suppliers.find(s => s.name.trim().toLowerCase() === currentSettlePurchase.supplier.trim().toLowerCase());
+  if (sup && sup.balanceDue) {
+    sup.balanceDue = Math.max(0, sup.balanceDue - currentSettlePurchase.total);
+  }
+
+  saveState();
+  document.getElementById('settlePaymentModal').classList.remove('open');
+  alert(`Payment for ${currentSettlePurchase.batchId} successfully settled on ${settlementDateStr} via ${currentSettleMode}! Ref: ${ref}`);
+});
+
+// ==========================================
+// 11. IMPORT MOBILE APP BACKUP & CLOUD SYNC
+// ==========================================
+
+// Open Import Modal
+document.getElementById('openImportBackupModalBtn')?.addEventListener('click', () => {
+  document.getElementById('importBackupModal').classList.add('open');
+});
+
+// Live preview function for backup JSON
+function updateBackupPreview(rawJson) {
+  const statusEl = document.getElementById('backupPreviewStatus');
+  if (!statusEl) return;
+  const trimmed = (rawJson || '').trim();
+  if (!trimmed || !trimmed.startsWith('{')) {
+    statusEl.style.display = 'none';
+    return;
+  }
+  try {
+    const data = JSON.parse(trimmed);
+    const iCount = Array.isArray(data.items) ? data.items.length : (Array.isArray(data.inventory) ? data.inventory.length : 0);
+    const pCount = Array.isArray(data.purchases) ? data.purchases.length : 0;
+    const sCount = Array.isArray(data.suppliers) ? data.suppliers.length : 0;
+    const uCount = Array.isArray(data.users) ? data.users.length : 0;
+    statusEl.style.display = 'block';
+    statusEl.style.background = '#ecfdf5';
+    statusEl.style.color = '#065f46';
+    statusEl.style.borderColor = '#a7f3d0';
+    statusEl.innerHTML = `✓ <strong>Valid Backup JSON:</strong> ${iCount} Items • ${pCount} Purchases • ${sCount} Suppliers • ${uCount} Users detected`;
+  } catch (err) {
+    statusEl.style.display = 'block';
+    statusEl.style.background = '#fef2f2';
+    statusEl.style.color = '#991b1b';
+    statusEl.style.borderColor = '#fecaca';
+    statusEl.innerHTML = `✕ <strong>Invalid JSON:</strong> Please check text syntax (${err.message})`;
+  }
+}
+
+document.getElementById('backupJsonPasteArea')?.addEventListener('input', (e) => {
+  updateBackupPreview(e.target.value);
+});
+
+// Paste from Clipboard in Web Browser
+document.getElementById('pasteFromClipboardBtn')?.addEventListener('click', async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) {
+      document.getElementById('backupJsonPasteArea').value = text;
+      updateBackupPreview(text);
+    } else {
+      alert('Clipboard appears to be empty.');
+    }
+  } catch (err) {
+    alert('Clipboard read permission was not granted. Please paste manually into the text box (Ctrl+V / Cmd+V).');
+  }
+});
+
+// File upload handler for backup JSON
+document.getElementById('backupFileInput')?.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const content = event.target.result;
+    document.getElementById('backupJsonPasteArea').value = content;
+    updateBackupPreview(content);
+  };
+  reader.readAsText(file);
+});
+
+// Confirm Import Mobile App JSON
+document.getElementById('confirmImportBackupBtn')?.addEventListener('click', () => {
+  const raw = document.getElementById('backupJsonPasteArea').value.trim();
+  if (!raw) {
+    alert('Please paste or choose a valid JSON backup exported from the mobile app');
+    return;
+  }
+
+  try {
+    const data = JSON.parse(raw);
+    let importedPurchases = 0;
+    let importedItems = 0;
+    let importedSuppliers = 0;
+    let importedUsers = 0;
+
+    // 1. Import Items -> Inventory (supports both "items" and "inventory")
+    const rawItems = Array.isArray(data.items) ? data.items : (Array.isArray(data.inventory) ? data.inventory : null);
+    if (rawItems) {
+      inventory = rawItems.map(it => {
+        const stock = parseFloat(it.currentStockKgs !== undefined ? it.currentStockKgs : it.stockKgs) || 0;
+        const boxes = parseInt(it.totalBoxes !== undefined ? it.totalBoxes : it.boxes) || 0;
+        const rate = parseFloat(it.defaultRatePerKg !== undefined ? it.defaultRatePerKg : it.avgRate) || 0;
+        let icon = it.icon;
+        if (!icon) {
+          const lower = (it.name || '').toLowerCase();
+          if (lower.includes('tomato')) icon = '🍅';
+          else if (lower.includes('onion')) icon = '🧅';
+          else if (lower.includes('carrot')) icon = '🥕';
+          else if (lower.includes('potato')) icon = '🥔';
+          else if (lower.includes('chilli') || lower.includes('chili')) icon = '🌶️';
+          else if (lower.includes('cauliflower') || lower.includes('cabbage')) icon = '🥦';
+          else if (lower.includes('capsicum')) icon = '🫑';
+          else icon = '🥬';
+        }
+        return {
+          name: it.name,
+          icon: icon,
+          stockKgs: stock,
+          boxes: boxes,
+          avgRate: rate,
+          category: it.category || 'Vegetables'
+        };
+      });
+      importedItems = inventory.length;
+    }
+
+    // 2. Import Purchases
+    if (Array.isArray(data.purchases)) {
+      purchases = data.purchases.map(p => {
+        const item = p.itemName || p.item || 'Vegetable';
+        const supplier = p.supplierName || p.supplier || 'Direct Mandi Farmer';
+        const total = parseFloat(p.totalAmount !== undefined ? p.totalAmount : p.total) || 0;
+        const isPaid = p.status === 'PAID' || p.paid === true;
+        return {
+          date: p.date,
+          batchId: p.batchId || ('PO-' + (p.id || Date.now())),
+          item: item,
+          boxes: parseInt(p.boxes) || 0,
+          qtyKgs: parseFloat(p.qtyKgs) || 0,
+          rate: parseFloat(p.rate) || 0,
+          total: total,
+          supplier: supplier,
+          paid: isPaid,
+          settlementDate: p.settlementDate || (isPaid ? p.date : ''),
+          settlementMode: p.paymentMethod || p.settlementMode || 'Cash',
+          recordedBy: p.recordedBy || 'Mobile App Sync'
+        };
+      });
+      importedPurchases = purchases.length;
+    }
+
+    // 3. Import Suppliers
+    if (Array.isArray(data.suppliers)) {
+      suppliers = data.suppliers.map(s => ({
+        name: s.name,
+        contact: s.phone || s.contact || '8608414322',
+        location: s.address || s.location || 'Mandi Yard',
+        balanceDue: parseFloat(s.outstandingPayable !== undefined ? s.outstandingPayable : s.balanceDue) || 0,
+        active: true
+      }));
+      importedSuppliers = suppliers.length;
+    }
+
+    // 4. Import Users
+    if (Array.isArray(data.users)) {
+      data.users.forEach(u => {
+        const existing = users.find(x => x.mobileNumber === u.mobileNumber);
+        if (!existing) {
+          users.push({
+            id: u.id || Date.now(),
+            mobileNumber: u.mobileNumber,
+            fullName: u.fullName,
+            role: u.role || 'PURCHASER',
+            pinHash: '5147',
+            department: u.department || 'Procurement',
+            isActive: u.isActive !== false,
+            isApproved: u.isApproved !== false,
+            createdAt: Date.now(),
+            lastLoginAt: 0
+          });
+          importedUsers++;
+        }
+      });
+      saveUsers();
+    }
+
+    saveState();
+    document.getElementById('importBackupModal').classList.remove('open');
+    document.getElementById('backupJsonPasteArea').value = '';
+    const statusEl = document.getElementById('backupPreviewStatus');
+    if (statusEl) statusEl.style.display = 'none';
+
+    alert(`Direct Mobile Sync Import Successful!\n\n✓ ${importedPurchases} Purchases\n✓ ${importedItems} Warehouse Inventory Items\n✓ ${importedSuppliers} Mandi Suppliers\n✓ ${importedUsers} Staff Accounts`);
+  } catch (err) {
+    alert('Failed to parse JSON backup. Error: ' + err.message);
+  }
+});
+
+// Clear / Reset All Data
+document.getElementById('clearWebDataBtn')?.addEventListener('click', () => {
+  if (!currentUser || currentUser.role !== 'ADMIN') {
+    alert('Access restricted: Only Administrators can reset database records.');
+    return;
+  }
+
+  if (confirm('Are you sure you want to clear all purchases, inventory, and supplier records? This will reset all tables to empty.')) {
+    purchases = [];
+    inventory = [];
+    suppliers = [];
+    saveState();
+    alert('All procurement and stock records have been reset.');
+  }
+});
+
+// Helper function to build 100% Cross-Platform Compatible Backup JSON
+function generateFullSyncPayload() {
+  const currentDomain = localStorage.getItem('lakshana_cloudflare_worker_url') || '';
+  
+  // Format items for Android Room ItemEntity
+  const items = inventory.map((it, idx) => ({
+    id: idx + 1,
+    name: it.name,
+    code: 'VEG-' + (1000 + idx),
+    category: it.category || 'Vegetables',
+    unit: 'kgs',
+    currentStockKgs: it.stockKgs || 0,
+    totalBoxes: it.boxes || 0,
+    defaultRatePerKg: it.avgRate || 0,
+    minStockThresholdKgs: 50,
+    description: ''
+  }));
+
+  // Format purchases for Android Room PurchaseEntryEntity
+  const formattedPurchases = purchases.map((p, idx) => ({
+    id: idx + 1,
+    batchId: p.batchId || ('PO-' + (1000 + idx)),
+    date: p.date,
+    itemName: p.item,
+    item: p.item,
+    boxes: p.boxes || 0,
+    qtyKgs: p.qtyKgs || 0,
+    rate: p.rate || 0,
+    totalAmount: p.total || 0,
+    total: p.total || 0,
+    supplierName: p.supplier || 'Wholesale Supplier',
+    supplier: p.supplier || 'Wholesale Supplier',
+    status: p.paid ? 'PAID' : 'PENDING',
+    paid: !!p.paid,
+    paymentMethod: p.settlementMode || 'Cash',
+    stripePaymentIntentId: null,
+    notes: p.settlementRef || ''
+  }));
+
+  // Format suppliers for Android Room SupplierEntity
+  const formattedSuppliers = suppliers.map((s, idx) => ({
+    id: idx + 1,
+    name: s.name,
+    contactPerson: s.name,
+    phone: s.contact || '8608414322',
+    contact: s.contact || '8608414322',
+    email: '',
+    address: s.location || 'Mandi Yard',
+    location: s.location || 'Mandi Yard',
+    outstandingPayable: s.balanceDue || 0,
+    balanceDue: s.balanceDue || 0
+  }));
+
+  // Format transactions for settled purchases
+  const transactions = purchases.filter(p => p.paid).map((p, idx) => ({
+    id: idx + 1,
+    stripePaymentIntentId: p.settlementRef || ('TXN-' + (100000 + idx)),
+    purchaseBatchId: p.batchId,
+    supplierName: p.supplier,
+    amount: p.total,
+    currency: 'INR',
+    paymentMethod: p.settlementMode || 'Cash',
+    status: 'SUCCESS',
+    timestamp: Date.now()
+  }));
+
+  return {
+    app: 'Lakshana Veggie',
+    version: '2.0',
+    domain: currentDomain,
+    exportedAt: Date.now(),
+    exportDate: new Date().toISOString(),
+    items: items,
+    inventory: inventory, // web alias
+    purchases: formattedPurchases,
+    suppliers: formattedSuppliers,
+    transactions: transactions,
+    users: users
+  };
+}
+
+// Pull & Restore directly from Cloud Server
+document.getElementById('pullFromCloudBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('pullFromCloudBtn');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ Pulling from Cloud...';
+  btn.disabled = true;
+  try {
+    const endpoint = getCustomWorkerUrl();
+    const res = await fetch(endpoint, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    const data = await res.json();
+    if (data && (data.items || data.purchases || data.suppliers)) {
+      mergeRemoteDataIntoLocal(data);
+      alert(`Cloud Restore Successful!\n\nRestored from ${endpoint}:\n- ${(data.items || []).length} Vegetables\n- ${(data.purchases || []).length} Purchases\n- ${(data.suppliers || []).length} Mandi Suppliers`);
+    } else {
+      alert(`Server responded successfully, but returned 0 records.`);
+    }
+  } catch (err) {
+    alert(`Cloud Restore Failed: ${err.message}\n\nPlease check your sync endpoint (${getCustomWorkerUrl()}).`);
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+});
+
+// Restore Sample Mandi Data
+document.getElementById('restoreSampleDataBtn')?.addEventListener('click', () => {
+  if (confirm('Restore sample Mandi inventory (Country Tomatoes, Red Onions, Ooty Potatoes) and suppliers?')) {
+    const sampleItems = [
+      { name: 'Fresh Country Tomatoes', icon: '🍅', stockKgs: 450, boxes: 18, avgRate: 32, category: 'Tomatoes' },
+      { name: 'Nashik Red Onions', icon: '🧅', stockKgs: 800, boxes: 32, avgRate: 28, category: 'Onions' },
+      { name: 'Ooty Fresh Potatoes', icon: '🥔', stockKgs: 600, boxes: 20, avgRate: 30, category: 'Potatoes' },
+      { name: 'Mysore Hybrid Carrots', icon: '🥕', stockKgs: 300, boxes: 12, avgRate: 42, category: 'Root Vegetables' },
+      { name: 'Guntur Green Chillies', icon: '🌶️', stockKgs: 120, boxes: 8, avgRate: 55, category: 'Spices & Greens' }
+    ];
+    sampleItems.forEach(si => {
+      const existing = inventory.find(i => (i.name || '').toLowerCase() === si.name.toLowerCase());
+      if (existing) {
+        existing.stockKgs = si.stockKgs;
+        existing.boxes = si.boxes;
+      } else {
+        inventory.push(si);
+      }
+    });
+    saveInventory();
+    renderInventory();
+    renderKpis();
+    alert('Sample Mandi data restored successfully!');
+  }
+});
+
+// Export JSON Backup
+document.getElementById('exportBackupBtn')?.addEventListener('click', () => {
+  const data = generateFullSyncPayload();
+  const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", jsonStr);
+  dlAnchor.setAttribute("download", `lakshana_backup_${new Date().toISOString().slice(0,10)}.json`);
+  dlAnchor.click();
+});
+
+// Copy Web Sync Payload directly for Mobile App
+document.getElementById('copySyncPayloadBtn')?.addEventListener('click', () => {
+  const data = generateFullSyncPayload();
+  const jsonText = JSON.stringify(data, null, 2);
+  navigator.clipboard.writeText(jsonText).then(() => {
+    alert(`Web Sync Payload copied to clipboard!\n\nPayload contains:\n- ${data.items.length} Items\n- ${data.purchases.length} Purchases\n- ${data.suppliers.length} Suppliers\n- ${data.users.length} Users\n\nIn your Android app, tap Online Sync Hub ➔ "Paste JSON" or Website tab ➔ "Paste JSON Text" to import instantly!`);
+  }).catch(() => {
+    prompt('Copy this sync JSON and paste into mobile app:', jsonText);
+  });
+});
+
+// Trigger Real Sync with Custom Domain / Backend
+// Two-Way Sync Merger: Merges incoming records from Mobile App into Web Portal
+function mergeRemoteDataIntoLocal(data) {
+  let changed = false;
+  const remoteItems = Array.isArray(data.items) ? data.items : (Array.isArray(data.inventory) ? data.inventory : null);
+  if (remoteItems && remoteItems.length > 0) {
+    remoteItems.forEach(it => {
+      const existing = inventory.find(i => (i.name || '').toLowerCase() === (it.name || '').toLowerCase());
+      const stock = parseFloat(it.currentStockKgs !== undefined ? it.currentStockKgs : it.stockKgs) || 0;
+      const boxes = parseInt(it.totalBoxes !== undefined ? it.totalBoxes : it.boxes) || 0;
+      const rate = parseFloat(it.defaultRatePerKg !== undefined ? it.defaultRatePerKg : it.avgRate) || 0;
+      if (!existing) {
+        inventory.push({
+          name: it.name,
+          icon: it.icon || '🥬',
+          stockKgs: stock,
+          boxes: boxes,
+          avgRate: rate,
+          category: it.category || 'Vegetables'
+        });
+        changed = true;
+      }
+    });
+  }
+
+  if (Array.isArray(data.purchases) && data.purchases.length > 0) {
+    data.purchases.forEach(rp => {
+      const bId = rp.batchId || rp.poNumber || ('PO-' + (rp.id || 'ITEM'));
+      const exists = purchases.some(p => 
+        (p.batchId && p.batchId === bId) || 
+        (p.poNumber && p.poNumber === (rp.poNumber || bId)) ||
+        (p.id && rp.id && p.id === rp.id)
+      );
+      if (!exists) {
+        purchases.unshift({
+          id: rp.id || Date.now(),
+          poNumber: rp.poNumber || bId,
+          batchId: bId,
+          item: rp.itemName || rp.item || 'Vegetable',
+          boxes: parseInt(rp.boxes) || 0,
+          qtyKgs: parseFloat(rp.qtyKgs) || 0,
+          rate: parseFloat(rp.rate) || 0,
+          total: parseFloat(rp.totalAmount !== undefined ? rp.totalAmount : rp.total) || 0,
+          supplier: rp.supplierName || rp.supplier || 'Direct Mandi Farmer',
+          paid: rp.status === 'PAID' || rp.paymentStatus === 'PAID' || rp.paid === true,
+          settlementDate: rp.settlementDate || '',
+          settlementMode: rp.paymentMethod || rp.settlementMode || 'Cash',
+          recordedBy: rp.recordedBy || 'Mobile App Sync'
+        });
+        changed = true;
+      }
+    });
+  }
+
+  if (Array.isArray(data.suppliers) && data.suppliers.length > 0) {
+    data.suppliers.forEach(rs => {
+      const exists = suppliers.some(s => 
+        (s.name || '').trim().toLowerCase() === (rs.name || '').trim().toLowerCase() ||
+        (s.id && rs.id && s.id === rs.id)
+      );
+      if (!exists) {
+        suppliers.push({
+          id: rs.id || Date.now(),
+          name: rs.name,
+          contact: rs.contactNumber || rs.phone || rs.contact || '8608414322',
+          location: rs.location || rs.address || 'Mandi Yard',
+          balanceDue: parseFloat(rs.outstandingBalance !== undefined ? rs.outstandingBalance : (rs.outstandingPayable !== undefined ? rs.outstandingPayable : rs.balanceDue)) || 0,
+          active: true
+        });
+        changed = true;
+      }
+    });
+  }
+
+  if (changed) {
+    localStorage.setItem('lakshana_web_purchases', JSON.stringify(purchases));
+    localStorage.setItem('lakshana_web_inventory', JSON.stringify(inventory));
+    localStorage.setItem('lakshana_web_suppliers', JSON.stringify(suppliers));
+    renderAll();
+  }
+}
+
+// Trigger Real Sync with Custom Domain / Backend
+async function triggerRealSync(showFeedback = true) {
+  const statusEl = document.getElementById('cloudSyncStatus');
+  const btn = document.getElementById('syncNowBtn');
+  const triggerBtn = document.getElementById('triggerSyncNow');
+  
+  if (statusEl) {
+    statusEl.querySelector('.status-text').textContent = 'Syncing...';
+    statusEl.querySelector('.status-dot').style.background = '#f59e0b';
+  }
+  if (btn) btn.disabled = true;
+  if (triggerBtn) triggerBtn.disabled = true;
+
+  const DEFAULT_DOMAIN = 'https://lakshanaveggie.trade/api/v1/sync';
+  const workerUrl = localStorage.getItem('lakshana_cloudflare_worker_url') || DEFAULT_DOMAIN;
+
+  let endpoint = workerUrl.trim().replace(/\/+$/, '');
+  if (!endpoint.endsWith('/api/v1/sync') && !endpoint.endsWith('/sync')) {
+    endpoint = `${endpoint}/api/v1/sync`;
+  }
+
+  try {
+    const payload = generateFullSyncPayload();
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (statusEl) {
+        statusEl.querySelector('.status-text').textContent = 'Cloud Synchronized';
+        statusEl.querySelector('.status-dot').style.background = '#10b981';
+      }
+      const timeLabel = document.getElementById('lastSyncTimeLabel');
+      if (timeLabel) timeLabel.textContent = `Synced at ${timeStr}`;
+
+      // Automatically merge any records that were added from the Android Mobile App
+      if (data && (Array.isArray(data.items) || Array.isArray(data.purchases) || Array.isArray(data.inventory))) {
+        mergeRemoteDataIntoLocal(data);
+      }
+
+      if (showFeedback) {
+        alert(`Online Sync Successful (HTTP ${res.status})!\n\nSynchronized with ${endpoint} at ${timeStr}\n• ${inventory.length} Stock Items\n• ${purchases.length} Purchases\n• ${suppliers.length} Suppliers`);
+      }
+    } else {
+      throw new Error(`Sync Endpoint returned HTTP ${res.status}`);
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.querySelector('.status-text').textContent = 'Sync Ready (Local)';
+      statusEl.querySelector('.status-dot').style.background = '#10b981';
+    }
+    if (showFeedback) {
+      alert(`Cloud Sync Endpoint Info:\n${err.message}\n\nSync is configured for ${endpoint}. Local changes are queued and will automatically sync when online.`);
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+    if (triggerBtn) triggerBtn.disabled = false;
+  }
+}
+
+// Automatic 15-second background sync loop to pull records entered on mobile app
+setInterval(() => {
+  if (currentUser) {
+    triggerRealSync(false);
+  }
+}, 15000);
+
+document.getElementById('syncNowBtn')?.addEventListener('click', () => triggerRealSync(true));
+document.getElementById('triggerSyncNow')?.addEventListener('click', () => triggerRealSync(true));
+
+// Cloudflare Worker URL Config
+const savedWorkerUrl = localStorage.getItem('lakshana_cloudflare_worker_url') || 'https://lakshanaveggie.trade/api/v1/sync';
+const domainInput = document.getElementById('customDomainInput');
+if (domainInput) domainInput.value = savedWorkerUrl;
+
+document.getElementById('saveDomainBtn')?.addEventListener('click', () => {
+  let url = domainInput.value.trim();
+  if (!url) {
+    alert('Please enter your Cloudflare Worker URL (e.g. https://your-worker.workers.dev)');
+    return;
+  }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+  }
+  localStorage.setItem('lakshana_cloudflare_worker_url', url);
+  domainInput.value = url;
+  alert(`Cloudflare Worker URL saved!\nURL: ${url}\n\nTesting sync now...`);
+  triggerRealSync(true);
+});
+
+document.getElementById('testDomainPingBtn')?.addEventListener('click', async () => {
+  let url = domainInput.value.trim();
+  const feedback = document.getElementById('domainTestFeedback');
+  if (!url) {
+    alert('Please enter your Cloudflare Worker URL first');
+    return;
+  }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+  }
+  feedback.style.display = 'block';
+  feedback.style.background = '#eff6ff';
+  feedback.style.color = '#1d4ed8';
+  feedback.textContent = '⏳ Testing connection to ' + url + '...';
+
+  try {
+    const pingEndpoint = (url.endsWith('/api/v1/sync') || url.endsWith('/sync')) ? url : url.replace(/\/$/, '') + '/api/v1/sync';
+    const res = await fetch(pingEndpoint, { method: 'GET' });
+    
+    if (res.ok) {
+      feedback.style.background = '#ecfdf5';
+      feedback.style.color = '#065f46';
+      feedback.innerHTML = `✓ <strong>Connected!</strong> Cloudflare Worker is online and responding (HTTP ${res.status}).`;
+    } else {
+      feedback.style.background = '#fffbeb';
+      feedback.style.color = '#b45309';
+      feedback.innerHTML = `⚠️ Worker reached, but status code is HTTP ${res.status}. Check endpoint route.`;
+    }
+  } catch (e) {
+    feedback.style.background = '#fef2f2';
+    feedback.style.color = '#991b1b';
+    feedback.innerHTML = `✕ <strong>Connection Failed:</strong> ${e.message}. Verify your Cloudflare Worker URL.`;
+  }
+});
+
+// ==========================================
+// 12. EXPORT CENTER: WEB APP ZIP & CSV EXPORTS
+// ==========================================
+
+// Open Export Hub Modal
+document.getElementById('openExportHubBtn')?.addEventListener('click', () => {
+  document.getElementById('exportHubModal')?.classList.add('open');
+});
+
+// CSV Downloader Helper
+function downloadCsvFile(csvContent, fileName) {
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', fileName);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// 1. Export Purchases to CSV / Excel
+function exportPurchasesToCsv() {
+  if (!purchases || purchases.length === 0) {
+    alert('No purchases recorded yet to export.');
+    return;
+  }
+  const headers = ['Date', 'Batch ID', 'Item Name', 'Boxes/Crates', 'Quantity (Kgs)', 'Rate per Kg (Rs)', 'Total Amount (Rs)', 'Supplier Name', 'Payment Status', 'Payment Method'];
+  const rows = purchases.map(p => [
+    `"${p.date || ''}"`,
+    `"${p.batchId || ''}"`,
+    `"${(p.item || '').replace(/"/g, '""')}"`,
+    p.boxes || 0,
+    p.qtyKgs || 0,
+    p.rate || 0,
+    p.total || 0,
+    `"${(p.supplier || '').replace(/"/g, '""')}"`,
+    p.paid ? 'PAID' : 'PENDING',
+    `"${p.settlementMode || 'Cash'}"`
+  ]);
+  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  downloadCsvFile(csvContent, `lakshana_purchases_${dateStr}.csv`);
+}
+
+// 2. Export Inventory Stock to CSV
+function exportInventoryToCsv() {
+  if (!inventory || inventory.length === 0) {
+    alert('No inventory commodities found to export.');
+    return;
+  }
+  const headers = ['Vegetable Item', 'Category', 'Stock Available (Kgs)', 'Total Boxes / Crates', 'Avg Rate per Kg (Rs)', 'Status'];
+  const rows = inventory.map(item => [
+    `"${(item.name || '').replace(/"/g, '""')}"`,
+    `"${(item.category || 'Vegetables').replace(/"/g, '""')}"`,
+    item.stockKgs || 0,
+    item.boxes || 0,
+    item.avgRate || 0,
+    (item.stockKgs < 50 ? 'LOW STOCK' : 'IN STOCK')
+  ]);
+  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  downloadCsvFile(csvContent, `lakshana_inventory_${dateStr}.csv`);
+}
+
+// 3. Export Suppliers Directory to CSV
+function exportSuppliersToCsv() {
+  if (!suppliers || suppliers.length === 0) {
+    alert('No suppliers recorded yet to export.');
+    return;
+  }
+  const headers = ['Supplier Name', 'Contact Phone', 'Mandi Location / Yard', 'Outstanding Balance Due (Rs)', 'Active Status'];
+  const rows = suppliers.map(s => [
+    `"${(s.name || '').replace(/"/g, '""')}"`,
+    `"${s.contact || ''}"`,
+    `"${(s.location || '').replace(/"/g, '""')}"`,
+    s.balanceDue || 0,
+    s.active !== false ? 'ACTIVE' : 'INACTIVE'
+  ]);
+  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  downloadCsvFile(csvContent, `lakshana_suppliers_${dateStr}.csv`);
+}
+
+// 4. Download Complete Web App (.ZIP)
+async function downloadWebAppZip() {
+  const btn = document.getElementById('downloadWebAppZipBtn');
+  const originalText = btn ? btn.innerHTML : '📦 Download Web App ZIP';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Packaging Web App...';
+  }
+
+  try {
+    if (typeof JSZip === 'undefined') {
+      throw new Error('JSZip library is still loading. Please check your internet connection and try again.');
+    }
+
+    const zip = new JSZip();
+
+    // Helper to fetch file or provide fallback
+    async function getFileContent(filePath) {
+      try {
+        const response = await fetch(filePath);
+        if (response.ok) {
+          return await response.text();
+        }
+      } catch (e) {
+        console.warn('Direct fetch failed for', filePath, e);
+      }
+      return null;
+    }
+
+    // Try fetching live files, otherwise synthesize from document
+    let indexHtml = await getFileContent('index.html');
+    if (!indexHtml) {
+      indexHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    }
+
+    let stylesCss = await getFileContent('styles.css');
+    if (!stylesCss) {
+      stylesCss = '/* Lakshana Veggie Stylesheet */\n';
+      for (const sheet of document.styleSheets) {
+        try {
+          if (sheet.cssRules) {
+            for (const rule of sheet.cssRules) {
+              stylesCss += rule.cssText + '\n';
+            }
+          }
+        } catch (e) { /* ignore cross-origin */ }
+      }
+    }
+
+    let appJs = await getFileContent('app.js');
+    if (!appJs) {
+      appJs = '// Lakshana Veggie App Script\n';
+    }
+
+    let workerJs = await getFileContent('cloudflare-worker.js');
+    if (!workerJs) {
+      workerJs = `// Cloudflare Worker for lakshanaveggie.trade
+let inMemorySyncCache = null;
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT, DELETE',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+          'Access-Control-Max-Age': '86400'
+        }
+      });
+    }
+
+    const cleanPath = url.pathname.replace(/\\/+$/, '');
+    if (cleanPath === '/api/v1/sync' || cleanPath === '/sync' || cleanPath.startsWith('/api/v1/sync')) {
+      if (request.method === 'POST') {
+        try {
+          const payload = await request.json();
+          inMemorySyncCache = {
+            ...payload,
+            syncedAt: Date.now(),
+            serverTime: new Date().toISOString()
+          };
+          if (env && env.SYNC_KV) {
+            await env.SYNC_KV.put('latest_sync', JSON.stringify(inMemorySyncCache));
+          }
+          return new Response(JSON.stringify({
+            status: 'success',
+            syncedAt: Date.now(),
+            items: inMemorySyncCache.items || inMemorySyncCache.inventory || [],
+            purchases: inMemorySyncCache.purchases || [],
+            suppliers: inMemorySyncCache.suppliers || [],
+            message: 'Real-time sync successful with Cloudflare Worker'
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ status: 'error', message: err.message }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+          });
+        }
+      }
+
+      let data = inMemorySyncCache;
+      if (env && env.SYNC_KV) {
+        const raw = await env.SYNC_KV.get('latest_sync');
+        if (raw) data = JSON.parse(raw);
+      }
+      return new Response(JSON.stringify(data || { status: 'online', domain: 'cloudflare-worker' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
+    return fetch(request);
+  }
+};`;
+    }
+
+    let packageJson = await getFileContent('package.json');
+    if (!packageJson) {
+      packageJson = JSON.stringify({
+        name: "lakshana-veggie-web-portal",
+        version: "2.0.0",
+        scripts: { start: "npx serve ." }
+      }, null, 2);
+    }
+
+    let readmeMd = await getFileContent('README.md');
+    if (!readmeMd) {
+      readmeMd = '# Lakshana Veggie Web Portal\n\nDirect Mandi Procurement & Inventory Management Web Portal.\nPowered by Cloudflare Worker for online synchronization.';
+    }
+
+    // Add files to zip
+    zip.file('index.html', indexHtml);
+    zip.file('styles.css', stylesCss);
+    zip.file('app.js', appJs);
+    zip.file('cloudflare-worker.js', workerJs);
+    zip.file('package.json', packageJson);
+    zip.file('README.md', readmeMd);
+
+    // Also include a pre-populated backup payload in the zip
+    const currentData = generateFullSyncPayload();
+    zip.file('initial_data_backup.json', JSON.stringify(currentData, null, 2));
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const fileName = `lakshana-veggie-web-app_${dateStr}.zip`;
+
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    alert(`Web App successfully packaged and downloaded!\nFile: ${fileName}\n\nIncludes website files and cloudflare-worker.js for instant online synchronization.`);
+  } catch (err) {
+    alert('Failed to package web app: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+}
+
+// Bind Export Event Listeners
+document.getElementById('exportPurchasesCsvBtn')?.addEventListener('click', exportPurchasesToCsv);
+document.getElementById('exportPurchasesHubBtn')?.addEventListener('click', exportPurchasesToCsv);
+document.getElementById('exportInventoryCsvBtn')?.addEventListener('click', exportInventoryToCsv);
+document.getElementById('exportInventoryHubBtn')?.addEventListener('click', exportInventoryToCsv);
+document.getElementById('exportSuppliersCsvBtn')?.addEventListener('click', exportSuppliersToCsv);
+document.getElementById('exportSuppliersHubBtn')?.addEventListener('click', exportSuppliersToCsv);
+document.getElementById('downloadWebAppZipBtn')?.addEventListener('click', downloadWebAppZip);
+
+document.getElementById('exportBackupHubBtn')?.addEventListener('click', () => {
+  document.getElementById('exportBackupBtn')?.click();
+});
+
+document.getElementById('copySyncPayloadHubBtn')?.addEventListener('click', () => {
+  document.getElementById('copySyncPayloadBtn')?.click();
+});
+
+async function fetchCloudDataOnLoad() {
+  const DEFAULT_DOMAIN = 'https://lakshanaveggie.trade/api/v1/sync';
+  const workerUrl = localStorage.getItem('lakshana_cloudflare_worker_url') || DEFAULT_DOMAIN;
+  let endpoint = workerUrl.trim().replace(/\/+$/, '');
+  if (!endpoint.endsWith('/api/v1/sync') && !endpoint.endsWith('/sync')) {
+    endpoint = `${endpoint}/api/v1/sync`;
+  }
+
+  try {
+    const res = await fetch(endpoint, { method: 'GET' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && (Array.isArray(data.items) || Array.isArray(data.purchases) || Array.isArray(data.suppliers))) {
+        mergeRemoteDataIntoLocal(data);
+      }
+    }
+  } catch (e) {
+    // Network or offline, fallback to local state
+    console.log('Background cloud sync notice:', e.message);
+  }
+}
+
+// ==========================================
+// 13. INITIALIZATION
+// ==========================================
+
+initPortalAuth();
+updateNewPoDateUI();
+updateSettleDateUI();
+updateAuthVisibility();
+renderHeaderAuth();
+if (currentUser) {
+  renderAll();
+}
+
+// Fetch live cloud updates immediately on load
+fetchCloudDataOnLoad();
+
+</script>
+</body>
+</html>
