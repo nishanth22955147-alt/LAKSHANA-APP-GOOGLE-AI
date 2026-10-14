@@ -707,6 +707,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isSyncing.value = true
             _syncSummary.value = _syncSummary.value.copy(syncState = SyncState.SYNCING)
+
             val result = cloudSyncManager.performOnlineSync()
             if (result.isSuccess) {
                 val summary = result.getOrThrow()

@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -79,6 +80,7 @@ fun OnlineSyncDialog(
     var testResultMsg by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
     var showArchitectureGuide by remember { mutableStateOf(false) }
     var showTroubleshooting by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     val formattedLastSync = remember(syncSummary.lastSyncTimestamp) {
         if (syncSummary.lastSyncTimestamp > 0) {
@@ -260,17 +262,35 @@ fun OnlineSyncDialog(
                                         if (showTroubleshooting) {
                                             Spacer(modifier = Modifier.height(8.dp))
                                             Text(
-                                                "1. Domain lakshanaveggie.trade is serving static pages, but HTTP POST to '/api/v1/sync' returns 404 because the Cloudflare Worker backend is not yet bound to this route.\n\n" +
-                                                "2. How to Fix on Cloudflare (2 Mins):\n" +
-                                                "   • Open Cloudflare Dashboard ➔ Workers & Pages ➔ Create Worker\n" +
-                                                "   • Paste the code from 'cloudflare-worker.js' (included in project) and click Deploy\n" +
-                                                "   • Under Worker Settings ➔ Domains & Routes, add route: *lakshanaveggie.trade/api/*\n\n" +
-                                                "3. Instant 100% Offline Workaround:\n" +
-                                                "   • Your data is completely safe in your local Android phone database.\n" +
-                                                "   • You can tap 'Copy JSON' or 'Share .json File' below to transfer records directly into your website without requiring the worker!",
+                                                "1. Why 404 appears: Cloudflare Pages was only serving static HTML files because the project was missing an edge `_worker.js` handler.\n\n" +
+                                                "2. How it's fixed:\n" +
+                                                "   • We added `_worker.js` and `_routes.json` to the repo! Once pushed to GitHub, Cloudflare Pages will automatically deploy the API backend at `/api/v1/sync`.\n" +
+                                                "   • You can also enter your direct Cloudflare Pages URL (e.g. `https://<your-project>.pages.dev/api/v1/sync`).\n" +
+                                                "   • The mobile app now automatically probes `/api/v1/sync` and `/sync` to self-heal connection.\n\n" +
+                                                "3. Offline-First Guarantee:\n" +
+                                                "   • All records are 100% saved locally in Room SQLite database. No data is lost.",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
+                                            Spacer(modifier = Modifier.height(10.dp))
+                                            Button(
+                                                onClick = {
+                                                    try {
+                                                        val workerCode = context.assets.open("website/cloudflare-worker.js").bufferedReader().use { it.readText() }
+                                                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                                        clipboard.setPrimaryClip(ClipData.newPlainText("Cloudflare Worker Script", workerCode))
+                                                        Toast.makeText(context, "Worker script copied! Paste it into dash.cloudflare.com", Toast.LENGTH_LONG).show()
+                                                    } catch (e: Exception) {
+                                                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                },
+                                                colors = ButtonDefaults.buttonColors(containerColor = SecondaryTeal),
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text("📋 Copy Cloudflare Worker Code", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                            }
                                         }
                                     }
                                 }
@@ -393,11 +413,11 @@ fun OnlineSyncDialog(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // Cloudflare Worker Sync Connection Hub
+                    // Online Cloud Sync Connection Hub
                     Text(
-                        "CLOUDFLARE WORKER SYNC",
+                        "ONLINE CLOUD SYNC",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -474,12 +494,12 @@ fun OnlineSyncDialog(
                                 ) {
                                     SuggestionChip(
                                         onClick = { domainInput = "https://lakshanaveggie.trade/api/v1/sync" },
-                                        label = { Text("lakshanaveggie.trade", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold) },
+                                        label = { Text("/api/v1/sync", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold) },
                                         modifier = Modifier.weight(1f)
                                     )
                                     SuggestionChip(
-                                        onClick = { domainInput = "https://api.lakshanaveggie.trade/sync" },
-                                        label = { Text("api.lakshanaveggie.trade", style = MaterialTheme.typography.labelSmall) },
+                                        onClick = { domainInput = "https://lakshanaveggie.trade/sync" },
+                                        label = { Text("/sync", style = MaterialTheme.typography.labelSmall) },
                                         modifier = Modifier.weight(1f)
                                     )
                                 }

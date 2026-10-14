@@ -103,20 +103,42 @@ class CloudSyncManager(
             } else if (responseCode in 300..399) {
                 Result.success("Worker Active (HTTP $responseCode Redirect). Server at '$host' is online.")
             } else if (responseCode == 404) {
-                // Check if the root domain is alive to give exact diagnostic
-                val rootOnline = try {
-                    val rootConn = java.net.URL("${url.protocol}://$host/").openConnection() as java.net.HttpURLConnection
-                    rootConn.connectTimeout = 4000
-                    rootConn.readTimeout = 4000
-                    val rCode = rootConn.responseCode
-                    rootConn.disconnect()
-                    rCode in 200..399
-                } catch (_: Exception) { false }
+                // Probe alternative candidate paths
+                val candidatePaths = listOf("/sync", "/api/sync", "/api/v1/health", "/health")
+                var workingCandidate = ""
+                for (path in candidatePaths) {
+                    try {
+                        val candUrl = "${url.protocol}://$host$path"
+                        val candConn = java.net.URL(candUrl).openConnection() as java.net.HttpURLConnection
+                        candConn.connectTimeout = 3000
+                        candConn.readTimeout = 3000
+                        val cCode = candConn.responseCode
+                        candConn.disconnect()
+                        if (cCode in 200..299) {
+                            workingCandidate = candUrl
+                            break
+                        }
+                    } catch (_: Exception) {}
+                }
 
-                if (rootOnline) {
-                    Result.failure(Exception("HTTP 404: Website '$host' is LIVE, but Cloudflare Worker route '/api/v1/sync' is not yet linked in Cloudflare Dashboard. Deploy cloudflare-worker.js to route '*$host/api/*' or use manual JSON sync."))
+                if (workingCandidate.isNotEmpty()) {
+                    setCloudEndpoint(workingCandidate)
+                    Result.success("Connected! Active sync route found at $workingCandidate (HTTP 200).")
                 } else {
-                    Result.failure(Exception("HTTP 404 Not Found at '$host'. The web host is reachable, but the endpoint route was not matched."))
+                    val rootOnline = try {
+                        val rootConn = java.net.URL("${url.protocol}://$host/").openConnection() as java.net.HttpURLConnection
+                        rootConn.connectTimeout = 3000
+                        rootConn.readTimeout = 3000
+                        val rCode = rootConn.responseCode
+                        rootConn.disconnect()
+                        rCode in 200..399
+                    } catch (_: Exception) { false }
+
+                    if (rootOnline) {
+                        Result.failure(Exception("HTTP 404: Website '$host' is LIVE, but Cloudflare has not completed building the new _worker.js from GitHub yet (takes 1-2 mins), or enter your Cloudflare .pages.dev URL."))
+                    } else {
+                        Result.failure(Exception("HTTP 404 Not Found at '$host'. The web host is reachable, but the endpoint route was not matched."))
+                    }
                 }
             } else {
                 Result.failure(Exception("HTTP $responseCode received from '$host'."))
@@ -191,8 +213,8 @@ class CloudSyncManager(
                 os.flush()
             }
 
-            val responseCode = conn.responseCode
-            val responseText = try {
+            var responseCode = conn.responseCode
+            var responseText = try {
                 if (responseCode in 200..299) {
                     conn.inputStream.bufferedReader().use { it.readText() }
                 } else {
@@ -202,6 +224,46 @@ class CloudSyncManager(
                 ""
             }
             conn.disconnect()
+
+            var effectiveEndpoint = endpoint
+
+            // If 404, automatically try /sync and /api/sync on the same host
+            if (responseCode == 404) {
+                val candidateFallbacks = listOf(
+                    "${url.protocol}://${url.host}/sync",
+                    "${url.protocol}://${url.host}/api/sync"
+                )
+                for (cand in candidateFallbacks) {
+                    if (cand == endpoint) continue
+                    try {
+                        val candConn = java.net.URL(cand).openConnection() as java.net.HttpURLConnection
+                        candConn.connectTimeout = 4000
+                        candConn.readTimeout = 4000
+                        candConn.doOutput = true
+                        candConn.requestMethod = "POST"
+                        candConn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                        candConn.setRequestProperty("Accept", "application/json")
+                        candConn.setRequestProperty("User-Agent", "Lakshana-Android-Sync/2.0")
+                        candConn.outputStream.use { os ->
+                            os.write(fullPayloadJson.toByteArray(Charsets.UTF_8))
+                            os.flush()
+                        }
+                        val cCode = candConn.responseCode
+                        val cText = try {
+                            if (cCode in 200..299) candConn.inputStream.bufferedReader().use { it.readText() }
+                            else candConn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+                        } catch (_: Exception) { "" }
+                        candConn.disconnect()
+                        if (cCode in 200..299) {
+                            responseCode = cCode
+                            responseText = cText
+                            effectiveEndpoint = cand
+                            setCloudEndpoint(cand)
+                            break
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
 
             val now = System.currentTimeMillis()
             setLastSyncTimestamp(now)
@@ -226,12 +288,11 @@ class CloudSyncManager(
                     stockMovementsCount = movements.size,
                     isOnline = true,
                     statusMessage = "Online Synced at $timeStr (HTTP $responseCode). Uploaded ${items.size} items, ${purchases.size} purchases & ${suppliers.size} suppliers to Cloud.",
-                    cloudEndpoint = endpoint,
+                    cloudEndpoint = effectiveEndpoint,
                     autoSyncEnabled = autoSync
                 )
                 Result.success(summary)
             } else if (responseCode == 404) {
-                // Server reachable but endpoint route not active
                 val rootOnline = try {
                     val rootConn = java.net.URL("${url.protocol}://${url.host}/").openConnection() as java.net.HttpURLConnection
                     rootConn.connectTimeout = 3000
@@ -242,7 +303,7 @@ class CloudSyncManager(
                 } catch (_: Exception) { false }
 
                 val detailMsg = if (rootOnline) {
-                    "HTTP 404 at ${url.host}: Website is LIVE, but Cloudflare Worker /api/v1/sync route is not mapped yet. Follow the 2-step setup in Guide or use manual JSON sync."
+                    "HTTP 404 at ${url.host}: Website is LIVE, but Cloudflare has not completed building the new _worker.js from GitHub yet (takes 1-2 mins). Push the latest commit to GitHub or enter your .pages.dev URL."
                 } else {
                     "HTTP 404 at ${url.host}: Web endpoint not found. Verify your domain and Cloudflare Worker routes."
                 }

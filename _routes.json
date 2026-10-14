@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "include": [
+    "/api/*",
+    "/sync",
+    "/health"
+  ],
+  "exclude": [
+    "/index.html",
+    "/styles.css",
+    "/app.js",
+    "/404.html",
+    "/sync-data.json"
+  ]
+}

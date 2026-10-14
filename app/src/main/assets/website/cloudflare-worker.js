@@ -1,22 +1,21 @@
 /**
- * Cloudflare Worker Default Domain Sync Script
- * Handles real-time Android Mobile App & Web Portal synchronization
- * 
- * SETUP IN CLOUDFLARE DASHBOARD:
- * 1. Go to Workers & Pages -> Create Worker
- * 2. Paste this code and click "Deploy"
- * 3. Copy your default worker URL (e.g. https://<worker-name>.<account>.workers.dev)
- * 4. Paste that URL into your Mobile App and Web Portal Sync settings!
+ * Cloudflare Worker: Lakshana Veggie Real-Time Backend & Storage Hub
+ * Domain: lakshanaveggie.trade
  */
 
-// In-memory cache fallback (persists across warm worker instances)
-let inMemorySyncCache = null;
+let inMemorySyncCache = {
+  items: [],
+  purchases: [],
+  suppliers: [],
+  version: 2,
+  syncedAt: Date.now()
+};
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // Handle CORS preflight options
+    // 1. CORS Preflight Handlers
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
@@ -29,81 +28,159 @@ export default {
       });
     }
 
-    // Match the API sync endpoint (handles trailing slashes and query params)
-    const cleanPath = url.pathname.replace(/\/+$/, '');
-    if (cleanPath === '/api/v1/sync' || cleanPath === '/sync' || cleanPath.startsWith('/api/v1/sync')) {
+    const cleanPath = url.pathname.replace(/\/+$/, '').toLowerCase();
+    const kv = (env && (env.SYNC_KV || env.LAKSHANA_KV || env.STORAGE || env.DATABASE));
+
+    // 2. Health & Diagnostics Endpoint
+    if (cleanPath === '/api/v1/health' || cleanPath === '/health') {
+      return new Response(JSON.stringify({
+        status: 'online',
+        service: 'Lakshana Veggie Procurement Backend',
+        domain: url.hostname || 'lakshanaveggie.trade',
+        storageType: kv ? 'Cloudflare KV (Persistent Global Storage)' : 'In-Memory Edge Cache',
+        kvConfigured: !!kv,
+        timestamp: Date.now(),
+        serverTime: new Date().toISOString()
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
+    // 3. Main Real-Time Sync Endpoint
+    if (cleanPath === '/api/v1/sync' || cleanPath === '/sync' || cleanPath === '/api/sync' || cleanPath.startsWith('/api/v1/sync')) {
       if (request.method === 'POST') {
         try {
-          const payload = await request.json();
-          const itemsCount = (payload.items || payload.inventory || []).length;
-          const purchasesCount = (payload.purchases || []).length;
-          const suppliersCount = (payload.suppliers || []).length;
+          const incoming = await request.json();
 
-          const syncRecord = {
-            ...payload,
+          let current = inMemorySyncCache;
+          if (kv) {
+            const raw = await kv.get('lakshana_db_v1');
+            if (raw) {
+              try { current = JSON.parse(raw); } catch (e) { current = inMemorySyncCache; }
+            }
+          }
+
+          const incomingItems = incoming.items || incoming.inventory || [];
+          const incomingPurchases = incoming.purchases || [];
+          const incomingSuppliers = incoming.suppliers || [];
+
+          // Merge Purchases
+          const purchaseMap = new Map();
+          (current.purchases || []).forEach(p => {
+            const key = p.poNumber || p.batchId || p.id || `${p.date}_${p.name || p.itemName}_${p.qtyKgs}`;
+            purchaseMap.set(key, p);
+          });
+          incomingPurchases.forEach(p => {
+            const key = p.poNumber || p.batchId || p.id || `${p.date}_${p.name || p.itemName}_${p.qtyKgs}`;
+            purchaseMap.set(key, p);
+          });
+          const mergedPurchases = Array.from(purchaseMap.values());
+
+          // Merge Items
+          const itemMap = new Map();
+          (current.items || []).forEach(i => {
+            const key = (i.name || '').trim().toLowerCase();
+            if (key) itemMap.set(key, i);
+          });
+          incomingItems.forEach(i => {
+            const key = (i.name || '').trim().toLowerCase();
+            if (key) {
+              const existing = itemMap.get(key);
+              if (existing) {
+                itemMap.set(key, { ...existing, ...i });
+              } else {
+                itemMap.set(key, i);
+              }
+            }
+          });
+          const mergedItems = Array.from(itemMap.values());
+
+          // Merge Suppliers
+          const supplierMap = new Map();
+          (current.suppliers || []).forEach(s => {
+            const key = (s.name || '').trim().toLowerCase();
+            if (key) supplierMap.set(key, s);
+          });
+          incomingSuppliers.forEach(s => {
+            const key = (s.name || '').trim().toLowerCase();
+            if (key) supplierMap.set(key, s);
+          });
+          const mergedSuppliers = Array.from(supplierMap.values());
+
+          const updatedDatabase = {
+            items: mergedItems,
+            purchases: mergedPurchases,
+            suppliers: mergedSuppliers,
+            version: 2,
             syncedAt: Date.now(),
             serverTime: new Date().toISOString()
           };
 
-          // Save to Cloudflare KV if bound (e.g. SYNC_KV)
-          if (env && env.SYNC_KV) {
-            await env.SYNC_KV.put('latest_sync', JSON.stringify(syncRecord));
+          if (kv) {
+            await kv.put('lakshana_db_v1', JSON.stringify(updatedDatabase));
+            await kv.put('last_sync_timestamp', Date.now().toString());
           } else {
-            inMemorySyncCache = syncRecord;
+            inMemorySyncCache = updatedDatabase;
           }
 
           return new Response(JSON.stringify({
             status: 'success',
-            syncedAt: Date.now(),
-            serverTime: new Date().toISOString(),
-            itemsCount,
-            purchasesCount,
-            suppliersCount,
-            message: 'Real-time sync successful with Cloudflare Worker'
+            syncedAt: updatedDatabase.syncedAt,
+            serverTime: updatedDatabase.serverTime,
+            items: updatedDatabase.items,
+            purchases: updatedDatabase.purchases,
+            suppliers: updatedDatabase.suppliers,
+            itemsCount: mergedItems.length,
+            purchasesCount: mergedPurchases.length,
+            suppliersCount: mergedSuppliers.length,
+            storage: kv ? 'Persistent Cloudflare KV' : 'In-Memory Cache'
           }), {
             status: 200,
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*'
-            }
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
           });
         } catch (err) {
           return new Response(JSON.stringify({
             status: 'error',
-            message: 'Invalid sync payload: ' + err.message
+            message: 'Sync payload parse error: ' + err.message
           }), {
             status: 400,
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*'
-            }
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
           });
         }
       }
 
-      // GET request: Return latest synced data or status
+      // GET request
       let data = inMemorySyncCache;
-      if (env && env.SYNC_KV) {
-        const raw = await env.SYNC_KV.get('latest_sync');
-        if (raw) data = JSON.parse(raw);
+      if (kv) {
+        const raw = await kv.get('lakshana_db_v1');
+        if (raw) {
+          try { data = JSON.parse(raw); } catch (e) { data = inMemorySyncCache; }
+        }
       }
 
-      return new Response(JSON.stringify(data || {
+      return new Response(JSON.stringify({
         status: 'online',
-        endpoint: '/api/v1/sync',
-        provider: 'Cloudflare Edge Worker',
-        timestamp: Date.now(),
-        message: 'Sync API is ready to accept mobile & web procurement payloads'
+        endpoint: cleanPath,
+        domain: url.hostname || 'lakshanaveggie.trade',
+        storage: kv ? 'Persistent Cloudflare KV' : 'In-Memory Edge Cache',
+        syncedAt: data.syncedAt || Date.now(),
+        items: data.items || [],
+        purchases: data.purchases || [],
+        suppliers: data.suppliers || []
       }), {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
 
-    // If request is not for /api/v1/sync, proxy through to the origin (e.g. GitHub Pages)
-    return fetch(request);
+    if (env && env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+      return env.ASSETS.fetch(request);
+    }
+
+    return new Response('Lakshana Veggie Cloud Server Online', {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' }
+    });
   }
 };
