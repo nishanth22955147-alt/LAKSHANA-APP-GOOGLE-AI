@@ -6,28 +6,54 @@
 // 1. DATA STATE MANAGEMENT (ZERO SAMPLE DATA)
 // ==========================================
 
-// Auto-purge all stale mock/demo data from browser localStorage
-(function purgeLegacySampleData() {
-  try {
-    ['lakshana_mock_seeded', 'lakshana_demo_data', 'lakshana_sample_initialized', 'lakshana_web_current_user'].forEach(k => {
-      localStorage.removeItem(k);
-    });
+// Default Mandi Catalog & Procurement Data (Ensures rich content on fresh visit)
+const DEFAULT_INVENTORY = [
+  { id: 101, name: 'Country Tomato (நாட்டு தக்காளி)', category: 'Vegetables', currentStockKgs: 450, totalBoxes: 18, defaultRatePerKg: 28 },
+  { id: 102, name: 'Hybrid Bangalore Tomato (பெங்களூரு தக்காளி)', category: 'Vegetables', currentStockKgs: 620, totalBoxes: 24, defaultRatePerKg: 32 },
+  { id: 103, name: 'Small Onion / Shallots (சின்ன வெங்காயம்)', category: 'Vegetables', currentStockKgs: 380, totalBoxes: 15, defaultRatePerKg: 65 },
+  { id: 104, name: 'Bellary Big Onion (பெரிய வெங்காயம்)', category: 'Vegetables', currentStockKgs: 1250, totalBoxes: 50, defaultRatePerKg: 35 },
+  { id: 105, name: 'Ooty Fresh Carrot (ஊட்டி கேரட்)', category: 'Vegetables', currentStockKgs: 290, totalBoxes: 12, defaultRatePerKg: 45 },
+  { id: 106, name: 'Kolar Potato (உருளைக்கிழங்கு)', category: 'Vegetables', currentStockKgs: 850, totalBoxes: 34, defaultRatePerKg: 30 },
+  { id: 107, name: 'Green Chilli (பச்சை மிளகாய்)', category: 'Vegetables', currentStockKgs: 140, totalBoxes: 7, defaultRatePerKg: 55 },
+  { id: 108, name: 'Cabbage (முட்டைகோஸ்)', category: 'Vegetables', currentStockKgs: 310, totalBoxes: 10, defaultRatePerKg: 18 },
+  { id: 109, name: 'Fresh Ginger (இஞ்சி)', category: 'Vegetables', currentStockKgs: 95, totalBoxes: 4, defaultRatePerKg: 110 },
+  { id: 110, name: 'Garlic (பூண்டு)', category: 'Vegetables', currentStockKgs: 120, totalBoxes: 6, defaultRatePerKg: 180 },
+  { id: 111, name: 'Beetroot (பீட்ரூட்)', category: 'Vegetables', currentStockKgs: 210, totalBoxes: 9, defaultRatePerKg: 25 },
+  { id: 112, name: 'Drumstick (முருங்கைக்காய்)', category: 'Vegetables', currentStockKgs: 85, totalBoxes: 5, defaultRatePerKg: 60 }
+];
 
-    ['lakshana_web_purchases', 'lakshana_web_inventory', 'lakshana_web_suppliers'].forEach(key => {
-      const raw = localStorage.getItem(key);
-      if (raw && (raw.includes('BATCH-2026') || raw.includes('Nashik') || raw.includes('Koyambedu APMC') || raw.includes('dummy') || raw.includes('sample'))) {
-        localStorage.removeItem(key);
-      }
-    });
-  } catch (e) {
-    console.error('Error during cleanup:', e);
-  }
-})();
+const DEFAULT_SUPPLIERS = [
+  { id: 1, name: 'Koyambedu APMC Merchant 14', contactNumber: '9840123456', location: 'Chennai APMC', outstandingBalance: 42500 },
+  { id: 2, name: 'Hosur Direct Farm Producers', contactNumber: '9443210987', location: 'Hosur Valley', outstandingBalance: 28000 },
+  { id: 3, name: 'Ooty Hill Vegetable Cooperative', contactNumber: '9789012345', location: 'Nilgiris / Ooty', outstandingBalance: 15400 },
+  { id: 4, name: 'Nashik Onion Logistics Hub', contactNumber: '9123456789', location: 'Nashik APMC', outstandingBalance: 65000 }
+];
 
-// Real storage arrays - strictly empty until user enters real data or syncs from mobile app
-let purchases = JSON.parse(localStorage.getItem('lakshana_web_purchases')) || [];
+const DEFAULT_PURCHASES = [
+  { id: 1, poNumber: 'PO-TODAY-01', itemName: 'Country Tomato (நாட்டு தக்காளி)', boxes: 18, qtyKgs: 450, rate: 28, totalAmount: 12600, supplierName: 'Hosur Direct Farm Producers', date: new Date().toISOString().slice(0, 10), paymentStatus: 'UNPAID' },
+  { id: 2, poNumber: 'PO-TODAY-02', itemName: 'Bellary Big Onion (பெரிய வெங்காயம்)', boxes: 50, qtyKgs: 1250, rate: 35, totalAmount: 43750, supplierName: 'Nashik Onion Logistics Hub', date: new Date().toISOString().slice(0, 10), paymentStatus: 'PARTIAL' },
+  { id: 3, poNumber: 'PO-TODAY-03', itemName: 'Ooty Fresh Carrot (ஊட்டி கேரட்)', boxes: 12, qtyKgs: 290, rate: 45, totalAmount: 13050, supplierName: 'Ooty Hill Vegetable Cooperative', date: new Date().toISOString().slice(0, 10), paymentStatus: 'UNPAID' },
+  { id: 4, poNumber: 'PO-TODAY-04', itemName: 'Small Onion / Shallots (சின்ன வெங்காயம்)', boxes: 15, qtyKgs: 380, rate: 65, totalAmount: 24700, supplierName: 'Koyambedu APMC Merchant 14', date: new Date().toISOString().slice(0, 10), paymentStatus: 'PAID' }
+];
+
+// Load local storage or default to initial Mandi catalog
 let inventory = JSON.parse(localStorage.getItem('lakshana_web_inventory')) || [];
 let suppliers = JSON.parse(localStorage.getItem('lakshana_web_suppliers')) || [];
+let purchases = JSON.parse(localStorage.getItem('lakshana_web_purchases')) || [];
+
+// Populate rich catalog if first visit
+if (inventory.length === 0) {
+  inventory = [...DEFAULT_INVENTORY];
+  localStorage.setItem('lakshana_web_inventory', JSON.stringify(inventory));
+}
+if (suppliers.length === 0) {
+  suppliers = [...DEFAULT_SUPPLIERS];
+  localStorage.setItem('lakshana_web_suppliers', JSON.stringify(suppliers));
+}
+if (purchases.length === 0) {
+  purchases = [...DEFAULT_PURCHASES];
+  localStorage.setItem('lakshana_web_purchases', JSON.stringify(purchases));
+}
 
 function saveState(triggerAutoSync = true) {
   localStorage.setItem('lakshana_web_purchases', JSON.stringify(purchases));
@@ -36,7 +62,7 @@ function saveState(triggerAutoSync = true) {
   if (currentUser) {
     renderAll();
   }
-  if (triggerAutoSync && currentUser) {
+  if (triggerAutoSync && currentUser && currentUser.role !== 'VIEWER') {
     // Automatically push to cloud without requiring manual actions or JSON uploads
     triggerRealSync(false);
   }
@@ -60,6 +86,18 @@ const DEFAULT_ADMIN = {
   lastLoginAt: Date.now()
 };
 
+const GUEST_VIEWER = {
+  id: 999,
+  mobileNumber: 'Guest',
+  fullName: 'Guest Mandi Viewer',
+  role: 'VIEWER',
+  department: 'Public / Visitor',
+  isActive: true,
+  isApproved: true,
+  createdAt: Date.now(),
+  lastLoginAt: Date.now()
+};
+
 let users = JSON.parse(localStorage.getItem('lakshana_web_users')) || [DEFAULT_ADMIN];
 // Ensure admin exists in user list
 if (!users.some(u => u.mobileNumber === '8608414322')) {
@@ -67,8 +105,8 @@ if (!users.some(u => u.mobileNumber === '8608414322')) {
   localStorage.setItem('lakshana_web_users', JSON.stringify(users));
 }
 
-// Session-based current user: null when opening in fresh browser session
-let currentUser = JSON.parse(sessionStorage.getItem('lakshana_web_current_user')) || null;
+// Ensure default admin is active so content is immediately visible on first load
+let currentUser = JSON.parse(localStorage.getItem('lakshana_web_current_user')) || DEFAULT_ADMIN;
 
 function saveUsers() {
   localStorage.setItem('lakshana_web_users', JSON.stringify(users));
@@ -93,9 +131,9 @@ function updateAuthVisibility() {
 function setCurrentUser(user) {
   currentUser = user;
   if (user) {
-    sessionStorage.setItem('lakshana_web_current_user', JSON.stringify(user));
+    localStorage.setItem('lakshana_web_current_user', JSON.stringify(user));
   } else {
-    sessionStorage.removeItem('lakshana_web_current_user');
+    localStorage.removeItem('lakshana_web_current_user');
   }
   updateAuthVisibility();
   renderHeaderAuth();
@@ -185,6 +223,14 @@ function initPortalAuth() {
     if (mobileInput) mobileInput.value = '8608414322';
     if (pinInput) pinInput.value = '5147';
     handlePortalLoginSubmit();
+  });
+
+  document.getElementById('portalGuestViewBtn')?.addEventListener('click', () => {
+    setCurrentUser(GUEST_VIEWER);
+  });
+
+  document.getElementById('portalInstantAdminBtn')?.addEventListener('click', () => {
+    setCurrentUser(DEFAULT_ADMIN);
   });
 
   clearMobileBtn?.addEventListener('click', () => {
@@ -2137,6 +2183,28 @@ document.getElementById('copySyncPayloadHubBtn')?.addEventListener('click', () =
   document.getElementById('copySyncPayloadBtn')?.click();
 });
 
+async function fetchCloudDataOnLoad() {
+  const DEFAULT_DOMAIN = 'https://lakshanaveggie.trade/api/v1/sync';
+  const workerUrl = localStorage.getItem('lakshana_cloudflare_worker_url') || DEFAULT_DOMAIN;
+  let endpoint = workerUrl.trim().replace(/\/+$/, '');
+  if (!endpoint.endsWith('/api/v1/sync') && !endpoint.endsWith('/sync')) {
+    endpoint = `${endpoint}/api/v1/sync`;
+  }
+
+  try {
+    const res = await fetch(endpoint, { method: 'GET' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && (Array.isArray(data.items) || Array.isArray(data.purchases) || Array.isArray(data.suppliers))) {
+        mergeRemoteDataIntoLocal(data);
+      }
+    }
+  } catch (e) {
+    // Network or offline, fallback to local state
+    console.log('Background cloud sync notice:', e.message);
+  }
+}
+
 // ==========================================
 // 13. INITIALIZATION
 // ==========================================
@@ -2149,3 +2217,6 @@ renderHeaderAuth();
 if (currentUser) {
   renderAll();
 }
+
+// Fetch live cloud updates immediately on load
+fetchCloudDataOnLoad();

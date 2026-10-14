@@ -10,9 +10,32 @@
  */
 
 let inMemorySyncCache = {
-  items: [],
-  purchases: [],
-  suppliers: [],
+  items: [
+    { id: 101, name: 'Country Tomato (நாட்டு தக்காளி)', category: 'Vegetables', currentStockKgs: 450, totalBoxes: 18, defaultRatePerKg: 28 },
+    { id: 102, name: 'Hybrid Bangalore Tomato (பெங்களூரு தக்காளி)', category: 'Vegetables', currentStockKgs: 620, totalBoxes: 24, defaultRatePerKg: 32 },
+    { id: 103, name: 'Small Onion / Shallots (சின்ன வெங்காயம்)', category: 'Vegetables', currentStockKgs: 380, totalBoxes: 15, defaultRatePerKg: 65 },
+    { id: 104, name: 'Bellary Big Onion (பெரிய வெங்காயம்)', category: 'Vegetables', currentStockKgs: 1250, totalBoxes: 50, defaultRatePerKg: 35 },
+    { id: 105, name: 'Ooty Fresh Carrot (ஊட்டி கேரட்)', category: 'Vegetables', currentStockKgs: 290, totalBoxes: 12, defaultRatePerKg: 45 },
+    { id: 106, name: 'Kolar Potato (உருளைக்கிழங்கு)', category: 'Vegetables', currentStockKgs: 850, totalBoxes: 34, defaultRatePerKg: 30 },
+    { id: 107, name: 'Green Chilli (பச்சை மிளகாய்)', category: 'Vegetables', currentStockKgs: 140, totalBoxes: 7, defaultRatePerKg: 55 },
+    { id: 108, name: 'Cabbage (முட்டைகோஸ்)', category: 'Vegetables', currentStockKgs: 310, totalBoxes: 10, defaultRatePerKg: 18 },
+    { id: 109, name: 'Fresh Ginger (இஞ்சி)', category: 'Vegetables', currentStockKgs: 95, totalBoxes: 4, defaultRatePerKg: 110 },
+    { id: 110, name: 'Garlic (பூண்டு)', category: 'Vegetables', currentStockKgs: 120, totalBoxes: 6, defaultRatePerKg: 180 },
+    { id: 111, name: 'Beetroot (பீட்ரூட்)', category: 'Vegetables', currentStockKgs: 210, totalBoxes: 9, defaultRatePerKg: 25 },
+    { id: 112, name: 'Drumstick (முருங்கைக்காய்)', category: 'Vegetables', currentStockKgs: 85, totalBoxes: 5, defaultRatePerKg: 60 }
+  ],
+  purchases: [
+    { id: 1, poNumber: 'PO-TODAY-01', itemName: 'Country Tomato (நாட்டு தக்காளி)', boxes: 18, qtyKgs: 450, rate: 28, totalAmount: 12600, supplierName: 'Hosur Direct Farm Producers', date: new Date().toISOString().slice(0, 10), paymentStatus: 'UNPAID' },
+    { id: 2, poNumber: 'PO-TODAY-02', itemName: 'Bellary Big Onion (பெரிய வெங்காயம்)', boxes: 50, qtyKgs: 1250, rate: 35, totalAmount: 43750, supplierName: 'Nashik Onion Logistics Hub', date: new Date().toISOString().slice(0, 10), paymentStatus: 'PARTIAL' },
+    { id: 3, poNumber: 'PO-TODAY-03', itemName: 'Ooty Fresh Carrot (ஊட்டி கேரட்)', boxes: 12, qtyKgs: 290, rate: 45, totalAmount: 13050, supplierName: 'Ooty Hill Vegetable Cooperative', date: new Date().toISOString().slice(0, 10), paymentStatus: 'UNPAID' },
+    { id: 4, poNumber: 'PO-TODAY-04', itemName: 'Small Onion / Shallots (சின்ன வெங்காயம்)', boxes: 15, qtyKgs: 380, rate: 65, totalAmount: 24700, supplierName: 'Koyambedu APMC Merchant 14', date: new Date().toISOString().slice(0, 10), paymentStatus: 'PAID' }
+  ],
+  suppliers: [
+    { id: 1, name: 'Koyambedu APMC Merchant 14', contactNumber: '9840123456', location: 'Chennai APMC', outstandingBalance: 42500 },
+    { id: 2, name: 'Hosur Direct Farm Producers', contactNumber: '9443210987', location: 'Hosur Valley', outstandingBalance: 28000 },
+    { id: 3, name: 'Ooty Hill Vegetable Cooperative', contactNumber: '9789012345', location: 'Nilgiris / Ooty', outstandingBalance: 15400 },
+    { id: 4, name: 'Nashik Onion Logistics Hub', contactNumber: '9123456789', location: 'Nashik APMC', outstandingBalance: 65000 }
+  ],
   version: 2,
   syncedAt: Date.now()
 };
@@ -229,12 +252,49 @@ export default {
 
     // 5. Cloudflare Pages Static Assets Handler
     if (env && env.ASSETS && typeof env.ASSETS.fetch === 'function') {
-      return env.ASSETS.fetch(request);
+      const assetRes = await env.ASSETS.fetch(request);
+      if (assetRes.status !== 404) {
+        return assetRes;
+      }
+      // If 404 on root or html route, attempt fetching /index.html
+      const indexReq = new Request(new URL('/index.html', request.url), request);
+      const indexRes = await env.ASSETS.fetch(indexReq);
+      if (indexRes.status !== 404) {
+        return indexRes;
+      }
     }
 
-    return new Response('Lakshana Veggie Cloud Server Online', {
+    // Direct HTML response so browser always shows the Mandi portal content
+    return new Response(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lakshana Veggie - Online Mandi Portal</title>
+  <meta http-equiv="refresh" content="1; url=/index.html">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    .card { background: #1e293b; border: 1px solid #334155; padding: 2.5rem; border-radius: 16px; max-width: 480px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+    .emoji { font-size: 3rem; margin-bottom: 0.5rem; }
+    h1 { margin: 0 0 0.5rem 0; font-size: 1.5rem; color: #38bdf8; }
+    p { color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin: 0.5rem 0 1.5rem 0; }
+    .btn { display: inline-block; background: #10b981; color: #ffffff; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; font-size: 1rem; transition: background 0.2s; }
+    .btn:hover { background: #059669; }
+    .badge { display: inline-block; background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 9999px; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="emoji">🥕</div>
+    <div class="badge">Cloudflare Edge Online</div>
+    <h1>LAKSHANA VEGGIE</h1>
+    <p>Direct Mandi Procurement & Live Inventory Management System.<br>Domain: <strong>lakshanaveggie.trade</strong></p>
+    <a href="/index.html" class="btn">Open Web Portal Dashboard</a>
+  </div>
+</body>
+</html>`, {
       status: 200,
-      headers: { 'Content-Type': 'text/plain' }
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
     });
   }
 };

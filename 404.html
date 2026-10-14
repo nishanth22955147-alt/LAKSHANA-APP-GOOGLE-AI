@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Not Found - Lakshana Veggie</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .not-found-container {
+      max-width: 600px;
+      margin: 80px auto;
+      padding: 36px 28px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .not-found-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+    .not-found-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 10px;
+    }
+    .not-found-subtitle {
+      font-size: 15px;
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .dns-box {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: left;
+      font-size: 13px;
+      color: #334155;
+      margin-bottom: 24px;
+    }
+    .dns-box h4 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dns-box code {
+      background: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: 600;
+    }
+    .btn-action-group {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: #059669;
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover {
+      background: #047857;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .countdown-text {
+      margin-top: 18px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body style="background: #f1f5f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0;">
+  <div class="not-found-container">
+    <div class="not-found-icon">🥕</div>
+    <h2 class="not-found-title">Page or Route Not Found</h2>
+    <p class="not-found-subtitle">
+      If you just connected a custom domain (e.g. <strong>lakshanaveggie.trade</strong>), DNS propagation or SSL certification might take 10–30 minutes, or you may be on an internal subpath.
+    </p>
+
+    <div class="dns-box">
+      <h4>🌐 Custom Domain Setup Checklist</h4>
+      <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+        <li><strong>DNS Records:</strong> Point <code>A</code> record to your host IP or <code>CNAME</code> to your hosting alias.</li>
+        <li><strong>Hosting Dashboard:</strong> Ensure your domain is claimed under Custom Domains in Firebase, Vercel, or Cloud Run.</li>
+        <li><strong>SSL Status:</strong> Wait for Let's Encrypt / Google SSL certificate to finish issuing (usually 15–60 mins).</li>
+      </ul>
+    </div>
+
+    <div class="btn-action-group">
+      <a href="index.html" class="btn-primary" id="homeBtn">Open Lakshana Web Portal</a>
+      <button class="btn-secondary" onclick="window.location.reload()">Refresh Page</button>
+    </div>
+
+    <div class="countdown-text" id="countdownMsg">
+      Redirecting to portal homepage in <span id="timerSpan">3</span>s...
+    </div>
+  </div>
+
+  <script>
+    let secondsLeft = 3;
+    const timerSpan = document.getElementById('timerSpan');
+    const interval = setInterval(() => {
+      secondsLeft--;
+      if (timerSpan) timerSpan.innerText = secondsLeft;
+      if (secondsLeft <= 0) {
+        clearInterval(interval);
+        window.location.href = 'index.html';
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
