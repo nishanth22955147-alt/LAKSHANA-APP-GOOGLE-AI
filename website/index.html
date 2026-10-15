@@ -288,6 +288,44 @@
         </div>
       </div>
 
+      <!-- Date Range Filter & Period Presets Bar -->
+      <div class="ledger-filter-card">
+        <div class="ledger-filter-row">
+          <div class="date-preset-filter-group" id="datePresetGroup">
+            <span class="filter-label">📅 Period:</span>
+            <button type="button" class="date-filter-chip active" data-preset="all">All Records</button>
+            <button type="button" class="date-filter-chip" data-preset="today">Today</button>
+            <button type="button" class="date-filter-chip" data-preset="yesterday">Yesterday</button>
+            <button type="button" class="date-filter-chip" data-preset="7days">Last 7 Days</button>
+            <button type="button" class="date-filter-chip" data-preset="30days">Last 30 Days</button>
+            <button type="button" class="date-filter-chip" data-preset="month">This Month</button>
+          </div>
+
+          <div class="date-range-inputs-group">
+            <div class="date-input-wrap">
+              <label for="purchaseDateFrom">From:</label>
+              <input type="date" id="purchaseDateFrom" class="form-input date-input-field" title="Start date filter" />
+            </div>
+            <div class="date-input-wrap">
+              <label for="purchaseDateTo">To:</label>
+              <input type="date" id="purchaseDateTo" class="form-input date-input-field" title="End date filter" />
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" id="clearDateFilterBtn" title="Reset date filters">
+              ✕ Clear Filter
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-summary-row" id="purchaseFilterSummary">
+          <span class="filter-summary-text" id="purchaseFilterSummaryText">
+            Showing all purchase records
+          </span>
+          <span class="filter-summary-badge" id="purchaseFilterSummaryBadge">
+            Total: ₹0.00
+          </span>
+        </div>
+      </div>
+
       <div class="table-container">
         <table class="data-table" id="purchasesTable">
           <thead>

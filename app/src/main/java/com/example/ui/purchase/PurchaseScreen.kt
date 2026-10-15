@@ -26,8 +26,11 @@ import com.example.ui.MainViewModel
 import com.example.ui.theme.SecondaryTeal
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningAmber
+import android.app.DatePickerDialog
+import androidx.compose.ui.platform.LocalContext
 import com.example.ui.components.DateFormatterUtil
 import com.example.ui.components.DateForwardBackwardSelector
+import java.util.Calendar
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,16 +46,100 @@ fun PurchaseScreen(
     val currentUser by viewModel.currentUser.collectAsState()
     val isAdmin = currentUser?.role == com.example.data.model.UserRole.ADMIN
 
+    val context = LocalContext.current
     var statusFilter by remember { mutableStateOf("All") }
+    var searchQuery by remember { mutableStateOf("") }
+    var datePreset by remember { mutableStateOf("All") } // "All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"
+    var customStartDate by remember { mutableStateOf<String?>(null) } // "yyyy-MM-dd"
+    var customEndDate by remember { mutableStateOf<String?>(null) } // "yyyy-MM-dd"
+
     var isNewPurchaseDialogOpen by remember { mutableStateOf(false) }
     var editingPurchase by remember { mutableStateOf<PurchaseEntryEntity?>(null) }
     var deletingPurchase by remember { mutableStateOf<PurchaseEntryEntity?>(null) }
 
-    val filteredPurchases = purchases.filter { p ->
-        when (statusFilter) {
-            "Pending" -> p.status == PurchaseStatus.PENDING_PAYMENT
-            "Paid" -> p.status == PurchaseStatus.PAID || p.status == PurchaseStatus.PAID_CASH || p.status == PurchaseStatus.PAID_UPI
-            else -> true
+    val filteredPurchases = remember(purchases, statusFilter, searchQuery, datePreset, customStartDate, customEndDate) {
+        val today = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val yest = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -1) }
+        val sevenDaysAgo = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -6) }
+
+        val startCal = customStartDate?.let {
+            DateFormatterUtil.parseToCalendar(it).apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+        }
+        val endCal = customEndDate?.let {
+            DateFormatterUtil.parseToCalendar(it).apply {
+                set(Calendar.HOUR_OF_DAY, 23)
+                set(Calendar.MINUTE, 59)
+                set(Calendar.SECOND, 59)
+                set(Calendar.MILLISECOND, 999)
+            }
+        }
+
+        purchases.filter { p ->
+            // 1. Status Filter
+            val statusMatch = when (statusFilter) {
+                "Pending" -> p.status == PurchaseStatus.PENDING_PAYMENT
+                "Paid" -> p.status.isSettled
+                else -> true
+            }
+            if (!statusMatch) return@filter false
+
+            // 2. Search Query Filter
+            if (searchQuery.isNotBlank()) {
+                val q = searchQuery.trim().lowercase(Locale.ROOT)
+                val textMatch = p.itemName.lowercase(Locale.ROOT).contains(q) ||
+                        p.supplierName.lowercase(Locale.ROOT).contains(q) ||
+                        p.batchId.lowercase(Locale.ROOT).contains(q)
+                if (!textMatch) return@filter false
+            }
+
+            // 3. Date Range Filter
+            val pCal = DateFormatterUtil.parseToCalendar(p.date).apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+
+            val yest = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -1) }
+            val sevenDaysAgo = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -6) }
+            val thirtyDaysAgo = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -29) }
+
+            when (datePreset) {
+                "Today" -> {
+                    pCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                    pCal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+                }
+                "Yesterday" -> {
+                    pCal.get(Calendar.YEAR) == yest.get(Calendar.YEAR) &&
+                    pCal.get(Calendar.DAY_OF_YEAR) == yest.get(Calendar.DAY_OF_YEAR)
+                }
+                "Last 7 Days" -> {
+                    !pCal.before(sevenDaysAgo) && !pCal.after(today)
+                }
+                "Last 30 Days" -> {
+                    !pCal.before(thirtyDaysAgo) && !pCal.after(today)
+                }
+                "This Month" -> {
+                    pCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                    pCal.get(Calendar.MONTH) == today.get(Calendar.MONTH)
+                }
+                "Custom" -> {
+                    val afterStart = startCal == null || !pCal.before(startCal)
+                    val beforeEnd = endCal == null || !pCal.after(endCal)
+                    afterStart && beforeEnd
+                }
+                else -> true // "All"
+            }
         }
     }
 
@@ -124,17 +211,218 @@ fun PurchaseScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Filter Chips
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Daily Purchase Ledger Filter Card
+            Card(
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)),
+                modifier = Modifier.fillMaxWidth().testTag("purchase_ledger_filter_card")
             ) {
-                listOf("All", "Pending", "Paid").forEach { filter ->
-                    FilterChip(
-                        selected = statusFilter == filter,
-                        onClick = { statusFilter = filter },
-                        label = { Text(filter) }
+                Column(modifier = Modifier.padding(12.dp)) {
+                    // Search bar
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search by vegetable, supplier or PO #...", style = MaterialTheme.typography.bodySmall) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }, modifier = Modifier.size(24.dp)) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear", modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth().testTag("purchase_search_input")
                     )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Period Presets Chips
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Period Filter:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (datePreset != "All" || statusFilter != "All" || searchQuery.isNotEmpty()) {
+                            TextButton(
+                                onClick = {
+                                    datePreset = "All"
+                                    statusFilter = "All"
+                                    searchQuery = ""
+                                    customStartDate = null
+                                    customEndDate = null
+                                },
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                                modifier = Modifier.height(24.dp).testTag("purchase_reset_filters_btn")
+                            ) {
+                                Text("Reset All", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth().testTag("purchase_date_presets_row")
+                    ) {
+                        val presets = listOf("All", "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Month", "Custom")
+                        items(presets) { preset ->
+                            FilterChip(
+                                selected = datePreset == preset,
+                                onClick = {
+                                    datePreset = preset
+                                    if (preset != "Custom") {
+                                        customStartDate = null
+                                        customEndDate = null
+                                    }
+                                },
+                                label = { Text(preset, style = MaterialTheme.typography.labelSmall) },
+                                modifier = Modifier.testTag("date_preset_$preset")
+                            )
+                        }
+                    }
+
+                    // Custom Date Pickers (if "Custom" preset is selected)
+                    if (datePreset == "Custom") {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    val initCal = customStartDate?.let { DateFormatterUtil.parseToCalendar(it) } ?: Calendar.getInstance()
+                                    DatePickerDialog(
+                                        context,
+                                        { _, year, month, day ->
+                                            val cal = Calendar.getInstance().apply { set(year, month, day) }
+                                            customStartDate = DateFormatterUtil.formatIso(cal)
+                                        },
+                                        initCal.get(Calendar.YEAR),
+                                        initCal.get(Calendar.MONTH),
+                                        initCal.get(Calendar.DAY_OF_MONTH)
+                                    ).show()
+                                },
+                                modifier = Modifier.weight(1f).testTag("custom_date_from_btn"),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                            ) {
+                                Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = customStartDate?.let { "From: $it" } ?: "From Date",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1
+                                )
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    val initCal = customEndDate?.let { DateFormatterUtil.parseToCalendar(it) } ?: Calendar.getInstance()
+                                    DatePickerDialog(
+                                        context,
+                                        { _, year, month, day ->
+                                            val cal = Calendar.getInstance().apply { set(year, month, day) }
+                                            customEndDate = DateFormatterUtil.formatIso(cal)
+                                        },
+                                        initCal.get(Calendar.YEAR),
+                                        initCal.get(Calendar.MONTH),
+                                        initCal.get(Calendar.DAY_OF_MONTH)
+                                    ).show()
+                                },
+                                modifier = Modifier.weight(1f).testTag("custom_date_to_btn"),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                            ) {
+                                Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = customEndDate?.let { "To: $it" } ?: "To Date",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1
+                                )
+                            }
+
+                            if (customStartDate != null || customEndDate != null) {
+                                IconButton(
+                                    onClick = {
+                                        customStartDate = null
+                                        customEndDate = null
+                                    },
+                                    modifier = Modifier.size(32.dp).testTag("clear_custom_date_btn")
+                                ) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear Dates", modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Status Filter Chips Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Status:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        listOf("All", "Pending", "Paid").forEach { filter ->
+                            FilterChip(
+                                selected = statusFilter == filter,
+                                onClick = { statusFilter = filter },
+                                label = { Text(filter, style = MaterialTheme.typography.labelSmall) }
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    // Filter Summary Row
+                    val periodText = when (datePreset) {
+                        "Today" -> "Today"
+                        "Yesterday" -> "Yesterday"
+                        "Last 7 Days" -> "Last 7 Days"
+                        "This Month" -> "This Month"
+                        "Custom" -> {
+                            if (customStartDate != null || customEndDate != null) {
+                                "${customStartDate ?: "Earliest"} to ${customEndDate ?: "Latest"}"
+                            } else {
+                                "Custom Range"
+                            }
+                        }
+                        else -> "All Records"
+                    }
+                    val totalFilteredAmount = filteredPurchases.sumOf { it.totalAmount }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Showing ${filteredPurchases.size} of ${purchases.size} purchases ($periodText)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = SuccessGreen.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                "Total: ₹${String.format(Locale.US, "%,.2f", totalFilteredAmount)}",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = SuccessGreen,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                 }
             }
 

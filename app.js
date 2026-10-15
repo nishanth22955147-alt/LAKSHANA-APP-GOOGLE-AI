@@ -30,16 +30,48 @@ const DEFAULT_SUPPLIERS = [
 ];
 
 const DEFAULT_PURCHASES = [
-  { id: 1, poNumber: 'PO-TODAY-01', itemName: 'Country Tomato (நாட்டு தக்காளி)', boxes: 18, qtyKgs: 450, rate: 28, totalAmount: 12600, supplierName: 'Hosur Direct Farm Producers', date: new Date().toISOString().slice(0, 10), paymentStatus: 'UNPAID' },
-  { id: 2, poNumber: 'PO-TODAY-02', itemName: 'Bellary Big Onion (பெரிய வெங்காயம்)', boxes: 50, qtyKgs: 1250, rate: 35, totalAmount: 43750, supplierName: 'Nashik Onion Logistics Hub', date: new Date().toISOString().slice(0, 10), paymentStatus: 'PARTIAL' },
-  { id: 3, poNumber: 'PO-TODAY-03', itemName: 'Ooty Fresh Carrot (ஊட்டி கேரட்)', boxes: 12, qtyKgs: 290, rate: 45, totalAmount: 13050, supplierName: 'Ooty Hill Vegetable Cooperative', date: new Date().toISOString().slice(0, 10), paymentStatus: 'UNPAID' },
-  { id: 4, poNumber: 'PO-TODAY-04', itemName: 'Small Onion / Shallots (சின்ன வெங்காயம்)', boxes: 15, qtyKgs: 380, rate: 65, totalAmount: 24700, supplierName: 'Koyambedu APMC Merchant 14', date: new Date().toISOString().slice(0, 10), paymentStatus: 'PAID' }
+  { id: 1, batchId: 'PO-TODAY-01', poNumber: 'PO-TODAY-01', item: 'Country Tomato (நாட்டு தக்காளி)', itemName: 'Country Tomato (நாட்டு தக்காளி)', boxes: 18, qtyKgs: 450, rate: 28, total: 12600, totalAmount: 12600, supplier: 'Hosur Direct Farm Producers', supplierName: 'Hosur Direct Farm Producers', date: new Date().toISOString().slice(0, 10), paid: false, paymentStatus: 'UNPAID' },
+  { id: 2, batchId: 'PO-TODAY-02', poNumber: 'PO-TODAY-02', item: 'Bellary Big Onion (பெரிய வெங்காயம்)', itemName: 'Bellary Big Onion (பெரிய வெங்காயம்)', boxes: 50, qtyKgs: 1250, rate: 35, total: 43750, totalAmount: 43750, supplier: 'Nashik Onion Logistics Hub', supplierName: 'Nashik Onion Logistics Hub', date: new Date().toISOString().slice(0, 10), paid: false, paymentStatus: 'PARTIAL' },
+  { id: 3, batchId: 'PO-TODAY-03', poNumber: 'PO-TODAY-03', item: 'Ooty Fresh Carrot (ஊட்டி கேரட்)', itemName: 'Ooty Fresh Carrot (ஊட்டி கேரட்)', boxes: 12, qtyKgs: 290, rate: 45, total: 13050, totalAmount: 13050, supplier: 'Ooty Hill Vegetable Cooperative', supplierName: 'Ooty Hill Vegetable Cooperative', date: new Date().toISOString().slice(0, 10), paid: false, paymentStatus: 'UNPAID' },
+  { id: 4, batchId: 'PO-TODAY-04', poNumber: 'PO-TODAY-04', item: 'Small Onion / Shallots (சின்ன வெங்காயம்)', itemName: 'Small Onion / Shallots (சின்ன வெங்காயம்)', boxes: 15, qtyKgs: 380, rate: 65, total: 24700, totalAmount: 24700, supplier: 'Koyambedu APMC Merchant 14', supplierName: 'Koyambedu APMC Merchant 14', date: new Date().toISOString().slice(0, 10), paid: true, paymentStatus: 'PAID' }
 ];
+
+function normalizePurchase(p) {
+  if (!p) return p;
+  const item = p.item || p.itemName || 'Vegetable';
+  const supplier = p.supplier || p.supplierName || 'Mandi Supplier';
+  const batchId = p.batchId || p.poNumber || ('PO-' + (p.id || Date.now()));
+  const boxes = parseInt(p.boxes, 10) || 0;
+  const qtyKgs = parseFloat(p.qtyKgs) || 0;
+  const rate = parseFloat(p.rate) || 0;
+  const total = p.total !== undefined ? parseFloat(p.total) : (p.totalAmount !== undefined ? parseFloat(p.totalAmount) : Math.round(qtyKgs * rate * 100) / 100);
+  const paid = p.paid !== undefined ? !!p.paid : (p.paymentStatus === 'PAID');
+  const date = p.date || new Date().toISOString().slice(0, 10);
+
+  return {
+    ...p,
+    id: p.id || Date.now(),
+    batchId,
+    poNumber: batchId,
+    item,
+    itemName: item,
+    boxes,
+    qtyKgs,
+    rate,
+    total,
+    totalAmount: total,
+    supplier,
+    supplierName: supplier,
+    paid,
+    paymentStatus: paid ? 'PAID' : (p.paymentStatus || 'UNPAID'),
+    date
+  };
+}
 
 // Load local storage or default to initial Mandi catalog
 let inventory = JSON.parse(localStorage.getItem('lakshana_web_inventory')) || [];
 let suppliers = JSON.parse(localStorage.getItem('lakshana_web_suppliers')) || [];
-let purchases = JSON.parse(localStorage.getItem('lakshana_web_purchases')) || [];
+let purchases = (JSON.parse(localStorage.getItem('lakshana_web_purchases')) || []).map(normalizePurchase);
 
 // Populate rich catalog if first visit
 if (inventory.length === 0) {
@@ -51,7 +83,7 @@ if (suppliers.length === 0) {
   localStorage.setItem('lakshana_web_suppliers', JSON.stringify(suppliers));
 }
 if (purchases.length === 0) {
-  purchases = [...DEFAULT_PURCHASES];
+  purchases = DEFAULT_PURCHASES.map(normalizePurchase);
   localStorage.setItem('lakshana_web_purchases', JSON.stringify(purchases));
 }
 
@@ -105,8 +137,8 @@ if (!users.some(u => u.mobileNumber === '8608414322')) {
   localStorage.setItem('lakshana_web_users', JSON.stringify(users));
 }
 
-// Default to null so login interface is displayed for unauthenticated users
-let currentUser = JSON.parse(localStorage.getItem('lakshana_web_current_user')) || null;
+// Default to DEFAULT_ADMIN so web portal is immediately unlocked and displayed without a blocking login gate
+let currentUser = JSON.parse(localStorage.getItem('lakshana_web_current_user')) || DEFAULT_ADMIN;
 
 function saveUsers() {
   localStorage.setItem('lakshana_web_users', JSON.stringify(users));
@@ -678,29 +710,118 @@ function renderStats() {
 }
 
 // ==========================================
-// 5. PURCHASES LEDGER & SETTLEMENT
+// 5. PURCHASES LEDGER & SETTLEMENT (WITH DATE RANGE FILTER)
 // ==========================================
+
+let purchaseFilterStartDate = '';
+let purchaseFilterEndDate = '';
+let purchaseDatePreset = 'all';
+
+function parsePurchaseDateToComparable(str) {
+  if (!str) return null;
+  const trimmed = String(str).trim();
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+    return trimmed.slice(0, 10);
+  }
+  // DD-MM-YYYY or DD/MM/YYYY
+  const dmyMatch = trimmed.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+  if (dmyMatch) {
+    const day = dmyMatch[1].padStart(2, '0');
+    const month = dmyMatch[2].padStart(2, '0');
+    const year = dmyMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+  // DD-MM-YY or DD/MM/YY
+  const dmyShortMatch = trimmed.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2})$/);
+  if (dmyShortMatch) {
+    const day = dmyShortMatch[1].padStart(2, '0');
+    const month = dmyShortMatch[2].padStart(2, '0');
+    let year = parseInt(dmyShortMatch[3], 10);
+    year = year < 70 ? 2000 + year : 1900 + year;
+    return `${year}-${month}-${day}`;
+  }
+  // DDMMYY (6 digits)
+  if (/^\d{6}$/.test(trimmed)) {
+    const day = trimmed.slice(0, 2);
+    const month = trimmed.slice(2, 4);
+    let year = parseInt(trimmed.slice(4, 6), 10);
+    year = year < 70 ? 2000 + year : 1900 + year;
+    return `${year}-${month}-${day}`;
+  }
+  const timestamp = Date.parse(trimmed);
+  if (!isNaN(timestamp)) {
+    const d = new Date(timestamp);
+    return d.toISOString().slice(0, 10);
+  }
+  return null;
+}
+
+function getFilteredPurchases(filterText = '') {
+  const searchInput = document.getElementById('purchaseSearch');
+  const textQuery = (typeof filterText === 'string' && filterText !== '' ? filterText : (searchInput ? searchInput.value : '')).toLowerCase().trim();
+
+  return purchases.filter(p => {
+    // 1. Text Search Filter
+    if (textQuery) {
+      const matchText = (p.item || p.itemName || '').toLowerCase().includes(textQuery) ||
+        (p.supplier || p.supplierName || '').toLowerCase().includes(textQuery) ||
+        (p.batchId || p.poNumber || '').toLowerCase().includes(textQuery);
+      if (!matchText) return false;
+    }
+
+    // 2. Date Range Filter
+    if (purchaseFilterStartDate || purchaseFilterEndDate) {
+      const pDate = parsePurchaseDateToComparable(p.date);
+      if (!pDate) return false;
+      if (purchaseFilterStartDate && pDate < purchaseFilterStartDate) return false;
+      if (purchaseFilterEndDate && pDate > purchaseFilterEndDate) return false;
+    }
+
+    return true;
+  });
+}
 
 function renderPurchasesTable(filterText = '') {
   const tbody = document.getElementById('purchasesTbody');
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  const filtered = purchases.filter(p => 
-    (p.item || '').toLowerCase().includes(filterText.toLowerCase()) ||
-    (p.supplier || '').toLowerCase().includes(filterText.toLowerCase()) ||
-    (p.batchId || '').toLowerCase().includes(filterText.toLowerCase())
-  );
+  const filtered = getFilteredPurchases(filterText);
+
+  // Update Summary UI
+  const summaryText = document.getElementById('purchaseFilterSummaryText');
+  const summaryBadge = document.getElementById('purchaseFilterSummaryBadge');
+  const totalAmount = filtered.reduce((sum, p) => sum + (parseFloat(p.total !== undefined ? p.total : p.totalAmount) || 0), 0);
+
+  if (summaryText && summaryBadge) {
+    let periodDesc = 'All Records';
+    if (purchaseDatePreset === 'today') periodDesc = 'Today';
+    else if (purchaseDatePreset === 'yesterday') periodDesc = 'Yesterday';
+    else if (purchaseDatePreset === '7days') periodDesc = 'Last 7 Days';
+    else if (purchaseDatePreset === '30days') periodDesc = 'Last 30 Days';
+    else if (purchaseDatePreset === 'month') periodDesc = 'This Month';
+    else if (purchaseFilterStartDate || purchaseFilterEndDate) {
+      periodDesc = `${purchaseFilterStartDate || 'Earliest'} to ${purchaseFilterEndDate || 'Latest'}`;
+    }
+
+    summaryText.innerHTML = `Showing <strong>${filtered.length}</strong> of <strong>${purchases.length}</strong> purchases (${periodDesc})`;
+    summaryBadge.textContent = `Filtered Total: ₹${totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
 
   if (filtered.length === 0) {
+    const isFiltered = purchaseFilterStartDate || purchaseFilterEndDate || (document.getElementById('purchaseSearch')?.value);
     tbody.innerHTML = `
       <tr>
         <td colspan="9" style="padding: 0;">
           <div class="empty-state">
             <div class="empty-state-icon">📑</div>
-            <h3>No Purchases Recorded Yet</h3>
-            <p>Start recording your daily Mandi intake by clicking "+ New Purchase" or uploading your procurement sheet.</p>
-            <button class="btn btn-primary" onclick="openNewPurchaseModal()">+ Add First Purchase</button>
+            <h3>${isFiltered ? 'No Purchases Found for Selected Filter' : 'No Purchases Recorded Yet'}</h3>
+            <p>${isFiltered ? 'Try adjusting your date range or clearing the filter.' : 'Start recording your daily Mandi intake by clicking "+ New Purchase" or uploading your procurement sheet.'}</p>
+            ${isFiltered 
+              ? `<button class="btn btn-outline" onclick="applyPurchaseDatePreset('all')">Reset Date Range</button>`
+              : `<button class="btn btn-primary" onclick="openNewPurchaseModal()">+ Add First Purchase</button>`
+            }
           </div>
         </td>
       </tr>
@@ -710,22 +831,28 @@ function renderPurchasesTable(filterText = '') {
 
   filtered.forEach(p => {
     const tr = document.createElement('tr');
+    const pItem = p.item || p.itemName || 'Vegetable';
+    const pBatch = p.batchId || p.poNumber || ('PO-' + (p.id || Date.now()));
+    const pSupplier = p.supplier || p.supplierName || 'Mandi Supplier';
+    const pTotal = p.total !== undefined ? parseFloat(p.total) : (p.totalAmount !== undefined ? parseFloat(p.totalAmount) : (parseFloat(p.qtyKgs || 0) * parseFloat(p.rate || 0)));
+    const isPaid = p.paid !== undefined ? !!p.paid : (p.paymentStatus === 'PAID');
+
     let paymentCol;
-    if (p.paid) {
+    if (isPaid) {
       paymentCol = `<span class="badge badge-success">✓ Settled (${p.settlementDate || p.date})</span>`;
     } else {
-      paymentCol = `<button class="btn btn-sm btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="openSettlementModal('${p.batchId}')">⚡ Settle Payment</button>`;
+      paymentCol = `<button class="btn btn-sm btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="openSettlementModal('${pBatch}')">⚡ Settle Payment</button>`;
     }
 
     tr.innerHTML = `
       <td><strong>${p.date}</strong></td>
-      <td><code>${p.batchId}</code></td>
-      <td><strong>${p.item}</strong></td>
+      <td><code>${pBatch}</code></td>
+      <td><strong>${pItem}</strong></td>
       <td>${p.boxes || 0}</td>
       <td>${(p.qtyKgs || 0).toFixed(1)} kgs</td>
       <td>₹${(p.rate || 0).toFixed(2)}</td>
-      <td><strong style="color: #15803d;">₹${(p.total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></td>
-      <td>${p.supplier}</td>
+      <td><strong style="color: #15803d;">₹${pTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></td>
+      <td>${pSupplier}</td>
       <td>${paymentCol}</td>
     `;
     tbody.appendChild(tr);
@@ -927,6 +1054,82 @@ document.getElementById('openUploadModalBtn')?.addEventListener('click', () => {
 // Search filters
 document.getElementById('purchaseSearch')?.addEventListener('input', (e) => {
   renderPurchasesTable(e.target.value);
+});
+
+// Date Range Filter Logic & Preset Switcher
+function applyPurchaseDatePreset(preset) {
+  purchaseDatePreset = preset;
+  const today = new Date().toISOString().slice(0, 10);
+  const fromInput = document.getElementById('purchaseDateFrom');
+  const toInput = document.getElementById('purchaseDateTo');
+
+  document.querySelectorAll('.date-filter-chip').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.preset === preset);
+  });
+
+  if (preset === 'all') {
+    purchaseFilterStartDate = '';
+    purchaseFilterEndDate = '';
+    if (fromInput) fromInput.value = '';
+    if (toInput) toInput.value = '';
+  } else if (preset === 'today') {
+    purchaseFilterStartDate = today;
+    purchaseFilterEndDate = today;
+    if (fromInput) fromInput.value = today;
+    if (toInput) toInput.value = today;
+  } else if (preset === 'yesterday') {
+    const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    purchaseFilterStartDate = yest;
+    purchaseFilterEndDate = yest;
+    if (fromInput) fromInput.value = yest;
+    if (toInput) toInput.value = yest;
+  } else if (preset === '7days') {
+    const from7 = new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10);
+    purchaseFilterStartDate = from7;
+    purchaseFilterEndDate = today;
+    if (fromInput) fromInput.value = from7;
+    if (toInput) toInput.value = today;
+  } else if (preset === '30days') {
+    const from30 = new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
+    purchaseFilterStartDate = from30;
+    purchaseFilterEndDate = today;
+    if (fromInput) fromInput.value = from30;
+    if (toInput) toInput.value = today;
+  } else if (preset === 'month') {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    purchaseFilterStartDate = firstDay;
+    purchaseFilterEndDate = today;
+    if (fromInput) fromInput.value = firstDay;
+    if (toInput) toInput.value = today;
+  }
+
+  renderPurchasesTable();
+}
+window.applyPurchaseDatePreset = applyPurchaseDatePreset;
+
+document.querySelectorAll('.date-filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    applyPurchaseDatePreset(chip.dataset.preset);
+  });
+});
+
+document.getElementById('purchaseDateFrom')?.addEventListener('change', (e) => {
+  purchaseFilterStartDate = e.target.value;
+  purchaseDatePreset = 'custom';
+  document.querySelectorAll('.date-filter-chip').forEach(btn => btn.classList.remove('active'));
+  renderPurchasesTable();
+});
+
+document.getElementById('purchaseDateTo')?.addEventListener('change', (e) => {
+  purchaseFilterEndDate = e.target.value;
+  purchaseDatePreset = 'custom';
+  document.querySelectorAll('.date-filter-chip').forEach(btn => btn.classList.remove('active'));
+  renderPurchasesTable();
+});
+
+document.getElementById('clearDateFilterBtn')?.addEventListener('click', () => {
+  applyPurchaseDatePreset('all');
 });
 
 document.getElementById('inventorySearch')?.addEventListener('input', (e) => {
@@ -1948,14 +2151,15 @@ function downloadCsvFile(csvContent, fileName) {
   URL.revokeObjectURL(url);
 }
 
-// 1. Export Purchases to CSV / Excel
+// 1. Export Purchases to CSV / Excel (Honors Active Date Range Filter)
 function exportPurchasesToCsv() {
-  if (!purchases || purchases.length === 0) {
-    alert('No purchases recorded yet to export.');
+  const exportList = typeof getFilteredPurchases === 'function' ? getFilteredPurchases() : purchases;
+  if (!exportList || exportList.length === 0) {
+    alert('No purchases found matching your selected date or search filter to export.');
     return;
   }
   const headers = ['Date', 'Batch ID', 'Item Name', 'Boxes/Crates', 'Quantity (Kgs)', 'Rate per Kg (Rs)', 'Total Amount (Rs)', 'Supplier Name', 'Payment Status', 'Payment Method'];
-  const rows = purchases.map(p => [
+  const rows = exportList.map(p => [
     `"${p.date || ''}"`,
     `"${p.batchId || ''}"`,
     `"${(p.item || '').replace(/"/g, '""')}"`,
@@ -1969,7 +2173,8 @@ function exportPurchasesToCsv() {
   ]);
   const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
   const dateStr = new Date().toISOString().slice(0, 10);
-  downloadCsvFile(csvContent, `lakshana_purchases_${dateStr}.csv`);
+  const filterSuffix = purchaseDatePreset !== 'all' ? `_${purchaseDatePreset}` : '';
+  downloadCsvFile(csvContent, `lakshana_purchases_${dateStr}${filterSuffix}.csv`);
 }
 
 // 2. Export Inventory Stock to CSV

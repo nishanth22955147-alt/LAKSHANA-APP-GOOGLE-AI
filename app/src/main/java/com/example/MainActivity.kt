@@ -1,5 +1,6 @@
 package com.example
 
+import android.graphics.PixelFormat
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setFormat(PixelFormat.RGBA_8888)
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {

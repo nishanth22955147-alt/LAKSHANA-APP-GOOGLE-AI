@@ -2,6 +2,13 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+process.on('uncaughtException', (err) => {
+  console.error('Server caught uncaught exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Server unhandled rejection:', reason);
+});
+
 const PORT = 3000;
 const PUBLIC_DIR = __dirname;
 

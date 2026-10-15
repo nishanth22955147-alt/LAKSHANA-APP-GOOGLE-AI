@@ -26,7 +26,7 @@ Your domain is managed on **Cloudflare**. To sync your mobile app and website:
    - Go to Cloudflare Dashboard ➔ **Workers & Pages** ➔ **Create Worker**
    - Paste the code from `cloudflare-worker.js`
    - Click **Deploy**
-   - Under Worker **Settings** ➔ **Domains & Routes**, add route `*lakshanaveggie.trade/api/*` (or add Custom Domain `sync.lakshanaveggie.trade`)
+   - Under Worker **Settings** ➔ **Domains & Routes** (or **Websites** ➔ **lakshanaveggie.trade** ➔ **Workers Routes**), add route: `*lakshanaveggie.trade/*` (This serves BOTH the full web portal dashboard AND the mobile `/api/v1/sync` API!)
 
 ---
 

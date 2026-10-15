@@ -13,6 +13,7 @@ import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -22,11 +23,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import com.example.ui.components.DateFormatterUtil
+import java.util.Calendar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
@@ -65,7 +69,8 @@ fun WebsiteScreen(
     val isSyncing by viewModel.isSyncing.collectAsState()
 
     var isDeployGuideOpen by remember { mutableStateOf(false) }
-    var activeWebTab by remember { mutableStateOf(0) } // Default to 0: Interactive Web Portal!
+    var activeWebTab by remember { mutableStateOf(3) } // Default to 3: Daily Purchases in Local App Format!
+    var webPurchaseDatePreset by remember { mutableStateOf("All") }
     var showPasteRestoreModal by remember { mutableStateOf(false) }
     var pasteJsonText by remember { mutableStateOf("") }
     var customVercelUrl by remember(syncSummary.cloudEndpoint) { mutableStateOf(syncSummary.cloudEndpoint) }
@@ -224,16 +229,45 @@ fun WebsiteScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
-                            onClick = { activeWebTab = 1 },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            onClick = {
+                                viewModel.restoreInitialMandiData { success, msg ->
+                                    Toast.makeText(context, if (success) "Local App Format Synced: $msg" else msg, Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
                             modifier = Modifier.weight(1.2f)
                         ) {
-                            Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.CloudSync, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Open In-App Portal")
+                            Text("⚡ 1-Tap Sync Local App", style = MaterialTheme.typography.labelMedium)
+                        }
+
+                        OutlinedButton(
+                            onClick = { activeWebTab = 3 },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Daily Ledger", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { activeWebTab = 0 },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("In-App Web View", style = MaterialTheme.typography.labelSmall)
                         }
 
                         OutlinedButton(
@@ -252,11 +286,11 @@ fun WebsiteScreen(
                                     Toast.makeText(context, "Opening Web Portal: $webPortalUrl", Toast.LENGTH_SHORT).show()
                                 }
                             },
-                            modifier = Modifier.weight(1.1f)
+                            modifier = Modifier.weight(1f)
                         ) {
                             Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Open in Browser")
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Open in Browser", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -273,12 +307,12 @@ fun WebsiteScreen(
                 Tab(
                     selected = activeWebTab == 0,
                     onClick = { activeWebTab = 0 },
-                    text = { Text("⚡ Web Sync & Live Portal") }
+                    text = { Text("🌐 Live Web Portal") }
                 )
                 Tab(
                     selected = activeWebTab == 1,
                     onClick = { activeWebTab = 1 },
-                    text = { Text("🌐 In-App Browser View") }
+                    text = { Text("⚡ Web Sync & Backup") }
                 )
                 Tab(
                     selected = activeWebTab == 2,
@@ -305,7 +339,7 @@ fun WebsiteScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             when (activeWebTab) {
-                1 -> {
+                0 -> {
                     // Full Embedded Interactive Web Portal (Loads instant local asset or custom domain)
                     EmbeddedWebPortalView(
                         targetDomain = primaryDomain,
@@ -313,7 +347,7 @@ fun WebsiteScreen(
                     )
                 }
 
-                0 -> {
+                1 -> {
                     // Direct Web & Mobile Sync Hub
                     Column(
                         modifier = Modifier
@@ -577,17 +611,18 @@ fun WebsiteScreen(
                                         Text("Pull from Cloud", style = MaterialTheme.typography.labelSmall)
                                     }
 
-                                    OutlinedButton(
+                                    Button(
                                         onClick = {
                                             viewModel.restoreInitialMandiData { success, msg ->
-                                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                                Toast.makeText(context, if (success) "Local Format Synced: $msg" else msg, Toast.LENGTH_LONG).show()
                                             }
                                         },
+                                        colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Default.CloudSync, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Reset Mandi Data", style = MaterialTheme.typography.labelSmall)
+                                        Text("⚡ Sync Local Format", style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
 
@@ -756,34 +791,100 @@ fun WebsiteScreen(
                 }
 
                 3 -> {
-                    // Daily Purchases
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(bottom = 20.dp)
-                    ) {
-                        items(purchases) { p ->
-                            Card(
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(p.itemName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                        Text("₹${String.format(Locale.US, "%.2f", p.totalAmount)}", fontWeight = FontWeight.Black, color = SuccessGreen)
+                    // Daily Purchases with Date-Range Filter
+                    val today = Calendar.getInstance().apply {
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+                    val yest = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -1) }
+                    val sevenDaysAgo = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -6) }
+                    val thirtyDaysAgo = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -29) }
+
+                    val filteredList = purchases.filter { p ->
+                        val pCal = DateFormatterUtil.parseToCalendar(p.date).apply {
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        when (webPurchaseDatePreset) {
+                            "Today" -> pCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) && pCal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+                            "Yesterday" -> pCal.get(Calendar.YEAR) == yest.get(Calendar.YEAR) && pCal.get(Calendar.DAY_OF_YEAR) == yest.get(Calendar.DAY_OF_YEAR)
+                            "Last 7 Days" -> !pCal.before(sevenDaysAgo) && !pCal.after(today)
+                            "Last 30 Days" -> !pCal.before(thirtyDaysAgo) && !pCal.after(today)
+                            "This Month" -> pCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) && pCal.get(Calendar.MONTH) == today.get(Calendar.MONTH)
+                            else -> true
+                        }
+                    }
+
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        // Date Preset Filter Chips
+                        Card(
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("📅 Period Filter:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    Text("₹${String.format(Locale.US, "%,.2f", filteredList.sumOf { it.totalAmount })}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall, color = SuccessGreen)
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    val presets = listOf("All", "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Month")
+                                    items(presets) { preset ->
+                                        FilterChip(
+                                            selected = webPurchaseDatePreset == preset,
+                                            onClick = { webPurchaseDatePreset = preset },
+                                            label = { Text(preset, style = MaterialTheme.typography.labelSmall) }
+                                        )
                                     }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        if (filteredList.isEmpty()) {
+                            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                Text("No purchases found for selected period.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                contentPadding = PaddingValues(bottom = 20.dp)
+                            ) {
+                                items(filteredList) { p ->
+                                    Card(
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text("${p.boxes} boxes • ${p.qtyKgs} kgs @ ₹${p.rate}/kg", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text(p.date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(p.itemName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                                Text("₹${String.format(Locale.US, "%.2f", p.totalAmount)}", fontWeight = FontWeight.Black, color = SuccessGreen)
+                                            }
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Text("${p.boxes} boxes • ${p.qtyKgs} kgs @ ₹${p.rate}/kg", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Text(p.date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -894,35 +995,31 @@ fun WebsiteScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Alert Box: Why Page Not Found Shows
+                    // Alert Box: Why Page Not Found (404) Shows
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.45f),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("Why 'Page Not Found' (404) Shows:", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
+                                Text("Why 404 / 'Website Not Working' Shows:", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
                             }
                             Spacer(modifier = Modifier.height(6.dp))
-                            Text("1. Domain Not Claimed in Host: You set DNS in GoDaddy/Namecheap, but didn't add the domain in Firebase/Vercel Custom Domains dashboard.", style = MaterialTheme.typography.labelSmall)
-                            Spacer(modifier = Modifier.height(3.dp))
-                            Text("2. DNS Propagation Delay: New DNS records take 15–45 minutes to propagate across worldwide servers.", style = MaterialTheme.typography.labelSmall)
-                            Spacer(modifier = Modifier.height(3.dp))
-                            Text("3. SSL Certificate Pending: Let's Encrypt / Google SSL certificate is being generated (10–30 mins).", style = MaterialTheme.typography.labelSmall)
-                            Spacer(modifier = Modifier.height(3.dp))
-                            Text("4. Public Folder: Ensure files deployed are from the website/ directory containing index.html.", style = MaterialTheme.typography.labelSmall)
+                            Text("Your domain 'lakshanaveggie.trade' is routed through Cloudflare, but the Cloudflare Worker or Pages project is not yet mapped to this custom domain in your Cloudflare dashboard.", style = MaterialTheme.typography.labelSmall)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("💡 Good News: You do NOT have to wait! The 'Local In-App' portal button works immediately with 100% features and zero internet dependency.", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = SuccessGreen)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    Text("📋 REQUIRED DNS RECORDS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("⚡ STEP-BY-STEP CLOUDFLARE FIX", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    // Custom Domain DNS Card
+                    // Cloudflare Worker / Pages Setup Card
                     Card(
                         shape = RoundedCornerShape(10.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
@@ -934,30 +1031,53 @@ fun WebsiteScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("🌐 lakshanaveggie.trade DNS", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                Text("☁️ Cloudflare Setup (lakshanaveggie.trade)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
                                 TextButton(
                                     onClick = {
                                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                        val clip = ClipData.newPlainText("lakshanaveggie.trade DNS", "Domain: lakshanaveggie.trade\nType: A\nHost: @\nValue: 76.76.21.21\n\nType: CNAME\nHost: www\nValue: cname.vercel-dns.com")
+                                        val clip = ClipData.newPlainText("Cloudflare Setup", """
+                                            LAKSHANA VEGGIE - CLOUDFLARE DOMAIN SETTINGS
+                                            ============================================
+                                            Domain: lakshanaveggie.trade
+                                            
+                                            METHOD 1 (Recommended - Cloudflare Custom Domain):
+                                            1. In Cloudflare Dashboard, go to 'Workers & Pages'.
+                                            2. Select your Worker (e.g. 'lakshanaveggie-worker').
+                                            3. Go to Settings > 'Domains & Routes' > 'Custom Domains'.
+                                            4. Click 'Add Custom Domain' and enter: lakshanaveggie.trade
+                                            5. Cloudflare automatically generates DNS records and SSL in < 60 seconds!
+                                            
+                                            METHOD 2 (Cloudflare Worker Route):
+                                            - Route: *lakshanaveggie.trade/*
+                                            - Zone: lakshanaveggie.trade
+                                            
+                                            METHOD 3 (If using external host like Vercel):
+                                            - In Cloudflare DNS: set Proxy Status to 'DNS Only' (Grey Cloud, not Orange Cloud).
+                                            - Record: A | Host: @ | Value: 76.76.21.21 | Proxy: DNS Only
+                                            - Record: CNAME | Host: www | Value: cname.vercel-dns.com | Proxy: DNS Only
+                                        """.trimIndent())
                                         clipboard.setPrimaryClip(clip)
-                                        Toast.makeText(context, "DNS Records copied to clipboard!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Cloudflare settings guide copied!", Toast.LENGTH_SHORT).show()
                                     }
                                 ) {
                                     Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Copy DNS", style = MaterialTheme.typography.labelSmall)
+                                    Text("Copy Guide", style = MaterialTheme.typography.labelSmall)
                                 }
                             }
-                            Text("Add in GoDaddy / Namecheap / Cloudflare DNS:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text("• Record: A | Host: @ | Value: 76.76.21.21", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.labelSmall)
-                            Text("• Record: CNAME | Host: www | Value: cname.vercel-dns.com", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.labelSmall)
+                            Text("1. In Cloudflare Dashboard -> Compute (Workers) -> Workers & Pages", style = MaterialTheme.typography.labelSmall)
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text("2. Click your worker -> Settings -> Domains & Routes", style = MaterialTheme.typography.labelSmall)
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text("3. Click 'Add Custom Domain' -> type 'lakshanaveggie.trade' -> Save", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text("4. Cloudflare will automatically bind your site and activate free SSL!", style = MaterialTheme.typography.labelSmall, color = SuccessGreen)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    Text("⚡ 3-STEP FIX CHECKLIST", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("🌐 EXTERNAL HOSTING DNS (VERCEL / NETLIFY)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Surface(
@@ -966,11 +1086,9 @@ fun WebsiteScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text("1. Delete Old Parking Records: In GoDaddy/Namecheap, delete default parked IP records that redirect to 'Domain Parked' pages.", style = MaterialTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text("2. Add Custom Domain IP: Add the A record (76.76.21.21) and CNAME shown above.", style = MaterialTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text("3. SSL Verification: Wait 15-30 minutes for DNS propagation and SSL certificate activation.", style = MaterialTheme.typography.bodySmall)
+                            Text("⚠️ Important for Cloudflare DNS users:", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("If pointing lakshanaveggie.trade to Vercel (76.76.21.21), you MUST switch the Cloudflare proxy icon to 'DNS Only' (Grey Cloud, NOT Orange Cloud). Otherwise, Cloudflare will block the connection with 404 or 525 SSL errors.", style = MaterialTheme.typography.labelSmall)
                         }
                     }
 
@@ -981,18 +1099,24 @@ fun WebsiteScreen(
                             onClick = {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 val guide = """
-                                    LAKSHANA VEGGIE - CUSTOM DOMAIN SETUP GUIDE
-                                    ==========================================
+                                    LAKSHANA VEGGIE - COMPLETE WEBSITE & DNS SETTINGS
+                                    =================================================
                                     Domain: https://lakshanaveggie.trade
                                     Sync API: https://lakshanaveggie.trade/api/v1/sync
 
-                                    Required DNS Records:
-                                    Type: A | Host: @ | Value: 76.76.21.21
-                                    Type: CNAME | Host: www | Value: cname.vercel-dns.com
+                                    Cloudflare Custom Domain Setup:
+                                    1. Go to Cloudflare Dashboard > Workers & Pages
+                                    2. Open your Worker > Settings > Domains & Routes
+                                    3. Click 'Add Custom Domain' > 'lakshanaveggie.trade'
+                                    4. Done! Ready in 60 seconds with SSL.
+
+                                    External Host DNS (if hosting on Vercel):
+                                    - Type: A | Host: @ | Value: 76.76.21.21 | Proxy: DNS Only (Grey Cloud)
+                                    - Type: CNAME | Host: www | Value: cname.vercel-dns.com | Proxy: DNS Only (Grey Cloud)
                                 """.trimIndent()
-                                val clip = ClipData.newPlainText("Domain Guide", guide)
+                                val clip = ClipData.newPlainText("Website & DNS Settings", guide)
                                 clipboard.setPrimaryClip(clip)
-                                Toast.makeText(context, "Full Guide copied to clipboard!", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Full Settings Guide copied to clipboard!", Toast.LENGTH_LONG).show()
                             },
                             modifier = Modifier.weight(1f)
                         ) {
@@ -1286,7 +1410,7 @@ fun EmbeddedWebPortalView(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "Could not connect to $targetDomain ($loadError). If you just pointed your DNS, changes take 15-30 mins to propagate.",
+                        "Remote domain returned $loadError. Your site is not yet bound to this domain in Cloudflare (Workers & Pages > Settings > Custom Domains). Tap below to instantly switch to the Local In-App Portal which has 100% features and works offline!",
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -1413,6 +1537,21 @@ fun EmbeddedWebPortalView(
                                     if (request?.isForMainFrame == true) {
                                         isLoading = false
                                         loadError = error?.description?.toString() ?: "Network error"
+                                    }
+                                }
+
+                                override fun onReceivedHttpError(
+                                    view: WebView?,
+                                    request: WebResourceRequest?,
+                                    errorResponse: WebResourceResponse?
+                                ) {
+                                    super.onReceivedHttpError(view, request, errorResponse)
+                                    if (request?.isForMainFrame == true && loadMode == "remote") {
+                                        val statusCode = errorResponse?.statusCode ?: 0
+                                        if (statusCode >= 400) {
+                                            isLoading = false
+                                            loadError = "HTTP $statusCode (${errorResponse?.reasonPhrase ?: "Status"})"
+                                        }
                                     }
                                 }
 
