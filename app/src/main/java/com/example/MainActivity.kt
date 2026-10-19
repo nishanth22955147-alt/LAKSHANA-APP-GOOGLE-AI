@@ -1,12 +1,12 @@
 package com.example
 
-import android.graphics.PixelFormat
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -14,29 +14,26 @@ import androidx.compose.ui.Modifier
 import com.example.ui.MainScreen
 import com.example.ui.MainViewModel
 import com.example.ui.auth.LoginScreen
-import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.theme.LakshanaTheme
 
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.setFormat(PixelFormat.RGBA_8888)
         enableEdgeToEdge()
-        setContent {
-            MyApplicationTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    val currentUser by viewModel.currentUser.collectAsState()
-                    val authUiState by viewModel.authUiState.collectAsState()
 
+        setContent {
+            LakshanaTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val currentUser by viewModel.currentUser.collectAsState()
                     if (currentUser == null) {
-                        LoginScreen(
-                            viewModel = viewModel
-                        )
+                        LoginScreen(viewModel = viewModel)
                     } else {
-                        MainScreen(
-                            viewModel = viewModel
-                        )
+                        MainScreen(viewModel = viewModel)
                     }
                 }
             }

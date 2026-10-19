@@ -41,7 +41,7 @@ import com.example.ui.supplier.SupplierScreen
 import com.example.ui.theme.SecondaryTeal
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.transaction.TransactionScreen
-import com.example.ui.website.WebsiteScreen
+
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -111,8 +111,7 @@ fun MainScreen(
             NavItem(NavigationDestination.Supplier, "Supplier", Icons.Default.Storefront, "nav_supplier"),
             NavItem(NavigationDestination.Transaction, "Transaction", Icons.AutoMirrored.Filled.ReceiptLong, "nav_transaction"),
             NavItem(NavigationDestination.Reports, "Reports", Icons.Default.Assessment, "nav_reports"),
-            NavItem(NavigationDestination.Inventory, "Inventory", Icons.Default.Warehouse, "nav_inventory"),
-            NavItem(NavigationDestination.Website, "Website", Icons.Default.Language, "nav_website")
+            NavItem(NavigationDestination.Inventory, "Inventory", Icons.Default.Warehouse, "nav_inventory")
         )
         if (currentUser?.role == UserRole.ADMIN) {
             list.add(NavItem(NavigationDestination.AdminUsers, "Users", Icons.Default.ManageAccounts, "nav_users"))
@@ -279,17 +278,7 @@ fun MainScreen(
                         modifier = Modifier.testTag("drawer_online_sync")
                     )
 
-                    // Feature Item: Website Portal
-                    NavigationDrawerItem(
-                        icon = { Icon(Icons.Default.Language, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                        label = { Text("Website Portal") },
-                        selected = currentDestination == NavigationDestination.Website,
-                        onClick = {
-                            coroutineScope.launch { drawerState.close() }
-                            viewModel.navigateTo(NavigationDestination.Website)
-                        },
-                        modifier = Modifier.testTag("drawer_website_portal")
-                    )
+
 
                     // Setting Item: App Details & Description
                     NavigationDrawerItem(
@@ -436,7 +425,6 @@ fun MainScreen(
                                         NavigationDestination.Reports -> "Analytics & Reports"
                                         NavigationDestination.Inventory -> "Inventory Management"
                                         NavigationDestination.AdminUsers -> "Admin User Roles"
-                                        NavigationDestination.Website -> "Lakshana Web Portal"
                                     },
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
@@ -626,7 +614,6 @@ fun MainScreen(
                     NavigationDestination.Reports -> ReportsScreen(viewModel = viewModel)
                     NavigationDestination.Inventory -> InventoryScreen(viewModel = viewModel)
                     NavigationDestination.AdminUsers -> AdminUsersScreen(viewModel = viewModel)
-                    NavigationDestination.Website -> WebsiteScreen(viewModel = viewModel)
                 }
             }
         }

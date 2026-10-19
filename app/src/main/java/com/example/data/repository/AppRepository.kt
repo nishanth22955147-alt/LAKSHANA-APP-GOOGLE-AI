@@ -278,6 +278,21 @@ class AppRepository(
         userDao.insertUser(user)
     }
 
+    suspend fun updateStaffUser(user: UserEntity) = withContext(Dispatchers.IO) {
+        userDao.updateUser(user)
+        if (_currentUser.value?.id == user.id) {
+            _currentUser.value = user
+        }
+    }
+
+    suspend fun deleteStaffUser(user: UserEntity) = withContext(Dispatchers.IO) {
+        userDao.deleteUser(user)
+    }
+
+    fun switchUserSession(user: UserEntity) {
+        _currentUser.value = user
+    }
+
     // Items & Inventory Management
     suspend fun addOrUpdateItem(item: ItemEntity): Long = withContext(Dispatchers.IO) {
         if (item.id == 0L) {
@@ -349,6 +364,10 @@ class AppRepository(
         }
     }
 
+    suspend fun deleteTransaction(transaction: TransactionEntity) = withContext(Dispatchers.IO) {
+        transactionDao.deleteTransaction(transaction)
+    }
+
     suspend fun addOrUpdateUserFromBackup(user: UserEntity): Long = withContext(Dispatchers.IO) {
         val existing = userDao.getUserByMobile(user.mobileNumber)
         if (existing != null) {
@@ -379,6 +398,15 @@ class AppRepository(
         supplierDao.deleteAllSuppliers()
         purchaseDao.deleteAllPurchases()
         itemDao.deleteAllItems()
+        transactionDao.deleteAllTransactions()
+        stockMovementDao.deleteAllMovements()
+    }
+
+    // Clear all vegetable items, suppliers, purchases, transactions, and movements for fresh start
+    suspend fun clearAllDataForFreshStart() = withContext(Dispatchers.IO) {
+        itemDao.deleteAllItems()
+        supplierDao.deleteAllSuppliers()
+        purchaseDao.deleteAllPurchases()
         transactionDao.deleteAllTransactions()
         stockMovementDao.deleteAllMovements()
     }

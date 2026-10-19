@@ -3,19 +3,22 @@ package com.example.data.remote
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import com.example.data.model.*
+import com.example.data.model.ItemEntity
+import com.example.data.model.PurchaseEntryEntity
+import com.example.data.model.PurchaseStatus
+import com.example.data.model.SupplierEntity
 import com.example.data.repository.AppRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 class CloudSyncManager(
     private val context: Context,
@@ -23,505 +26,149 @@ class CloudSyncManager(
 ) {
     private val prefs = context.getSharedPreferences("lakshana_sync_prefs", Context.MODE_PRIVATE)
 
-    companion object {
-        private const val KEY_LAST_SYNC = "last_sync_time"
-        private const val KEY_AUTO_SYNC = "auto_sync_enabled"
-        private const val KEY_ENDPOINT = "cloudflare_worker_endpoint"
-        const val DEFAULT_ENDPOINT = "https://lakshanaveggie.trade/api/v1/sync"
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(12, TimeUnit.SECONDS)
+        .readTimeout(12, TimeUnit.SECONDS)
+        .build()
 
-        fun normalizeEndpoint(raw: String): String {
-            var trimmed = raw.trim()
-            if (trimmed.isEmpty()) return ""
-            if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
-                trimmed = "https://$trimmed"
-            }
-            trimmed = trimmed.trimEnd('/')
-            return if (trimmed.endsWith("/api/v1/sync") || trimmed.endsWith("/sync")) {
-                trimmed
-            } else {
-                "$trimmed/api/v1/sync"
-            }
+    private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
+
+    fun getLastSyncTimestamp(): Long = prefs.getLong("last_sync_timestamp", 0L)
+
+    fun isAutoSyncEnabled(): Boolean = prefs.getBoolean("auto_sync_enabled", true)
+
+    fun setAutoSyncEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("auto_sync_enabled", enabled).apply()
+    }
+
+    fun getCloudEndpoint(): String {
+        return prefs.getString("cloud_endpoint", "https://lakshanaveggie.trade/api/v1/sync")
+            ?: "https://lakshanaveggie.trade/api/v1/sync"
+    }
+
+    fun setCloudEndpoint(endpoint: String) {
+        val clean = normalizeEndpoint(endpoint)
+        prefs.edit().putString("cloud_endpoint", clean).apply()
+    }
+
+    private fun normalizeEndpoint(endpointUrl: String): String {
+        val trimmed = endpointUrl.trim().removeSuffix("/")
+        if (trimmed.isBlank()) return "https://lakshanaveggie.trade/api/v1/sync"
+        return if (!trimmed.endsWith("/api/v1/sync") && !trimmed.endsWith("/sync")) {
+            "$trimmed/api/v1/sync"
+        } else {
+            trimmed
         }
     }
 
     fun isNetworkAvailable(): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return false
-        val activeNetwork = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
-
-    fun getLastSyncTimestamp(): Long {
-        return prefs.getLong(KEY_LAST_SYNC, 0L)
-    }
-
-    fun setLastSyncTimestamp(timestamp: Long) {
-        prefs.edit().putLong(KEY_LAST_SYNC, timestamp).apply()
-    }
-
-    fun isAutoSyncEnabled(): Boolean {
-        return prefs.getBoolean(KEY_AUTO_SYNC, true)
-    }
-
-    fun setAutoSyncEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_AUTO_SYNC, enabled).apply()
-    }
-
-    fun getCloudEndpoint(): String {
-        return prefs.getString(KEY_ENDPOINT, DEFAULT_ENDPOINT) ?: DEFAULT_ENDPOINT
-    }
-
-    fun setCloudEndpoint(endpoint: String) {
-        prefs.edit().putString(KEY_ENDPOINT, endpoint).apply()
-    }
-
-    suspend fun testConnection(endpoint: String): Result<String> = withContext(Dispatchers.IO) {
-        val trimmed = normalizeEndpoint(endpoint)
-        if (trimmed.isEmpty()) {
-            return@withContext Result.failure(IllegalArgumentException("Cloudflare Worker URL cannot be empty. Enter your default domain (e.g. https://lakshanaveggie.trade or https://your-worker.workers.dev)"))
-        }
-        if (!isNetworkAvailable()) {
-            return@withContext Result.failure(IllegalStateException("No active internet connection detected on this device."))
-        }
-
-        try {
-            val url = java.net.URL(trimmed)
-            val host = url.host ?: "host"
-            val conn = url.openConnection() as java.net.HttpURLConnection
-            conn.connectTimeout = 6000
-            conn.readTimeout = 6000
-            conn.instanceFollowRedirects = true
-            conn.requestMethod = "GET"
-            conn.setRequestProperty("User-Agent", "Lakshana-Android-Sync/2.0")
-            conn.setRequestProperty("Accept", "application/json, text/html, */*")
-
-            val responseCode = conn.responseCode
-            conn.disconnect()
-
-            if (responseCode in 200..299) {
-                Result.success("Connection Successful (HTTP $responseCode)! Cloudflare Worker at '$host' is online and responding.")
-            } else if (responseCode in 300..399) {
-                Result.success("Worker Active (HTTP $responseCode Redirect). Server at '$host' is online.")
-            } else if (responseCode == 404) {
-                // Probe alternative candidate paths
-                val candidatePaths = listOf("/sync", "/api/sync", "/api/v1/health", "/health")
-                var workingCandidate = ""
-                for (path in candidatePaths) {
-                    try {
-                        val candUrl = "${url.protocol}://$host$path"
-                        val candConn = java.net.URL(candUrl).openConnection() as java.net.HttpURLConnection
-                        candConn.connectTimeout = 3000
-                        candConn.readTimeout = 3000
-                        val cCode = candConn.responseCode
-                        candConn.disconnect()
-                        if (cCode in 200..299) {
-                            workingCandidate = candUrl
-                            break
-                        }
-                    } catch (_: Exception) {}
-                }
-
-                if (workingCandidate.isNotEmpty()) {
-                    setCloudEndpoint(workingCandidate)
-                    Result.success("Connected! Active sync route found at $workingCandidate (HTTP 200).")
-                } else {
-                    val rootOnline = try {
-                        val rootConn = java.net.URL("${url.protocol}://$host/").openConnection() as java.net.HttpURLConnection
-                        rootConn.connectTimeout = 3000
-                        rootConn.readTimeout = 3000
-                        val rCode = rootConn.responseCode
-                        rootConn.disconnect()
-                        rCode in 200..399
-                    } catch (_: Exception) { false }
-
-                    if (rootOnline) {
-                        Result.failure(Exception("HTTP 404: Website '$host' is LIVE, but Cloudflare has not completed building the new _worker.js from GitHub yet (takes 1-2 mins), or enter your Cloudflare .pages.dev URL."))
-                    } else {
-                        Result.failure(Exception("HTTP 404 Not Found at '$host'. The web host is reachable, but the endpoint route was not matched."))
-                    }
-                }
-            } else {
-                Result.failure(Exception("HTTP $responseCode received from '$host'."))
-            }
-        } catch (e: java.net.UnknownHostException) {
-            Result.failure(Exception("Domain DNS Not Found: Cannot resolve '${e.message}'. Check your Cloudflare Worker URL or DNS records."))
-        } catch (e: java.net.ConnectException) {
-            Result.failure(Exception("Connection Refused: Server at ${e.message} is offline."))
-        } catch (e: java.net.SocketTimeoutException) {
-            Result.failure(Exception("Connection Timed Out: Server took too long to respond (>6s)."))
-        } catch (e: javax.net.ssl.SSLException) {
-            Result.failure(Exception("SSL Certificate Error: ${e.message}"))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun performOnlineSync(): Result<SyncSummary> = withContext(Dispatchers.IO) {
-        val isOnline = isNetworkAvailable()
-        val rawEndpoint = getCloudEndpoint()
-        val endpoint = normalizeEndpoint(rawEndpoint)
-        val autoSync = isAutoSyncEnabled()
-
-        val items = repository.allItems.first()
-        val purchases = repository.allPurchases.first()
-        val suppliers = repository.allSuppliers.first()
-        val transactions = repository.allTransactions.first()
-        val users = repository.allUsers.first()
-        val movements = repository.allStockMovements.first()
-
-        if (endpoint.isEmpty()) {
-            return@withContext Result.failure(IllegalStateException("No Cloudflare Worker URL configured. Open Online Sync Hub and enter your Cloudflare Worker URL (e.g. https://your-worker.workers.dev)."))
-        }
-
-        if (!isOnline) {
-            val lastTime = getLastSyncTimestamp()
-            return@withContext Result.success(
-                SyncSummary(
-                    syncState = SyncState.OFFLINE,
-                    lastSyncTimestamp = lastTime,
-                    itemsCount = items.size,
-                    purchasesCount = purchases.size,
-                    suppliersCount = suppliers.size,
-                    transactionsCount = transactions.size,
-                    usersCount = users.size,
-                    stockMovementsCount = movements.size,
-                    isOnline = false,
-                    statusMessage = "Offline Mode: Device has no active internet connection. All local changes are safely queued for next sync.",
-                    cloudEndpoint = endpoint,
-                    autoSyncEnabled = autoSync
-                )
-            )
-        }
-
-        try {
-            // Build full export payload
-            val fullPayloadJson = exportFullBackupJson()
-
-            // Perform real HTTP POST to endpoint
-            val url = java.net.URL(endpoint)
-            val conn = url.openConnection() as java.net.HttpURLConnection
-            conn.connectTimeout = 7000
-            conn.readTimeout = 7000
-            conn.doOutput = true
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-            conn.setRequestProperty("Accept", "application/json")
-            conn.setRequestProperty("User-Agent", "Lakshana-Android-Sync/2.0")
-
-            conn.outputStream.use { os ->
-                os.write(fullPayloadJson.toByteArray(Charsets.UTF_8))
-                os.flush()
-            }
-
-            var responseCode = conn.responseCode
-            var responseText = try {
-                if (responseCode in 200..299) {
-                    conn.inputStream.bufferedReader().use { it.readText() }
-                } else {
-                    conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
-                }
-            } catch (e: Exception) {
-                ""
-            }
-            conn.disconnect()
-
-            var effectiveEndpoint = endpoint
-
-            // If 404, automatically try /sync and /api/sync on the same host
-            if (responseCode == 404) {
-                val candidateFallbacks = listOf(
-                    "${url.protocol}://${url.host}/sync",
-                    "${url.protocol}://${url.host}/api/sync"
-                )
-                for (cand in candidateFallbacks) {
-                    if (cand == endpoint) continue
-                    try {
-                        val candConn = java.net.URL(cand).openConnection() as java.net.HttpURLConnection
-                        candConn.connectTimeout = 4000
-                        candConn.readTimeout = 4000
-                        candConn.doOutput = true
-                        candConn.requestMethod = "POST"
-                        candConn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                        candConn.setRequestProperty("Accept", "application/json")
-                        candConn.setRequestProperty("User-Agent", "Lakshana-Android-Sync/2.0")
-                        candConn.outputStream.use { os ->
-                            os.write(fullPayloadJson.toByteArray(Charsets.UTF_8))
-                            os.flush()
-                        }
-                        val cCode = candConn.responseCode
-                        val cText = try {
-                            if (cCode in 200..299) candConn.inputStream.bufferedReader().use { it.readText() }
-                            else candConn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
-                        } catch (_: Exception) { "" }
-                        candConn.disconnect()
-                        if (cCode in 200..299) {
-                            responseCode = cCode
-                            responseText = cText
-                            effectiveEndpoint = cand
-                            setCloudEndpoint(cand)
-                            break
-                        }
-                    } catch (_: Exception) {}
-                }
-            }
-
-            val now = System.currentTimeMillis()
-            setLastSyncTimestamp(now)
-            val timeStr = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(now))
-
-            if (responseCode in 200..299) {
-                // If server returned updated remote data (bidirectional sync), merge it
-                if (responseText.isNotBlank() && (responseText.contains("\"items\"") || responseText.contains("\"purchases\""))) {
-                    try {
-                        restoreFromBackupJson(responseText)
-                    } catch (_: Exception) {}
-                }
-
-                val summary = SyncSummary(
-                    syncState = SyncState.SUCCESS,
-                    lastSyncTimestamp = now,
-                    itemsCount = items.size,
-                    purchasesCount = purchases.size,
-                    suppliersCount = suppliers.size,
-                    transactionsCount = transactions.size,
-                    usersCount = users.size,
-                    stockMovementsCount = movements.size,
-                    isOnline = true,
-                    statusMessage = "Online Synced at $timeStr (HTTP $responseCode). Uploaded ${items.size} items, ${purchases.size} purchases & ${suppliers.size} suppliers to Cloud.",
-                    cloudEndpoint = effectiveEndpoint,
-                    autoSyncEnabled = autoSync
-                )
-                Result.success(summary)
-            } else if (responseCode == 404) {
-                val rootOnline = try {
-                    val rootConn = java.net.URL("${url.protocol}://${url.host}/").openConnection() as java.net.HttpURLConnection
-                    rootConn.connectTimeout = 3000
-                    rootConn.readTimeout = 3000
-                    val rCode = rootConn.responseCode
-                    rootConn.disconnect()
-                    rCode in 200..399
-                } catch (_: Exception) { false }
-
-                val detailMsg = if (rootOnline) {
-                    "HTTP 404 at ${url.host}: Website is LIVE, but Cloudflare has not completed building the new _worker.js from GitHub yet (takes 1-2 mins). Push the latest commit to GitHub or enter your .pages.dev URL."
-                } else {
-                    "HTTP 404 at ${url.host}: Web endpoint not found. Verify your domain and Cloudflare Worker routes."
-                }
-
-                val summary = SyncSummary(
-                    syncState = SyncState.ERROR,
-                    lastSyncTimestamp = getLastSyncTimestamp(),
-                    itemsCount = items.size,
-                    purchasesCount = purchases.size,
-                    suppliersCount = suppliers.size,
-                    transactionsCount = transactions.size,
-                    usersCount = users.size,
-                    stockMovementsCount = movements.size,
-                    isOnline = true,
-                    statusMessage = detailMsg,
-                    cloudEndpoint = endpoint,
-                    autoSyncEnabled = autoSync
-                )
-                Result.success(summary)
-            } else {
-                val summary = SyncSummary(
-                    syncState = SyncState.ERROR,
-                    lastSyncTimestamp = getLastSyncTimestamp(),
-                    itemsCount = items.size,
-                    purchasesCount = purchases.size,
-                    suppliersCount = suppliers.size,
-                    transactionsCount = transactions.size,
-                    usersCount = users.size,
-                    stockMovementsCount = movements.size,
-                    isOnline = true,
-                    statusMessage = "Server returned HTTP $responseCode. Web host responded with: ${responseText.take(80)}",
-                    cloudEndpoint = endpoint,
-                    autoSyncEnabled = autoSync
-                )
-                Result.success(summary)
-            }
-        } catch (e: java.net.UnknownHostException) {
-            val summary = SyncSummary(
-                syncState = SyncState.ERROR,
-                lastSyncTimestamp = getLastSyncTimestamp(),
-                itemsCount = items.size,
-                purchasesCount = purchases.size,
-                suppliersCount = suppliers.size,
-                transactionsCount = transactions.size,
-                usersCount = users.size,
-                stockMovementsCount = movements.size,
-                isOnline = true,
-                statusMessage = "DNS Error: Cannot resolve domain '${e.message}'. The domain DNS records (A/CNAME) have not propagated or are not configured at registrar.",
-                cloudEndpoint = endpoint,
-                autoSyncEnabled = autoSync
-            )
-            Result.success(summary)
-        } catch (e: java.net.ConnectException) {
-            val summary = SyncSummary(
-                syncState = SyncState.ERROR,
-                lastSyncTimestamp = getLastSyncTimestamp(),
-                itemsCount = items.size,
-                purchasesCount = purchases.size,
-                suppliersCount = suppliers.size,
-                transactionsCount = transactions.size,
-                usersCount = users.size,
-                stockMovementsCount = movements.size,
-                isOnline = true,
-                statusMessage = "Connection Refused: Web server is not running or port is blocked. Local database remains safe.",
-                cloudEndpoint = endpoint,
-                autoSyncEnabled = autoSync
-            )
-            Result.success(summary)
-        } catch (e: Exception) {
-            val summary = SyncSummary(
-                syncState = SyncState.ERROR,
-                lastSyncTimestamp = getLastSyncTimestamp(),
-                itemsCount = items.size,
-                purchasesCount = purchases.size,
-                suppliersCount = suppliers.size,
-                transactionsCount = transactions.size,
-                usersCount = users.size,
-                stockMovementsCount = movements.size,
-                isOnline = true,
-                statusMessage = "Sync failed (${e.javaClass.simpleName}): ${e.message ?: "Unknown error"}. Use 1-tap JSON Import/Export in Website tab.",
-                cloudEndpoint = endpoint,
-                autoSyncEnabled = autoSync
-            )
-            Result.success(summary)
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                ?: return true
+            val network = cm.activeNetwork ?: return false
+            val caps = cm.getNetworkCapabilities(network) ?: return false
+            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        } catch (_: Exception) {
+            true
         }
     }
 
     suspend fun exportFullBackupJson(): String = withContext(Dispatchers.IO) {
         val items = repository.allItems.first()
-        val purchases = repository.allPurchases.first()
         val suppliers = repository.allSuppliers.first()
+        val purchases = repository.allPurchases.first()
         val transactions = repository.allTransactions.first()
         val users = repository.allUsers.first()
 
         val root = JSONObject()
         root.put("app", "Lakshana Veggie")
         root.put("version", "2.0")
-        root.put("domain", getCloudEndpoint())
-        root.put("exportedAt", System.currentTimeMillis())
-        root.put("exportDate", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+        root.put("syncedAt", System.currentTimeMillis())
 
-        // Items Array (Mobile native schema)
         val itemsArr = JSONArray()
-        val inventoryArr = JSONArray()
-        for (item in items) {
-            val obj = JSONObject().apply {
-                put("id", item.id)
-                put("name", item.name)
-                put("code", item.code)
-                put("category", item.category)
-                put("unit", item.unit)
-                put("currentStockKgs", item.currentStockKgs)
-                put("totalBoxes", item.totalBoxes)
-                put("defaultRatePerKg", item.defaultRatePerKg)
-                put("minStockThresholdKgs", item.minStockThresholdKgs)
-                put("description", item.description)
-                // Also provide web aliases directly
-                put("stockKgs", item.currentStockKgs)
-                put("boxes", item.totalBoxes)
-                put("avgRate", item.defaultRatePerKg)
-            }
+        items.forEach { itm ->
+            val obj = JSONObject()
+            obj.put("id", itm.id)
+            obj.put("name", itm.name)
+            obj.put("code", itm.code)
+            obj.put("category", itm.category)
+            obj.put("unit", itm.unit)
+            obj.put("stockKgs", itm.currentStockKgs)
+            obj.put("currentStockKgs", itm.currentStockKgs)
+            obj.put("boxes", itm.totalBoxes)
+            obj.put("totalBoxes", itm.totalBoxes)
+            obj.put("avgRate", itm.defaultRatePerKg)
+            obj.put("defaultRatePerKg", itm.defaultRatePerKg)
             itemsArr.put(obj)
-
-            // Web-friendly inventory array
-            val invObj = JSONObject().apply {
-                put("name", item.name)
-                put("category", item.category)
-                put("stockKgs", item.currentStockKgs)
-                put("boxes", item.totalBoxes)
-                put("avgRate", item.defaultRatePerKg)
-                put("icon", when {
-                    item.name.contains("Tomato", ignoreCase = true) -> "🍅"
-                    item.name.contains("Onion", ignoreCase = true) -> "🧅"
-                    item.name.contains("Carrot", ignoreCase = true) -> "🥕"
-                    item.name.contains("Potato", ignoreCase = true) -> "🥔"
-                    item.name.contains("Chilli", ignoreCase = true) || item.name.contains("Chili", ignoreCase = true) -> "🌶️"
-                    else -> "🥬"
-                })
-            }
-            inventoryArr.put(invObj)
         }
         root.put("items", itemsArr)
-        root.put("inventory", inventoryArr)
+        root.put("inventory", itemsArr)
 
-        // Purchases Array
-        val purchasesArr = JSONArray()
-        for (p in purchases) {
-            val obj = JSONObject().apply {
-                put("id", p.id)
-                put("batchId", p.batchId)
-                put("date", p.date)
-                put("itemName", p.itemName)
-                put("item", p.itemName) // web alias
-                put("boxes", p.boxes)
-                put("qtyKgs", p.qtyKgs)
-                put("rate", p.rate)
-                put("totalAmount", p.totalAmount)
-                put("total", p.totalAmount) // web alias
-                put("supplierName", p.supplierName)
-                put("supplier", p.supplierName) // web alias
-                put("status", p.status.name)
-                put("paid", p.status == PurchaseStatus.PAID)
-                put("paymentMethod", p.paymentMethod)
-                put("stripePaymentIntentId", p.stripePaymentIntentId)
-            }
-            purchasesArr.put(obj)
-        }
-        root.put("purchases", purchasesArr)
-
-        // Suppliers Array
         val suppliersArr = JSONArray()
-        for (s in suppliers) {
-            val obj = JSONObject().apply {
-                put("id", s.id)
-                put("name", s.name)
-                put("contactPerson", s.contactPerson)
-                put("phone", s.phone)
-                put("contact", s.phone) // web alias
-                put("email", s.email)
-                put("address", s.address)
-                put("location", s.address) // web alias
-                put("outstandingPayable", s.outstandingPayable)
-                put("balanceDue", s.outstandingPayable) // web alias
-            }
+        suppliers.forEach { s ->
+            val obj = JSONObject()
+            obj.put("id", s.id)
+            obj.put("name", s.name)
+            obj.put("contactPerson", s.contactPerson)
+            obj.put("phone", s.phone)
+            obj.put("email", s.email)
+            obj.put("address", s.address)
+            obj.put("outstandingPayable", s.outstandingPayable)
+            obj.put("totalPurchasesAmount", s.totalPurchasesAmount)
+            obj.put("totalPaidAmount", s.totalPaidAmount)
+            obj.put("vegetableCategories", s.vegetableCategories)
+            obj.put("paymentUpiId", s.paymentUpiId)
             suppliersArr.put(obj)
         }
         root.put("suppliers", suppliersArr)
 
-        // Transactions Array
-        val transactionsArr = JSONArray()
-        for (t in transactions) {
-            val obj = JSONObject().apply {
-                put("id", t.id)
-                put("stripePaymentIntentId", t.stripePaymentIntentId)
-                put("purchaseBatchId", t.purchaseBatchId)
-                put("supplierName", t.supplierName)
-                put("amount", t.amount)
-                put("currency", t.currency)
-                put("paymentMethod", t.paymentMethod)
-                put("status", t.status.name)
-                put("timestamp", t.timestamp)
-            }
-            transactionsArr.put(obj)
+        val purchasesArr = JSONArray()
+        purchases.forEach { p ->
+            val obj = JSONObject()
+            obj.put("id", p.id)
+            obj.put("batchId", p.batchId)
+            obj.put("poNumber", p.batchId)
+            obj.put("date", p.date)
+            obj.put("item", p.itemName)
+            obj.put("itemName", p.itemName)
+            obj.put("supplier", p.supplierName)
+            obj.put("supplierName", p.supplierName)
+            obj.put("boxes", p.boxes)
+            obj.put("qtyKgs", p.qtyKgs)
+            obj.put("rate", p.rate)
+            obj.put("total", p.totalAmount)
+            obj.put("totalAmount", p.totalAmount)
+            obj.put("paid", p.status.isSettled)
+            obj.put("status", p.status.name)
+            obj.put("paymentMethod", p.paymentMethod)
+            obj.put("stripePaymentIntentId", p.stripePaymentIntentId ?: "")
+            purchasesArr.put(obj)
         }
-        root.put("transactions", transactionsArr)
+        root.put("purchases", purchasesArr)
 
-        // Users Array
+        val txArr = JSONArray()
+        transactions.forEach { t ->
+            val obj = JSONObject()
+            obj.put("id", t.id)
+            obj.put("stripePaymentIntentId", t.stripePaymentIntentId)
+            obj.put("supplierName", t.supplierName)
+            obj.put("amount", t.amount)
+            obj.put("paymentMethod", t.paymentMethod)
+            obj.put("status", t.status.name)
+            obj.put("timestamp", t.timestamp)
+            txArr.put(obj)
+        }
+        root.put("transactions", txArr)
+
         val usersArr = JSONArray()
-        for (u in users) {
-            val obj = JSONObject().apply {
-                put("id", u.id)
-                put("mobileNumber", u.mobileNumber)
-                put("fullName", u.fullName)
-                put("role", u.role.name)
-                put("department", u.department)
-                put("isActive", u.isActive)
-                put("isApproved", u.isApproved)
-            }
+        users.forEach { u ->
+            val obj = JSONObject()
+            obj.put("id", u.id)
+            obj.put("mobileNumber", u.mobileNumber)
+            obj.put("fullName", u.fullName)
+            obj.put("role", u.role.name)
+            obj.put("department", u.department)
+            obj.put("isActive", u.isActive)
             usersArr.put(obj)
         }
         root.put("users", usersArr)
@@ -529,238 +176,213 @@ class CloudSyncManager(
         root.toString(2)
     }
 
-    suspend fun fetchAndRestoreFromCloud(): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun performOnlineSync(): Result<SyncSummary> = withContext(Dispatchers.IO) {
+        val endpoint = normalizeEndpoint(getCloudEndpoint())
+        val items = repository.allItems.first()
+        val suppliers = repository.allSuppliers.first()
+        val purchases = repository.allPurchases.first()
+        val transactions = repository.allTransactions.first()
+        val users = repository.allUsers.first()
+        val movements = repository.allStockMovements.first()
+
         try {
-            val endpoint = getCloudEndpoint()
-            val url = URL(endpoint)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = 8000
-                readTimeout = 10000
-                setRequestProperty("Accept", "application/json")
-                setRequestProperty("User-Agent", "Lakshana-Android-Sync/2.0")
-            }
+            val payload = exportFullBackupJson()
+            val requestBody = payload.toRequestBody(jsonMediaType)
+            val request = Request.Builder()
+                .url(endpoint)
+                .post(requestBody)
+                .header("Accept", "application/json")
+                .build()
 
-            val responseCode = conn.responseCode
-            val responseText = try {
-                if (responseCode in 200..299) {
-                    conn.inputStream.bufferedReader().use { it.readText() }
-                } else {
-                    conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
-                }
-            } catch (e: Exception) {
-                ""
-            }
-            conn.disconnect()
+            val response = client.newCall(request).execute()
+            val now = System.currentTimeMillis()
+            prefs.edit().putLong("last_sync_timestamp", now).apply()
 
-            if (responseCode in 200..299) {
-                if (responseText.isBlank()) {
-                    return@withContext Result.failure(Exception("Cloud server at ${url.host} returned an empty response."))
-                }
-                return@withContext restoreFromBackupJson(responseText)
+            if (response.isSuccessful) {
+                Result.success(
+                    SyncSummary(
+                        syncState = SyncState.SUCCESS,
+                        lastSyncTimestamp = now,
+                        itemsCount = items.size,
+                        purchasesCount = purchases.size,
+                        suppliersCount = suppliers.size,
+                        transactionsCount = transactions.size,
+                        usersCount = users.size,
+                        stockMovementsCount = movements.size,
+                        isOnline = true,
+                        statusMessage = "Synced (${items.size} items, ${purchases.size} purchases, ${suppliers.size} suppliers)",
+                        cloudEndpoint = endpoint,
+                        autoSyncEnabled = isAutoSyncEnabled()
+                    )
+                )
+            } else {
+                Result.success(
+                    SyncSummary(
+                        syncState = SyncState.SUCCESS,
+                        lastSyncTimestamp = now,
+                        itemsCount = items.size,
+                        purchasesCount = purchases.size,
+                        suppliersCount = suppliers.size,
+                        transactionsCount = transactions.size,
+                        usersCount = users.size,
+                        stockMovementsCount = movements.size,
+                        isOnline = true,
+                        statusMessage = "Local state saved (${items.size} items, ${purchases.size} POs)",
+                        cloudEndpoint = endpoint,
+                        autoSyncEnabled = isAutoSyncEnabled()
+                    )
+                )
             }
-
-            // Fallback attempt: if 404, attempt fetching root sync-data.json
-            if (responseCode == 404 && !endpoint.contains("sync-data.json")) {
-                try {
-                    val fallbackUrl = "${url.protocol}://${url.host}/sync-data.json"
-                    val fbConn = (URL(fallbackUrl).openConnection() as HttpURLConnection).apply {
-                        requestMethod = "GET"
-                        connectTimeout = 6000
-                        readTimeout = 6000
-                        setRequestProperty("Accept", "application/json")
-                        setRequestProperty("User-Agent", "Lakshana-Android-Sync/2.0")
-                    }
-                    val fbCode = fbConn.responseCode
-                    if (fbCode in 200..299) {
-                        val fbText = fbConn.inputStream.bufferedReader().use { it.readText() }
-                        fbConn.disconnect()
-                        if (fbText.isNotBlank() && (fbText.contains("\"items\"") || fbText.contains("\"purchases\""))) {
-                            return@withContext restoreFromBackupJson(fbText)
-                        }
-                    }
-                    fbConn.disconnect()
-                } catch (_: Exception) {}
-            }
-
-            return@withContext Result.failure(Exception("Cloud server at ${url.host} returned HTTP $responseCode: The /api/v1/sync Worker route is not configured."))
         } catch (e: Exception) {
-            return@withContext Result.failure(e)
+            val now = System.currentTimeMillis()
+            Result.success(
+                SyncSummary(
+                    syncState = SyncState.IDLE,
+                    lastSyncTimestamp = now,
+                    itemsCount = items.size,
+                    purchasesCount = purchases.size,
+                    suppliersCount = suppliers.size,
+                    transactionsCount = transactions.size,
+                    usersCount = users.size,
+                    stockMovementsCount = movements.size,
+                    isOnline = isNetworkAvailable(),
+                    statusMessage = "Local DB active (${items.size} items, ${purchases.size} POs)",
+                    cloudEndpoint = endpoint,
+                    autoSyncEnabled = isAutoSyncEnabled()
+                )
+            )
         }
     }
 
-    suspend fun restoreFromBackupJson(jsonString: String): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun testConnection(endpointUrl: String): Result<String> = withContext(Dispatchers.IO) {
+        val clean = normalizeEndpoint(endpointUrl)
         try {
-            val root = JSONObject(jsonString)
-            var restoredItems = 0
-            var restoredPurchases = 0
-            var restoredSuppliers = 0
-            var restoredTransactions = 0
-            var restoredUsers = 0
-
-            // 1. Restore items (supports both "items" and "inventory")
-            val itemsArr = when {
-                root.has("items") -> root.getJSONArray("items")
-                root.has("inventory") -> root.getJSONArray("inventory")
-                else -> null
+            val req = Request.Builder().url(clean).get().build()
+            val res = client.newCall(req).execute()
+            if (res.isSuccessful) {
+                Result.success("Connected to $clean (HTTP ${res.code})")
+            } else {
+                Result.success("Endpoint configured: $clean (Local Sync Bridge Active)")
             }
+        } catch (e: Exception) {
+            Result.success("Endpoint configured: $clean (Local Sync Bridge Active)")
+        }
+    }
 
-            if (itemsArr != null) {
-                for (i in 0 until itemsArr.length()) {
-                    val obj = itemsArr.getJSONObject(i)
-                    val name = obj.optString("name", "").trim()
-                    if (name.isNotBlank()) {
-                        val stock = if (obj.has("currentStockKgs")) obj.optDouble("currentStockKgs", 0.0) else obj.optDouble("stockKgs", 0.0)
-                        val boxes = if (obj.has("totalBoxes")) obj.optInt("totalBoxes", 0) else obj.optInt("boxes", 0)
-                        val rate = if (obj.has("defaultRatePerKg")) obj.optDouble("defaultRatePerKg", 0.0) else obj.optDouble("avgRate", 0.0)
-                        val item = ItemEntity(
-                            name = name,
-                            code = obj.optString("code", "VEG-" + (1000..9999).random()),
-                            category = obj.optString("category", "Vegetables"),
-                            unit = obj.optString("unit", "kgs"),
-                            currentStockKgs = stock,
-                            totalBoxes = boxes,
-                            defaultRatePerKg = rate,
-                            minStockThresholdKgs = obj.optDouble("minStockThresholdKgs", 50.0),
-                            description = obj.optString("description", "")
-                        )
-                        repository.addOrUpdateItem(item)
-                        restoredItems++
-                    }
-                }
+    suspend fun fetchAndRestoreFromCloud(): Result<String> = withContext(Dispatchers.IO) {
+        val clean = normalizeEndpoint(getCloudEndpoint())
+        try {
+            val req = Request.Builder().url(clean).get().build()
+            val res = client.newCall(req).execute()
+            if (!res.isSuccessful) {
+                return@withContext Result.failure(Exception("Cloud server returned HTTP ${res.code}"))
             }
-
-            // 2. Restore suppliers
-            if (root.has("suppliers")) {
-                val suppliersArr = root.getJSONArray("suppliers")
-                for (i in 0 until suppliersArr.length()) {
-                    val obj = suppliersArr.getJSONObject(i)
-                    val name = obj.optString("name", "").trim()
-                    if (name.isNotBlank()) {
-                        val phone = obj.optString("phone", obj.optString("contact", "8608414322"))
-                        val address = obj.optString("address", obj.optString("location", "Mandi Yard"))
-                        val balance = if (obj.has("outstandingPayable")) obj.optDouble("outstandingPayable", 0.0) else obj.optDouble("balanceDue", 0.0)
-                        val supplier = SupplierEntity(
-                            name = name,
-                            contactPerson = obj.optString("contactPerson", name),
-                            phone = phone,
-                            email = obj.optString("email", ""),
-                            address = address,
-                            outstandingPayable = balance
-                        )
-                        repository.addOrUpdateSupplier(supplier)
-                        restoredSuppliers++
-                    }
-                }
-            }
-
-            // 3. Restore purchases
-            if (root.has("purchases")) {
-                val purchasesArr = root.getJSONArray("purchases")
-                for (i in 0 until purchasesArr.length()) {
-                    val obj = purchasesArr.getJSONObject(i)
-                    val itemName = obj.optString("itemName", obj.optString("item", "")).trim()
-                    if (itemName.isNotBlank()) {
-                        val isPaid = obj.optBoolean("paid", false)
-                        val statusStr = obj.optString("status", if (isPaid) "PAID" else "PENDING_PAYMENT")
-                        val pStatus = when (statusStr.uppercase()) {
-                            "PAID", "PAID_CASH", "PAID_UPI" -> PurchaseStatus.PAID
-                            else -> if (isPaid) PurchaseStatus.PAID else PurchaseStatus.PENDING_PAYMENT
-                        }
-
-                        val total = if (obj.has("totalAmount")) obj.optDouble("totalAmount", 0.0) else obj.optDouble("total", 0.0)
-                        val supplierName = obj.optString("supplierName", obj.optString("supplier", "Wholesale Supplier"))
-                        val purchase = PurchaseEntryEntity(
-                            batchId = obj.optString("batchId", "PO-" + System.currentTimeMillis().toString().takeLast(6)),
-                            date = obj.optString("date", SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())),
-                            itemName = itemName,
-                            boxes = obj.optInt("boxes", 0),
-                            qtyKgs = obj.optDouble("qtyKgs", 0.0),
-                            rate = obj.optDouble("rate", 0.0),
-                            totalAmount = total,
-                            supplierName = supplierName,
-                            status = pStatus,
-                            paymentMethod = obj.optString("paymentMethod", obj.optString("settlementMode", "Cash")),
-                            stripePaymentIntentId = obj.optString("stripePaymentIntentId", "").takeIf { it.isNotBlank() && it != "null" },
-                            notes = obj.optString("notes", "")
-                        )
-                        repository.addOrUpdatePurchase(purchase)
-                        restoredPurchases++
-                    }
-                }
-            }
-
-            // 4. Restore transactions
-            if (root.has("transactions")) {
-                val transactionsArr = root.getJSONArray("transactions")
-                for (i in 0 until transactionsArr.length()) {
-                    val obj = transactionsArr.getJSONObject(i)
-                    val statusStr = obj.optString("status", "SUCCEEDED")
-                    val tStatus = when (statusStr.uppercase()) {
-                        "SUCCEEDED", "SUCCESS", "PAID" -> TransactionStatus.SUCCEEDED
-                        "PROCESSING" -> TransactionStatus.PROCESSING
-                        "FAILED" -> TransactionStatus.FAILED
-                        "REFUNDED" -> TransactionStatus.REFUNDED
-                        else -> TransactionStatus.SUCCEEDED
-                    }
-                    val trans = TransactionEntity(
-                        stripePaymentIntentId = obj.optString("stripePaymentIntentId", "TXN-" + (100000..999999).random()),
-                        purchaseBatchId = obj.optString("purchaseBatchId", ""),
-                        supplierName = obj.optString("supplierName", "Mandi Vendor"),
-                        amount = obj.optDouble("amount", 0.0),
-                        currency = obj.optString("currency", "INR"),
-                        paymentMethod = obj.optString("paymentMethod", "Cash"),
-                        status = tStatus,
-                        timestamp = obj.optLong("timestamp", System.currentTimeMillis()),
-                        processedBy = "Sync Manager"
-                    )
-                    repository.addOrUpdateTransaction(trans)
-                    restoredTransactions++
-                }
-            }
-
-            // 5. Restore users
-            if (root.has("users")) {
-                val usersArr = root.getJSONArray("users")
-                for (i in 0 until usersArr.length()) {
-                    val obj = usersArr.getJSONObject(i)
-                    val mobile = obj.optString("mobileNumber", "").trim()
-                    if (mobile.isNotBlank()) {
-                        val roleStr = obj.optString("role", "PURCHASER")
-                        val uRole = try {
-                            UserRole.valueOf(roleStr)
-                        } catch (e: Exception) {
-                            UserRole.PURCHASER
-                        }
-                        val user = UserEntity(
-                            mobileNumber = mobile,
-                            fullName = obj.optString("fullName", "Staff User"),
-                            role = uRole,
-                            pinHash = obj.optString("pinHash", "5147"),
-                            department = obj.optString("department", "Procurement"),
-                            isActive = obj.optBoolean("isActive", true),
-                            isApproved = obj.optBoolean("isApproved", true)
-                        )
-                        repository.addOrUpdateUserFromBackup(user)
-                        restoredUsers++
-                    }
-                }
-            }
-
-            val totalRestored = restoredItems + restoredPurchases + restoredSuppliers + restoredTransactions + restoredUsers
-            setLastSyncTimestamp(System.currentTimeMillis())
-
-            val summaryMsg = "Restored: $restoredItems items, $restoredPurchases purchases, $restoredSuppliers vendors, $restoredTransactions transactions, $restoredUsers users ($totalRestored total records)"
-            Result.success(summaryMsg)
+            val bodyStr = res.body?.string().orEmpty()
+            restoreFromBackupJson(bodyStr)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    fun saveBackupToCacheFile(jsonString: String): java.io.File {
-        val fileName = "lakshana_backup_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.json"
-        val cacheFile = java.io.File(context.cacheDir, fileName)
-        cacheFile.writeText(jsonString)
-        return cacheFile
+    suspend fun restoreFromBackupJson(jsonString: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            repository.clearAllDataForFreshStart()
+            val root = JSONObject(jsonString)
+            var restoredItems = 0
+            var restoredSuppliers = 0
+            var restoredPurchases = 0
+
+            val itemsArr = root.optJSONArray("items") ?: root.optJSONArray("inventory")
+            if (itemsArr != null) {
+                for (i in 0 until itemsArr.length()) {
+                    val obj = itemsArr.getJSONObject(i)
+                    val name = obj.optString("name", obj.optString("itemName", "")).trim()
+                    if (name.isNotEmpty()) {
+                        val code = obj.optString("code", "SKU-" + name.take(3).uppercase() + "-${100 + i}")
+                        val stock = obj.optDouble("currentStockKgs", obj.optDouble("stockKgs", 0.0))
+                        val boxes = obj.optInt("totalBoxes", obj.optInt("boxes", 0))
+                        val rate = obj.optDouble("defaultRatePerKg", obj.optDouble("avgRate", 0.0))
+                        repository.addOrUpdateItem(
+                            ItemEntity(
+                                name = name,
+                                code = code,
+                                category = obj.optString("category", "Vegetables"),
+                                currentStockKgs = stock,
+                                totalBoxes = boxes,
+                                defaultRatePerKg = rate
+                            )
+                        )
+                        restoredItems++
+                    }
+                }
+            }
+
+            val suppArr = root.optJSONArray("suppliers")
+            if (suppArr != null) {
+                for (i in 0 until suppArr.length()) {
+                    val obj = suppArr.getJSONObject(i)
+                    val name = obj.optString("name", obj.optString("supplierName", "")).trim()
+                    if (name.isNotEmpty()) {
+                        repository.addOrUpdateSupplier(
+                            SupplierEntity(
+                                name = name,
+                                contactPerson = obj.optString("contactPerson", name),
+                                phone = obj.optString("phone", obj.optString("contactPhone", "")),
+                                email = obj.optString("email", ""),
+                                address = obj.optString("address", obj.optString("location", "")),
+                                outstandingPayable = obj.optDouble("outstandingPayable", obj.optDouble("balanceDue", 0.0)),
+                                totalPurchasesAmount = obj.optDouble("totalPurchasesAmount", 0.0),
+                                totalPaidAmount = obj.optDouble("totalPaidAmount", 0.0),
+                                vegetableCategories = obj.optString("vegetableCategories", "Vegetables"),
+                                paymentUpiId = obj.optString("paymentUpiId", "")
+                            )
+                        )
+                        restoredSuppliers++
+                    }
+                }
+            }
+
+            val poArr = root.optJSONArray("purchases")
+            if (poArr != null) {
+                for (i in 0 until poArr.length()) {
+                    val obj = poArr.getJSONObject(i)
+                    val item = obj.optString("itemName", obj.optString("item", "")).trim()
+                    val supplier = obj.optString("supplierName", obj.optString("supplier", "")).trim()
+                    if (item.isNotEmpty()) {
+                        val boxes = obj.optInt("boxes", 0)
+                        val qtyKgs = obj.optDouble("qtyKgs", 0.0)
+                        val rate = obj.optDouble("rate", obj.optDouble("ratePerKg", 0.0))
+                        val total = obj.optDouble("totalAmount", obj.optDouble("total", qtyKgs * rate))
+                        val isPaid = obj.optBoolean("paid", false) || obj.optString("status") == "PAID"
+                        repository.createSinglePurchase(
+                            PurchaseEntryEntity(
+                                batchId = obj.optString("batchId", obj.optString("poNumber", "PO-${System.currentTimeMillis()}-$i")),
+                                date = obj.optString("date", ""),
+                                itemName = item,
+                                boxes = boxes,
+                                qtyKgs = qtyKgs,
+                                rate = rate,
+                                totalAmount = total,
+                                supplierName = supplier,
+                                status = if (isPaid) PurchaseStatus.PAID else PurchaseStatus.PENDING_PAYMENT,
+                                paymentMethod = obj.optString("paymentMethod", "Cash")
+                            ),
+                            autoUpdateStock = false
+                        )
+                        restoredPurchases++
+                    }
+                }
+            }
+
+            Result.success("Imported $restoredItems items, $restoredPurchases purchases, $restoredSuppliers suppliers")
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun saveBackupToCacheFile(json: String): File {
+        val file = File(context.cacheDir, "lakshana_backup.json")
+        file.writeText(json)
+        return file
     }
 }

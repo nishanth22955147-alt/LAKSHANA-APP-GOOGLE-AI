@@ -98,7 +98,7 @@ fun DailySpreadsheetAuditHubDialog(
     var importTargetDate by remember { mutableStateOf(initialDate) }
     var rawInputText by remember { mutableStateOf("") }
     var autoUpdateStock by remember { mutableStateOf(true) }
-    var defaultSupplier by remember { mutableStateOf("Lakshana Agro Farms") }
+    var defaultSupplier by remember { mutableStateOf("") }
     var importedFileName by remember { mutableStateOf<String?>(null) }
     var batchSuccessBatchId by remember { mutableStateOf<String?>(null) }
     var batchSuccessAmount by remember { mutableStateOf(0.0) }
@@ -266,10 +266,6 @@ fun DailySpreadsheetAuditHubDialog(
                             onAutoUpdateStockChange = { autoUpdateStock = it },
                             importedFileName = importedFileName,
                             onPickFile = { openDocLauncher.launch("*/*") },
-                            onLoadSample = {
-                                rawInputText = ExcelSheetParser.SAMPLE_DAILY_EXCEL_CSV
-                                viewModel.parseDailyExcelText(rawInputText, defaultSupplier)
-                            },
                             excelResult = excelResult,
                             isProcessing = isProcessing,
                             batchSuccessBatchId = batchSuccessBatchId,
@@ -503,7 +499,6 @@ fun ImportDailySpreadsheetView(
     onAutoUpdateStockChange: (Boolean) -> Unit,
     importedFileName: String?,
     onPickFile: () -> Unit,
-    onLoadSample: () -> Unit,
     excelResult: com.example.data.util.ExcelParseResult?,
     isProcessing: Boolean,
     batchSuccessBatchId: String?,
@@ -536,29 +531,20 @@ fun ImportDailySpreadsheetView(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Import Source Actions: Pick File vs Load Sample
+        // Import Source Action: Pick File
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
                 onClick = onPickFile,
                 colors = ButtonDefaults.buttonColors(containerColor = SecondaryTeal),
-                modifier = Modifier.testTag("choose_spreadsheet_file_button")
+                modifier = Modifier.fillMaxWidth().testTag("choose_spreadsheet_file_button")
             ) {
                 Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text("Browse File (CSV/Excel)")
-            }
-
-            OutlinedButton(
-                onClick = onLoadSample,
-                modifier = Modifier.testTag("load_sample_sheet_button")
-            ) {
-                Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Load Sample Rows")
             }
         }
 
@@ -602,7 +588,7 @@ fun ImportDailySpreadsheetView(
             value = rawInputText,
             onValueChange = onRawInputTextChange,
             label = { Text("Spreadsheet Entries (Date, Items, Boxes, Qty(kgs), Rate, Total)") },
-            placeholder = { Text("Date,Items,Boxes,Qty(kgs),Rate,Total\n2026-09-25,Fresh Country Tomatoes,25,500.0,35.00,17500.00\n2026-09-25,Nashik Red Onions,40,1000.0,28.00,28000.00") },
+            placeholder = { Text("Date,Items,Boxes,Qty(kgs),Rate,Total") },
             modifier = Modifier.fillMaxWidth().weight(1f).testTag("import_raw_text_input")
         )
 

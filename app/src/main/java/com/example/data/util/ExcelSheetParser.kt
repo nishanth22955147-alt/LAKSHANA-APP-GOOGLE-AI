@@ -14,7 +14,7 @@ data class DailyPurchaseRow(
     val calculatedTotal: Double,
     val enteredTotal: Double?,
     val hasMathDiscrepancy: Boolean = false,
-    val supplierName: String = "Wholesale Supplier"
+    val supplierName: String = ""
 )
 
 data class ExcelParseResult(
@@ -29,24 +29,7 @@ data class ExcelParseResult(
 
 object ExcelSheetParser {
 
-    val SAMPLE_DAILY_EXCEL_CSV = """
-Date,Supplier,Items,Boxes,Qty(kgs),Rate,Total
-2026-09-25,Lakshana Agro Farms,Fresh Country Tomatoes,25,500.0,35.00,17500.00
-2026-09-25,Lakshana Agro Farms,Nashik Red Onions,40,1000.0,28.00,28000.00
-2026-09-25,Green Valley Mandi,Ooty Fresh Carrots,30,450.0,45.00,20250.00
-2026-09-25,Green Valley Mandi,Green Capsicum,15,225.0,55.00,12375.00
-2026-09-25,Direct APMC Merchant,Fresh Cauliflower,35,525.0,32.00,16800.00
-    """.trimIndent()
-
-    val SAMPLE_GRAINS_EXCEL_TSV = """
-Date	Supplier	Items	Boxes	Qty(kgs)	Rate	Total
-2026-09-25	Lakshana Agro Farms	Baby Potatoes	50	1250.0	25.00	31250.00
-2026-09-25	Lakshana Agro Farms	Green Chillies	20	300.0	65.00	19500.00
-2026-09-25	Green Valley Mandi	Fresh Ginger	10	150.0	110.00	16500.00
-2026-09-25	Green Valley Mandi	Fresh Coriander Leaves	20	200.0	40.00	8000.00
-    """.trimIndent()
-
-    fun parse(rawText: String, defaultSupplier: String = "Lakshana Agro Farms"): ExcelParseResult {
+    fun parse(rawText: String, defaultSupplier: String = ""): ExcelParseResult {
         val lines = rawText.lines()
             .map { it.trim() }
             .filter { it.isNotBlank() }

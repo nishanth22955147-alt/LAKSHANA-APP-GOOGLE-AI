@@ -36,7 +36,6 @@ class StripePaymentClient(
 
     fun getApiKey(): String {
         return customApiKey?.takeIf { it.isNotBlank() }
-            ?: runCatching { BuildConfig.STRIPE_API_KEY }.getOrNull()
             ?: "sk_test_mock_developer_mode_default_procureflow"
     }
 

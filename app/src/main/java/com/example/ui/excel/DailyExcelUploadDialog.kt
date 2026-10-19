@@ -61,7 +61,7 @@ fun DailyExcelUploadDialog(
     var selectedSpreadsheetDate by remember(initialDate) { mutableStateOf(initialDate) }
     var rawInputText by remember { mutableStateOf("") }
     var autoUpdateStock by remember { mutableStateOf(true) }
-    var defaultSupplier by remember { mutableStateOf("Lakshana Agro Farms") }
+    var defaultSupplier by remember { mutableStateOf("") }
     var batchSuccessBatchId by remember { mutableStateOf<String?>(null) }
     var batchSuccessAmount by remember { mutableStateOf(0.0) }
 
@@ -97,21 +97,7 @@ fun DailyExcelUploadDialog(
         if (uri != null) {
             uploadedImageUri = uri
             uploadedFileName = uri.lastPathSegment ?: "mandi_sheet_photo.jpg"
-            // Auto-trigger OCR extraction on Mandi sheet image
-            isImageScanning = true
-            // Convert Mandi photo to standard entries: Date, Supplier, Items, Boxes, Qty(kgs), Rate, Total
-            val extractedMandiText = """
-Date,Supplier,Items,Boxes,Qty(kgs),Rate,Total
-$selectedSpreadsheetDate,Lakshana Agro Farms,Fresh Country Tomatoes,25,500.0,35.00,17500.00
-$selectedSpreadsheetDate,Lakshana Agro Farms,Nashik Red Onions,40,1000.0,28.00,28000.00
-$selectedSpreadsheetDate,Green Valley Mandi,Ooty Fresh Carrots,30,450.0,45.00,20250.00
-$selectedSpreadsheetDate,Green Valley Mandi,Baby Potatoes,50,1250.0,25.00,31250.00
-$selectedSpreadsheetDate,Direct APMC Merchant,Green Chillies,20,300.0,65.00,19500.00
-            """.trimIndent()
-            rawInputText = extractedMandiText
-            viewModel.parseDailyExcelText(extractedMandiText, defaultSupplier)
-            isImageScanning = false
-            Toast.makeText(context, "Mandi Sheet Image digitized into purchase entries!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Bill image attached. Enter or paste bill rows in Text / Paste tab.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -409,20 +395,6 @@ $selectedSpreadsheetDate,Direct APMC Merchant,Green Chillies,20,300.0,65.00,1950
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text("Choose Excel / CSV File from Device")
                                         }
-
-                                        Spacer(modifier = Modifier.height(10.dp))
-
-                                        OutlinedButton(
-                                            onClick = {
-                                                rawInputText = ExcelSheetParser.SAMPLE_DAILY_EXCEL_CSV
-                                                viewModel.parseDailyExcelText(rawInputText, defaultSupplier)
-                                            },
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Icon(Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(16.dp))
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text("Load Mandi Sample Excel File")
-                                        }
                                     }
                                 }
 
@@ -500,45 +472,6 @@ $selectedSpreadsheetDate,Direct APMC Merchant,Green Chillies,20,300.0,65.00,1950
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text("Upload Bill Image / Photo")
                                         }
-
-                                        Spacer(modifier = Modifier.height(10.dp))
-
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            OutlinedButton(
-                                                onClick = {
-                                                    val mandiSample = """
-Date,Supplier,Items,Boxes,Qty(kgs),Rate,Total
-$selectedSpreadsheetDate,Lakshana Agro Farms,Fresh Country Tomatoes,25,500.0,35.00,17500.00
-$selectedSpreadsheetDate,Lakshana Agro Farms,Nashik Red Onions,40,1000.0,28.00,28000.00
-$selectedSpreadsheetDate,Green Valley Mandi,Ooty Fresh Carrots,30,450.0,45.00,20250.00
-                                                    """.trimIndent()
-                                                    rawInputText = mandiSample
-                                                    viewModel.parseDailyExcelText(mandiSample, defaultSupplier)
-                                                },
-                                                modifier = Modifier.weight(1f)
-                                            ) {
-                                                Text("Mandi Bill 1", style = MaterialTheme.typography.labelSmall)
-                                            }
-
-                                            OutlinedButton(
-                                                onClick = {
-                                                    val farmSample = """
-Date,Supplier,Items,Boxes,Qty(kgs),Rate,Total
-$selectedSpreadsheetDate,Lakshana Agro Farms,Baby Potatoes,50,1250.0,25.00,31250.00
-$selectedSpreadsheetDate,Green Valley Mandi,Green Chillies,20,300.0,65.00,19500.00
-$selectedSpreadsheetDate,Direct APMC Merchant,Fresh Cauliflower,35,525.0,32.00,16800.00
-                                                    """.trimIndent()
-                                                    rawInputText = farmSample
-                                                    viewModel.parseDailyExcelText(farmSample, defaultSupplier)
-                                                },
-                                                modifier = Modifier.weight(1f)
-                                            ) {
-                                                Text("Mandi Bill 2", style = MaterialTheme.typography.labelSmall)
-                                            }
-                                        }
                                     }
                                 }
 
@@ -552,7 +485,7 @@ $selectedSpreadsheetDate,Direct APMC Merchant,Fresh Cauliflower,35,525.0,32.00,1
                                     Column(modifier = Modifier.padding(12.dp)) {
                                         Text("Image Mandi Extraction Specs:", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text("• Optical character digitizer reads handwritten or printed vegetable slips", style = MaterialTheme.typography.bodySmall)
+                                        Text("• Attach your handwritten or printed vegetable bill photo", style = MaterialTheme.typography.bodySmall)
                                         Text("• Identifies Supplier Name, Item, Boxes, Weight, Rate and Total", style = MaterialTheme.typography.bodySmall)
                                         Text("• Automatically computes: Total Amount = Qty(kgs) * Rate per kg", style = MaterialTheme.typography.bodySmall)
                                     }
@@ -567,10 +500,7 @@ $selectedSpreadsheetDate,Direct APMC Merchant,Fresh Cauliflower,35,525.0,32.00,1
                                     placeholder = {
                                         Text(
                                             "Paste Excel / CSV daily entries here:\n\n" +
-                                                    "Date,Supplier,Items,Boxes,Qty(kgs),Rate,Total\n" +
-                                                    "$selectedSpreadsheetDate,Lakshana Agro Farms,Fresh Country Tomatoes,25,500.0,35.00,17500.00\n" +
-                                                    "$selectedSpreadsheetDate,Green Valley Mandi,Nashik Red Onions,40,1000.0,28.00,28000.00\n" +
-                                                    "$selectedSpreadsheetDate,Direct APMC Merchant,Ooty Fresh Carrots,30,450.0,45.00,20250.00"
+                                                    "Date,Supplier,Items,Boxes,Qty(kgs),Rate,Total"
                                         )
                                     },
                                     modifier = Modifier

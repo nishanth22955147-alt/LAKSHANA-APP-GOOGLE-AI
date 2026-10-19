@@ -17,7 +17,7 @@ data class SupplierEntity(
     val totalPaidAmount: Double = 0.0,
     val outstandingPayable: Double = 0.0,
     val rating: Float = 4.5f,
-    val vegetableCategories: String = "Country Tomatoes, Onions, Potatoes, Greens",
+    val vegetableCategories: String = "Fresh Vegetables & Mandi Produce",
     val paymentUpiId: String = "",
     val notes: String = "",
     val createdAt: Long = System.currentTimeMillis()

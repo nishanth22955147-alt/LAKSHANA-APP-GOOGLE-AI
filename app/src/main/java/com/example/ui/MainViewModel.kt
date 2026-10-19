@@ -44,7 +44,6 @@ sealed interface NavigationDestination {
     data object Reports : NavigationDestination
     data object Inventory : NavigationDestination
     data object AdminUsers : NavigationDestination
-    data object Website : NavigationDestination
 }
 
 data class AuthUiState(
@@ -147,12 +146,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
 
     init {
-        // Clear legacy example data once and ensure default Admin exists (no auto-login)
+        // Clear all vegetable items, suppliers, purchases, and entries for a 100% fresh start (preserves admin user)
         viewModelScope.launch {
             val prefs = application.getSharedPreferences("lakshana_prefs", Context.MODE_PRIVATE)
-            if (!prefs.getBoolean("cleared_example_data_v2", false)) {
-                repository.clearAllExampleData()
-                prefs.edit().putBoolean("cleared_example_data_v2", true).apply()
+            if (!prefs.getBoolean("cleared_all_fresh_start_v15", false)) {
+                repository.clearAllDataForFreshStart()
+                prefs.edit().putBoolean("cleared_all_fresh_start_v15", true).apply()
             }
             repository.ensureDefaultAdminExists()
             // Auto sync on startup if internet is available
@@ -410,6 +409,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateStaffUser(user: UserEntity) {
+        viewModelScope.launch {
+            repository.updateStaffUser(user)
+            _toastEvent.emit("Staff profile '${user.fullName}' updated")
+        }
+    }
+
+    fun deleteStaffUser(user: UserEntity) {
+        viewModelScope.launch {
+            repository.deleteStaffUser(user)
+            _toastEvent.emit("Staff profile '${user.fullName}' removed")
+        }
+    }
+
+    fun switchUserSession(user: UserEntity) {
+        repository.switchUserSession(user)
+        viewModelScope.launch {
+            _toastEvent.emit("Signed in as ${user.fullName} (${user.role.displayName})")
+        }
+    }
+
     // --- Items & Inventory Management ---
     fun saveItem(item: ItemEntity) {
         viewModelScope.launch {
@@ -499,6 +519,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // --- Transaction Management ---
+    fun saveTransaction(transaction: TransactionEntity) {
+        viewModelScope.launch {
+            repository.addOrUpdateTransaction(transaction)
+            _toastEvent.emit("Settlement receipt '${transaction.stripePaymentIntentId}' saved")
+        }
+    }
+
+    fun deleteTransaction(transaction: TransactionEntity) {
+        viewModelScope.launch {
+            repository.deleteTransaction(transaction)
+            _toastEvent.emit("Settlement receipt '${transaction.stripePaymentIntentId}' removed")
+        }
+    }
+
     fun clearAllExampleData() {
         viewModelScope.launch {
             repository.clearAllExampleData()
@@ -507,13 +542,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // --- Daily Excel Bulk Upload & Automatic Stock Updates ---
-    fun parseDailyExcelText(text: String, defaultSupplier: String = "Farm Wholesale Supply") {
+    fun parseDailyExcelText(text: String, defaultSupplier: String = "") {
         val result = ExcelSheetParser.parse(text, defaultSupplier)
         _excelParseResult.value = result
-    }
-
-    fun loadSampleDailyExcel() {
-        parseDailyExcelText(ExcelSheetParser.SAMPLE_DAILY_EXCEL_CSV, "Sunrise Agro Producers")
     }
 
     fun clearExcelParseResult() {
@@ -787,61 +818,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 _toastEvent.emit(err)
                 onResult(false, err)
-            }
-        }
-    }
-
-    fun restoreInitialMandiData(onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val sampleItems = listOf(
-                    com.example.data.model.ItemEntity(name = "Country Tomato (நாட்டு தக்காளி)", code = "TOM-01", category = "Vegetables", currentStockKgs = 450.0, totalBoxes = 18, defaultRatePerKg = 32.0, unit = "kgs"),
-                    com.example.data.model.ItemEntity(name = "Bellary Big Onion (பெரிய வெங்காயம்)", code = "ONI-01", category = "Vegetables", currentStockKgs = 800.0, totalBoxes = 32, defaultRatePerKg = 28.0, unit = "kgs"),
-                    com.example.data.model.ItemEntity(name = "Ooty Fresh Potato (உருளைக்கிழங்கு)", code = "POT-01", category = "Vegetables", currentStockKgs = 600.0, totalBoxes = 20, defaultRatePerKg = 30.0, unit = "kgs"),
-                    com.example.data.model.ItemEntity(name = "Mysore Hybrid Carrot (கேரட்)", code = "CAR-01", category = "Vegetables", currentStockKgs = 300.0, totalBoxes = 12, defaultRatePerKg = 42.0, unit = "kgs"),
-                    com.example.data.model.ItemEntity(name = "Guntur Green Chillies (பச்சை மிளகாய்)", code = "CHI-01", category = "Vegetables", currentStockKgs = 120.0, totalBoxes = 8, defaultRatePerKg = 55.0, unit = "kgs"),
-                    com.example.data.model.ItemEntity(name = "Small Onion / Shallots (சின்ன வெங்காயம்)", code = "SHL-01", category = "Vegetables", currentStockKgs = 380.0, totalBoxes = 15, defaultRatePerKg = 65.0, unit = "kgs")
-                )
-                sampleItems.forEach { repository.addOrUpdateItem(it) }
-
-                val sampleSuppliers = listOf(
-                    com.example.data.model.SupplierEntity(name = "Hosur Direct Farm Producers", contactPerson = "Ramanathan", phone = "9443210987", email = "hosur@lakshanaveggie.trade", address = "Hosur Valley, Tamil Nadu", outstandingPayable = 28000.0, vegetableCategories = "Country Tomatoes, Chillies, Greens"),
-                    com.example.data.model.SupplierEntity(name = "Nashik Onion Logistics Hub", contactPerson = "Senthil Kumar", phone = "9123456789", email = "nashik@lakshanaveggie.trade", address = "Nashik APMC, Maharashtra", outstandingPayable = 65000.0, vegetableCategories = "Red Onions, Shallots, Garlic"),
-                    com.example.data.model.SupplierEntity(name = "Ooty Hill Vegetable Cooperative", contactPerson = "Murugan", phone = "9789012345", email = "ooty@lakshanaveggie.trade", address = "Nilgiris / Ooty Market", outstandingPayable = 15400.0, vegetableCategories = "Carrots, Potatoes, Cabbage"),
-                    com.example.data.model.SupplierEntity(name = "Koyambedu APMC Merchant 14", contactPerson = "Velmurugan", phone = "9840123456", email = "koyambedu@lakshanaveggie.trade", address = "Koyambedu Market, Chennai", outstandingPayable = 42500.0, vegetableCategories = "Drumstick, Cauliflower, Vegetables")
-                )
-                sampleSuppliers.forEach { repository.addOrUpdateSupplier(it) }
-
-                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-                val nowCal = java.util.Calendar.getInstance()
-                val todayStr = sdf.format(nowCal.time)
-                val yestCal = (nowCal.clone() as java.util.Calendar).apply { add(java.util.Calendar.DAY_OF_YEAR, -1) }
-                val yestStr = sdf.format(yestCal.time)
-                val fourDaysCal = (nowCal.clone() as java.util.Calendar).apply { add(java.util.Calendar.DAY_OF_YEAR, -4) }
-                val fourDaysStr = sdf.format(fourDaysCal.time)
-
-                val samplePurchases = listOf(
-                    com.example.data.model.PurchaseEntryEntity(batchId = "PO-TODAY-01", date = todayStr, itemName = "Country Tomato (நாட்டு தக்காளி)", boxes = 18, qtyKgs = 450.0, rate = 28.0, totalAmount = 12600.0, supplierName = "Hosur Direct Farm Producers", status = com.example.data.model.PurchaseStatus.PENDING_PAYMENT, paymentMethod = "Credit / Unpaid"),
-                    com.example.data.model.PurchaseEntryEntity(batchId = "PO-TODAY-02", date = todayStr, itemName = "Bellary Big Onion (பெரிய வெங்காயம்)", boxes = 50, qtyKgs = 1250.0, rate = 35.0, totalAmount = 43750.0, supplierName = "Nashik Onion Logistics Hub", status = com.example.data.model.PurchaseStatus.PAID_UPI, paymentMethod = "UPI (Google Pay)"),
-                    com.example.data.model.PurchaseEntryEntity(batchId = "PO-YEST-01", date = yestStr, itemName = "Ooty Fresh Potato (உருளைக்கிழங்கு)", boxes = 20, qtyKgs = 600.0, rate = 29.0, totalAmount = 17400.0, supplierName = "Ooty Hill Vegetable Cooperative", status = com.example.data.model.PurchaseStatus.PAID_CASH, paymentMethod = "Cash"),
-                    com.example.data.model.PurchaseEntryEntity(batchId = "PO-YEST-02", date = yestStr, itemName = "Mysore Hybrid Carrot (கேரட்)", boxes = 12, qtyKgs = 290.0, rate = 45.0, totalAmount = 13050.0, supplierName = "Ooty Hill Vegetable Cooperative", status = com.example.data.model.PurchaseStatus.PENDING_PAYMENT, paymentMethod = "Credit / Unpaid"),
-                    com.example.data.model.PurchaseEntryEntity(batchId = "PO-WEEK-01", date = fourDaysStr, itemName = "Small Onion / Shallots (சின்ன வெங்காயம்)", boxes = 15, qtyKgs = 380.0, rate = 65.0, totalAmount = 24700.0, supplierName = "Koyambedu APMC Merchant 14", status = com.example.data.model.PurchaseStatus.PAID, paymentMethod = "Bank NEFT")
-                )
-                samplePurchases.forEach { repository.addOrUpdatePurchase(it) }
-
-                val now = System.currentTimeMillis()
-                _syncSummary.value = _syncSummary.value.copy(
-                    syncState = com.example.data.remote.SyncState.SUCCESS,
-                    lastSyncTimestamp = now,
-                    itemsCount = sampleItems.size,
-                    purchasesCount = samplePurchases.size,
-                    suppliersCount = sampleSuppliers.size,
-                    statusMessage = "Local App Format Synced: Loaded Mandi catalog, ${samplePurchases.size} daily purchases & suppliers."
-                )
-                _toastEvent.emit("Default Mandi inventory, suppliers & purchases restored!")
-                onResult(true, "Restored ${sampleItems.size} vegetables, ${sampleSuppliers.size} suppliers, and ${samplePurchases.size} purchase ledger records.")
-            } catch (e: Exception) {
-                onResult(false, "Restore failed: ${e.message}")
             }
         }
     }

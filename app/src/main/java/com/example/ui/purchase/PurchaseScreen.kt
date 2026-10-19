@@ -110,10 +110,6 @@ fun PurchaseScreen(
                 set(Calendar.MILLISECOND, 0)
             }
 
-            val yest = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -1) }
-            val sevenDaysAgo = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -6) }
-            val thirtyDaysAgo = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -29) }
-
             when (datePreset) {
                 "Today" -> {
                     pCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
@@ -125,9 +121,6 @@ fun PurchaseScreen(
                 }
                 "Last 7 Days" -> {
                     !pCal.before(sevenDaysAgo) && !pCal.after(today)
-                }
-                "Last 30 Days" -> {
-                    !pCal.before(thirtyDaysAgo) && !pCal.after(today)
                 }
                 "This Month" -> {
                     pCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
@@ -273,7 +266,7 @@ fun PurchaseScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.fillMaxWidth().testTag("purchase_date_presets_row")
                     ) {
-                        val presets = listOf("All", "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Month", "Custom")
+                        val presets = listOf("All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom")
                         items(presets) { preset ->
                             FilterChip(
                                 selected = datePreset == preset,
@@ -736,7 +729,7 @@ fun CreatePurchaseDialog(
     var boxesText by remember { mutableStateOf("10") }
     var qtyKgsText by remember { mutableStateOf("200.0") }
     var rateText by remember { mutableStateOf(items.firstOrNull()?.defaultRatePerKg?.toString() ?: "40.0") }
-    var supplierName by remember { mutableStateOf(suppliers.firstOrNull()?.name ?: "Lakshana Farm Suppliers") }
+    var supplierName by remember { mutableStateOf(suppliers.firstOrNull()?.name ?: "") }
     var purchaseDate by remember { mutableStateOf(DateFormatterUtil.todayDDMMYY()) }
     var autoUpdateStock by remember { mutableStateOf(true) }
 
@@ -862,7 +855,7 @@ fun CreatePurchaseDialog(
                             val sup = suppliers.firstOrNull { it.name.equals(supplierName, ignoreCase = true) }
                             onCreate(itemName.trim(), boxes, qty, rate, supplierName.trim(), sup?.id, autoUpdateStock, purchaseDate)
                         },
-                        enabled = itemName.isNotBlank() && qty > 0.0 && rate > 0.0,
+                        enabled = itemName.isNotBlank() && supplierName.isNotBlank() && qty > 0.0 && rate > 0.0,
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Create PO")
